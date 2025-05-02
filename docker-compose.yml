@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    networks:
+      - transcendence
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    networks:
+      - transcendence
+
+networks:
+  transcendence:
+    driver: bridge
