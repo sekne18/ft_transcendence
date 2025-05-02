@@ -3,18 +3,19 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 export default defineConfig({
-  root: './frontend',
+  // Since we're already in the frontend folder, no need to include it in paths
   build: {
     outDir: '../dist',
     emptyOutDir: true,
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './frontend/src'),
+      '@': path.resolve(__dirname, 'src'),
     },
   },
   server: {
     port: 3000,
-    open: true,
+    host: '0.0.0.0', // Allow connections from outside the container
+    open: false, // Don't try to open browser in Docker
   },
 });
