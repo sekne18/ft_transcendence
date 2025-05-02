@@ -1,21 +1,20 @@
-// vite.config.ts
-import { defineConfig } from 'vite';
-import path from 'path';
+// frontend/vite.config.ts
+import { defineConfig } from 'vite'
+import path from 'path'
 
 export default defineConfig({
-  // Since we're already in the frontend folder, no need to include it in paths
+  root: '.', // root of the frontend folder
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true,
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
+    host: true,
     port: 3000,
-    host: '0.0.0.0', // Allow connections from outside the container
-    open: false, // Don't try to open browser in Docker
   },
-});
+})

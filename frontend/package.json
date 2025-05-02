@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npx vite",
+    "build": "npx vite build",
     "docker-build": "docker build -t frontend .",
     "docker-run": "docker run -p 3000:3000 frontend"
   },
