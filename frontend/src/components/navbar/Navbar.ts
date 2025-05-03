@@ -1,34 +1,30 @@
 
 export function Navbar() {
-    const container = document.createElement("div");
-
-    container.innerHTML = `
-    <div class="flex items-center justify-between bg-white px-4 py-4 shadow-sm">
+    return `
+    <div class="flex items-center justify-between bg-[#2e3949] px-4 py-4 shadow-sm">
       <div class="flex items-center">
-        <a href="#" class="ml-4 text-xl font-semibold text-white" data-i18n="nav_title"></a>
+        <a href="#" class="ml-4 text-xl font-semibold text-white hover:text-blue-500" data-i18n="nav_title"></a>
       </div>
       <div class="flex space-x-4">
-        <a href="#" class="px-3 py-2 font-bold text-white hover:text-gray-700 rounded" data-i18n="nav_game">Item</a>
-        <a href="#" class="px-3 py-2 font-bold text-white hover:text-gray-700 rounded" data-i18n="nav_leaderboard">Item</a>
-        <a href="#" class="px-3 py-2 font-bold text-white hover:text-gray-700 rounded" data-i18n="nav_chat">as</a>
+        <a href="#game" class="px-3 py-2 font-bold text-white hover:text-blue-500 rounded" data-i18n="nav_game" data-page="game">Item</a>
+        <a href="#leaderboard" class="px-3 py-2 font-bold text-white hover:text-blue-500 rounded" data-i18n="nav_leaderboard" data-page="leaderboard">Item</a>
+        <a href="#chat" class="px-3 py-2 font-bold text-white hover:text-blue-500 rounded" data-i18n="nav_chat" data-page="chat">as</a>
       </div>
-      <div class="flex justify-end gap-2 mb-4">
-        <button data-lang="en" class="px-2 py-1 bg-blue-500 text-white rounded">EN</button>
-        <button data-lang="nl" class="px-2 py-1 bg-blue-500 text-white rounded">NL</button>
-        <button data-lang="sl" class="px-2 py-1 bg-blue-500 text-white rounded">SL</button>
+      
+        <!-- Language Dropdown -->
+      <div class="relative">
+        <button id="langDropdownButton" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none">
+          Language
+        </button>
+        <ul id="langDropdownMenu" class="absolute right-0 mt-2 hidden w-32 bg-white rounded shadow-md z-10 text-sm text-gray-800">
+          <li><button data-lang="en" class="w-full px-4 py-2 hover:bg-blue-100 text-left">English</button></li>
+          <li><button data-lang="nl" class="w-full px-4 py-2 hover:bg-blue-100 text-left">Nederlands</button></li>
+          <li><button data-lang="sl" class="w-full px-4 py-2 hover:bg-blue-100 text-left">Slovenščina</button></li>
+        </ul>
       </div>
       <div class="flex">
         <a href="#" class="inline-block bg-indigo-600 text-white w-12 h-12 rounded-full hover:bg-indigo-700"></a>
       </div>
     </div>
-
     `;
-
-    return container.innerHTML;
-}
-
-function logout() {
-    console.log("Logging out...");
-    // Add logout logic
-    window.location.href = "/";
 }
