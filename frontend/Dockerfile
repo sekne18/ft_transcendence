@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copy package files first for better caching
 COPY package*.json ./
+COPY postcss.config.js tailwind.config.js ./
 RUN npm install
 
 # Copy the rest of the application
