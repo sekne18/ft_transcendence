@@ -27,5 +27,4 @@ export default defineConfig({
       interval: 1000     // Polling interval in ms
     }
   },
-
 })
