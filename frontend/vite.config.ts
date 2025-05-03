@@ -16,5 +16,16 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    hmr: {
+      // For Docker compatibility
+      clientPort: 443,  // The port your browser connects to
+      host: 'localhost', // The host your browser connects to
+      protocol: 'wss'    // For secure WebSockets
+    },
+    watch: {
+      usePolling: true,  // Needed for some Docker setups
+      interval: 1000     // Polling interval in ms
+    }
   },
+
 })
