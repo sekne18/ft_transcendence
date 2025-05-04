@@ -16,8 +16,8 @@ export class GameInstance {
 		this.input = { left: 0, right: 0 };
 		this.params = params;
 		this.state = {
-			left_x: this.params.paddle_w * 1.5, left_y: this.params.arena_h / 2,
-			right_x: this.params.arena_w - this.params.paddle_w * 1.5, right_y: this.params.arena_h / 2,
+			left_x: this.params.paddle_offset, left_y: this.params.arena_h / 2,
+			right_x: this.params.arena_w - this.params.paddle_offset, right_y: this.params.arena_h / 2,
 			ball_x: this.params.arena_w / 2, ball_y: this.params.arena_h / 2,
 			left_score: 0, right_score: 0,
 			ball_vx: 0, ball_vy: 0,
@@ -51,7 +51,10 @@ export class GameInstance {
 
 	public launchBall(): void {
 		this.state.ball_vx = Math.random() * 2 - 1;
-		this.state.ball_vy = Math.random() * 2 - 1;
+		this.state.ball_vy = (Math.random() * 2 - 1) * 0.2;
+		let { x, y } = normalize(this.state.ball_vx, this.state.ball_vy);
+		this.state.ball_vx = x * this.params.ball_minv;
+		this.state.ball_vy = y * this.params.ball_minv;
 		this.state.ball_ax = 1;
 		this.state.ball_ay = 1;
 	}
@@ -66,9 +69,9 @@ export class GameInstance {
 	}
 
 	public resetGame(): void {
-		this.state.left_x = this.params.paddle_w * 1.5;
+		this.state.left_x = this.params.paddle_offset;
 		this.state.left_y = this.params.arena_h / 2;
-		this.state.right_x = this.params.arena_w - this.params.paddle_w * 1.5;
+		this.state.right_x = this.params.arena_w - this.params.paddle_offset;
 		this.state.right_y = this.params.arena_h / 2;
 		this.state.left_score = 0;
 		this.state.right_score = 0;
@@ -210,4 +213,14 @@ function clamp(value: number, min: number, max: number): number {
 	if (value < min) return min;
 	if (value > max) return max;
 	return value;
+}
+
+function normalize(x: number, y: number): { x: number, y: number } {
+	const length = Math.sqrt(x * x + y * y);
+	if (length === 0) return { x: 0, y: 0 };
+	return { x: x / length, y: y / length };
+}
+
+function scale(x: number, y: number, scale: number): { x: number, y: number } {
+	return { x: x * scale, y: y * scale };
 }
