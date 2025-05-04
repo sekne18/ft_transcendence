@@ -1,7 +1,7 @@
 import './styles.css';
 import App from './App';
-import { languageService } from './components/i18n/language';
-import { router } from './components/navbar/router';
+import { languageService } from './scripts/components/i18n/language';
+import { router } from './scripts/components/navbar/router';
 
 document.getElementById('app')!.innerHTML = App();
 

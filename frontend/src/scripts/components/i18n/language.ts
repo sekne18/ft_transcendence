@@ -1,13 +1,10 @@
-// i18n/language.ts
 import { translations } from "./translations";
 
 /**
  * Language service for handling translations
  */
 export const languageService = {
-  /**
-   * Initialize language functionality
-   */
+  
   init(): void {
     // Apply saved language from localStorage or default to English
     const savedLang = localStorage.getItem('lang') || 'en';

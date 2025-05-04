@@ -1,7 +1,7 @@
-import { Chat } from "./components/chat/Chat";
-import { Game } from "./components/game/Game";
-import { Leaderboard } from "./components/leaderboard/Leaderboard";
-import { Navbar } from "./components/navbar/Navbar";
+import { Chat } from "./scripts/components/chat/Chat";
+import { Game } from "./scripts/components/game/Game";
+import { Leaderboard } from "./scripts/components/leaderboard/Leaderboard";
+import { Navbar } from "./scripts/components/navbar/Navbar";
 
 export default function App() {
     return `
