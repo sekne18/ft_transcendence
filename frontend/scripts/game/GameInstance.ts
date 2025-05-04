@@ -2,18 +2,6 @@
 // and managing game state
 import { GameParams, GameState, UserInput } from './GameTypes';
 
-function cleanUserInput(input: UserInput): UserInput {
-	if (input < -1) return -1;
-	if (input > 1) return 1;
-	return input;
-}
-
-function clamp(value: number, min: number, max: number): number {
-	if (value < min) return min;
-	if (value > max) return max;
-	return value;
-}
-
 const FPS = 60;
 const FRAME_TIME = 1000 / FPS;
 
@@ -28,8 +16,8 @@ export class GameInstance {
 		this.input = { left: 0, right: 0 };
 		this.params = params;
 		this.state = {
-			left_x: this.params.paddle_w , left_y: this.params.arena_h / 2 - this.params.paddle_h / 2,
-			right_x: this.params.arena_w - this.params.paddle_w, right_y: this.params.arena_h / 2 - this.params.paddle_h / 2,
+			left_x: this.params.paddle_offset, left_y: this.params.arena_h / 2,
+			right_x: this.params.arena_w - this.params.paddle_offset, right_y: this.params.arena_h / 2,
 			ball_x: this.params.arena_w / 2, ball_y: this.params.arena_h / 2,
 			left_score: 0, right_score: 0,
 			ball_vx: 0, ball_vy: 0,
@@ -52,9 +40,6 @@ export class GameInstance {
 	public startGame(): void {
 		this.resetGame();
 		this.launchBall();
-		this.interval_id = setInterval(() => {
-			this.updateState(FRAME_TIME); // Assuming 60 FPS, deltaTime is ~0.016 seconds
-		}, FRAME_TIME);
 	}
 
 	public stopGame(): void {
@@ -66,9 +51,12 @@ export class GameInstance {
 
 	public launchBall(): void {
 		this.state.ball_vx = Math.random() * 2 - 1;
-		this.state.ball_vy = Math.random() * 2 - 1;
-		this.state.ball_ax = 0;
-		this.state.ball_ay = 0;
+		this.state.ball_vy = (Math.random() * 2 - 1) * 0.2;
+		let { x, y } = normalize(this.state.ball_vx, this.state.ball_vy);
+		this.state.ball_vx = x * this.params.ball_minv;
+		this.state.ball_vy = y * this.params.ball_minv;
+		this.state.ball_ax = 1;
+		this.state.ball_ay = 1;
 	}
 
 	public resetBall(): void {
@@ -76,15 +64,15 @@ export class GameInstance {
 		this.state.ball_y = this.params.arena_h / 2;
 		this.state.ball_vx = 0;
 		this.state.ball_vy = 0;
-		this.state.ball_ax = 0;
-		this.state.ball_ay = 0;
+		this.state.ball_ax = 1;
+		this.state.ball_ay = 1;
 	}
 
 	public resetGame(): void {
-		this.state.left_x = this.params.paddle_w;
-		this.state.left_y = this.params.arena_h / 2 - this.params.paddle_h / 2;
-		this.state.right_x = this.params.arena_w - this.params.paddle_w;
-		this.state.right_y = this.params.arena_h / 2 - this.params.paddle_h / 2;
+		this.state.left_x = this.params.paddle_offset;
+		this.state.left_y = this.params.arena_h / 2;
+		this.state.right_x = this.params.arena_w - this.params.paddle_offset;
+		this.state.right_y = this.params.arena_h / 2;
 		this.state.left_score = 0;
 		this.state.right_score = 0;
 		this.resetBall();
@@ -101,9 +89,9 @@ export class GameInstance {
 	public updateState(deltaTime: number): void {
 		// Update paddle acceleration & velocity based on last input
 		this.state.left_ax = this.params.paddle_maxa * this.input.left;
-		this.state.left_vx = Math.min(this.params.paddle_maxv, Math.max(-this.params.paddle_maxv, this.state.left_vx + this.state.left_ax));
+		this.state.left_vy = Math.min(this.params.paddle_maxv, Math.max(-this.params.paddle_maxv, this.state.left_vy + this.state.left_ax));
 		this.state.right_ax = this.params.paddle_maxa * this.input.right;
-		this.state.right_vx = Math.min(this.params.paddle_maxv, Math.max(-this.params.paddle_maxv, this.state.right_vx + this.state.right_ax));
+		this.state.right_vy = Math.min(this.params.paddle_maxv, Math.max(-this.params.paddle_maxv, this.state.right_vy + this.state.right_ax));
 
 		// Apply acceleration to ball
 		//this.state.ball_vx += this.state.ball_ax * deltaTime;
@@ -114,10 +102,11 @@ export class GameInstance {
 		this.state.ball_y += this.state.ball_vy * deltaTime;
 
 		// Update paddle positions
-		this.state.left_x += this.state.left_vx * deltaTime;
 		this.state.left_y += this.state.left_vy * deltaTime;
-		this.state.right_x += this.state.right_vx * deltaTime;
 		this.state.right_y += this.state.right_vy * deltaTime;
+
+		this.state.left_vy *= 0.5;
+		this.state.right_vy *= 0.5;
 
 		this.checkCollisions();
 	}
@@ -203,13 +192,35 @@ export class GameInstance {
 		//check for goal
 		if (this.state.ball_x - this.params.ball_r < 0) {
 			this.state.right_score++;
-			this.resetBall();
+			this.startGame();
 		}
 		else if (this.state.ball_x + this.params.ball_r > this.params.arena_w) {
 			this.state.left_score++;
-			this.resetBall();
+			this.startGame();
 		}
 	}
 
 
+}
+
+function cleanUserInput(input: UserInput): UserInput {
+	if (input < -1) return -1;
+	if (input > 1) return 1;
+	return input;
+}
+
+function clamp(value: number, min: number, max: number): number {
+	if (value < min) return min;
+	if (value > max) return max;
+	return value;
+}
+
+function normalize(x: number, y: number): { x: number, y: number } {
+	const length = Math.sqrt(x * x + y * y);
+	if (length === 0) return { x: 0, y: 0 };
+	return { x: x / length, y: y / length };
+}
+
+function scale(x: number, y: number, scale: number): { x: number, y: number } {
+	return { x: x * scale, y: y * scale };
 }

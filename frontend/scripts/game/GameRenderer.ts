@@ -1,17 +1,17 @@
-import { GameInstance } from "./GameInstance";
-import { RenderDetails } from "./GameTypes";
+import { GameParams, RenderDetails, GameState } from "./GameTypes";
 
-class GameRenderer {
+export class GameRenderer {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
-	private game: GameInstance;
+	private GameParams: GameParams;
 	private renderDetails: RenderDetails;
 
-	constructor(canvas: HTMLCanvasElement, game: GameInstance, renderDetails: RenderDetails) {
+
+	constructor(canvas: HTMLCanvasElement, GameParams: GameParams, renderDetails: RenderDetails, private getGameState: () => GameState) {
+		this.GameParams = GameParams;
 		this.renderDetails = renderDetails;
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d")!;
-		this.game = game;
 	}
 
 	public render(): void {
@@ -20,6 +20,8 @@ class GameRenderer {
 	}
 
 	private clearCanvas(): void {
+		this.ctx.fillStyle = this.renderDetails.arena_color;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
@@ -42,12 +44,17 @@ class GameRenderer {
 	}
 
 	private drawGameObjects(): void {
-		const state = this.game.getState();
-		const params = this.game.getParams();
+		const state = this.getGameState();
 
 		this.drawArena(this.canvas.width, this.canvas.height);
-		this.drawBall(state.ball_x, state.ball_y, params.ball_r);
-		this.drawPaddle(state.left_x, state.left_y, params.paddle_w, params.paddle_h);
-		this.drawPaddle(state.right_x, state.right_y, params.paddle_w, params.paddle_h);
+		this.drawBall(state.ball_x, state.ball_y, this.GameParams.ball_r);
+		this.drawPaddle(
+			state.left_x - this.GameParams.paddle_w / 2, state.left_y - this.GameParams.paddle_h / 2,
+			this.GameParams.paddle_w, this.GameParams.paddle_h
+		);
+		this.drawPaddle(
+			state.right_x - this.GameParams.paddle_w / 2, state.right_y - this.GameParams.paddle_h / 2,
+			this.GameParams.paddle_w, this.GameParams.paddle_h
+		);
 	}
 }
