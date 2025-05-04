@@ -1,0 +1,104 @@
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="flex flex-col gap-8">
+        <!-- Profile Header -->
+        <div class="card border-none shadow-md">
+            <div class="p-0">
+                <!-- Cover Image -->
+                <div class="h-48 w-full relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-primary-800/40">
+                        <img src="https://img.heroui.chat/image/landscape?w=1200&h=400&u=1" alt="Cover"
+                            class="w-full h-full object-cover opacity-60" />
+                    </div>
+                    <button class="absolute top-4 right-4 bg-background-30 backdrop-blur-md rounded-full p-2">
+                        <i data-lucide="camera"></i>
+                    </button>
+                </div>
+
+                <!-- Profile Details -->
+                <div class="px-6 pb-6 pt-0 relative">
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                        <div class="-mt-12 relative">
+                            <div class="relative">
+                                <img src="https://img.heroui.chat/image/avatar?w=200&h=200&u=5"
+                                    class="w-24 h-24 text-large rounded-full border-4 border-background"
+                                    alt="Alex Morgan" />
+                                <div class="absolute bottom-0 right-0 bg-primary-500 rounded-full p-1">
+                                    <i data-lucide="check" class="text-xs text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 sm:mt-0">
+                            <div>
+                                <h1 class="text-2xl font-bold">Alex Morgan</h1>
+                                <p class="text-default-500">@alexmorgan</p>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button class="button button-flat button-primary flex items-center gap-2">
+                                    <i data-lucide="edit-3"></i>
+                                    <span>Edit Profile</span>
+                                </button>
+                                <button class="button button-flat button-icon-only">
+                                    <i data-lucide="more-horizontal"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap gap-6">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="map-pin" class="text-default-500"></i>
+                            <span>San Francisco, CA</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="briefcase" class="text-default-500"></i>
+                            <span>Product Designer at HeroUI</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="text-default-500"></i>
+                            <span>Joined March 2021</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex gap-6">
+                        <div class="flex flex-col">
+                            <span class="font-semibold">1,248</span>
+                            <span class="text-default-500 text-sm">Following</span>
+                        </div>
+                        <div class="divider-vertical"></div>
+                        <div class="flex flex-col">
+                            <span class="font-semibold">8.5K</span>
+                            <span class="text-default-500 text-sm">Followers</span>
+                        </div>
+                        <div class="divider-vertical"></div>
+                        <div class="flex flex-col">
+                            <span class="font-semibold">142</span>
+                            <span class="text-default-500 text-sm">Projects</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="card shadow-md border-none">
+            <!-- <div class="px-6 pt-6 pb-0">
+                <div class="tabs" id="profile-tabs">
+                    <div class="tab active" data-tab="info">Information</div>
+                    <div class="tab" data-tab="activity">Activity</div>
+                    <div class="tab" data-tab="settings">Settings</div>
+                </div>
+            </div> -->
+            <h2 class="font-bold text-2xl  pt-5 pl-5">Match History</h2>
+            <div class="px-6 py-6">
+                <!-- Tab content will be dynamically loaded -->
+                <div id="tab-content">
+                    <!-- By default, show the info tab -->
+                    <div id="info-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
