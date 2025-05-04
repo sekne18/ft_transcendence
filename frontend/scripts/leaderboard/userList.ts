@@ -1,3 +1,5 @@
+import { bronzeMedalSvg, silverMedalSvg, trophySvg } from "../../images";
+
 export interface LeaderboardPlayer {
   id: string;
   rank: number;
@@ -12,22 +14,35 @@ export interface LeaderboardPlayer {
 function createLeaderboardRow(player: LeaderboardPlayer): string {
   const highlightClass = player.rank <= 3 ? 'bg-gray-800/50' : '';
   const medal = player.rank === 1
-    ? '🥇'
+    ? trophySvg
     : player.rank === 2
-    ? '🥈'
-    : player.rank === 3
-    ? '🥉'
-    : player.rank.toString();
+      ? silverMedalSvg
+      : player.rank === 3
+        ? bronzeMedalSvg
+        : player.rank.toString();
+  const medalBgColor = player.rank === 1
+    ? 'bg-[#44391F]'
+    : player.rank === 2
+      ? 'bg-[#3F4049]'
+      : player.rank === 3
+        ? 'bg-[#402D1E]'
+        : player.rank.toString();
 
   const progressBarColor = player.winRate >= 70
     ? 'bg-[#45D483]'
     : player.winRate >= 50
-    ? 'bg-[#6366F1]'
-    : 'bg-[#F4407F]';
+      ? 'bg-[#6366F1]'
+      : 'bg-[#F4407F]';
 
   return `
     <tr class="${highlightClass}">
-      <td class="text-center font-medium">${medal}</td>
+      <td class="text-center font-medium">
+      <div class="w-10 h-10 justify-center justify-self-center content-center">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center ${medalBgColor}">
+            ${medal}
+          </div>
+        </div>
+      </td>
       <td>
         <div class="flex items-center gap-3">
           <img src="${player.avatarUrl}" alt="${player.username}" class="w-8 h-8 rounded-full" />
@@ -54,23 +69,6 @@ function renderLeaderboardRows(players: LeaderboardPlayer[]) {
   leaderboardBody.innerHTML = players.map(createLeaderboardRow).join('');
 }
 
-function setupTabSwitching() {
-  const tabButtons = document.querySelectorAll('[data-tab]');
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const activeTab = button.getAttribute('data-tab') || 'global';
-
-      tabButtons.forEach(btn =>
-        btn.classList.remove('border-blue-500', 'text-blue-500')
-      );
-      button.classList.add('border-blue-500', 'text-blue-500');
-
-      // TODO: Use activeTab to switch datasets if needed
-    });
-  });
-}
-
 export function renderLeaderboard(players: LeaderboardPlayer[]) {
   renderLeaderboardRows(players);
-  setupTabSwitching();
 }

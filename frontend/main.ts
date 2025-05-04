@@ -6,7 +6,7 @@ import { setupLangDropdown } from './scripts/i18n';
 
 // Initial page load
 document.addEventListener('DOMContentLoaded', () => {
+  initRouter();
   languageService.init();
   setupLangDropdown();
-  initRouter();
 });

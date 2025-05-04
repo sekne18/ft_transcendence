@@ -1,6 +1,5 @@
 import { LeaderboardPlayer, renderLeaderboard } from "./userList";
 
-
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
@@ -11,6 +10,7 @@ export function initLeaderboard(): void {
 }
 
 function getData(): void {
+    // Mock data
     const leaderboardData: LeaderboardPlayer[] = [
         {
             id: '1',

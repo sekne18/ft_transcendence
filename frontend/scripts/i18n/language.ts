@@ -22,7 +22,7 @@ export const languageService = {
   setLanguage(lang: string): void {
     const texts = translations[lang];
     if (!texts) return;
-    
+  
     document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
       const key = el.dataset.i18n!;
       if (texts[key]) {

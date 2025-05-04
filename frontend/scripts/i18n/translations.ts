@@ -17,7 +17,11 @@ export const translations: Record<string, LanguageMap> = {
     leaderboard_title: 'Leaderboard',
     leaderboard_rank: 'Rank',
     leaderboard_player: 'Player',
+    leaderboard_level: 'Level',
+    leaderboard_wins: 'Wins',
+    leaderboard_win_rate: 'Win Rate',
     leaderboard_score: 'Score',
+    leaderboard_desc: "See who's dominating the Pong arena",
     
     // Chat items
     chat_title: 'Chat',
@@ -36,10 +40,14 @@ export const translations: Record<string, LanguageMap> = {
     game_lives: 'Levens',
     
     // Leaderboard items
+    leaderboard_level: 'Niveau',
+    leaderboard_wins: 'Overwinningen',
+    leaderboard_win_rate: 'Winstpercentage',
+    leaderboard_score: 'Score',
+    leaderboard_desc: "Bekijk wie de Pong-arena domineert",
     leaderboard_title: 'Leiderschapsbord',
     leaderboard_rank: 'Rang',
     leaderboard_player: 'Speler',
-    leaderboard_score: 'Score',
     
     // Chat items
     chat_title: 'Spreek',
@@ -57,11 +65,15 @@ export const translations: Record<string, LanguageMap> = {
     game_score: 'Rezultat',
     game_lives: 'Življenja',
     
-    // Leaderboard items
+    // Leaderboard item
+    leaderboard_level: 'Stopnja',
+    leaderboard_wins: 'Zmage',
+    leaderboard_win_rate: 'Stopnja zmag',
+    leaderboard_score: 'Točke',
+    leaderboard_desc: "Poglej, kdo dominira v Pong areni",
     leaderboard_title: 'Lestvica',
     leaderboard_rank: 'Uvrstitev',
     leaderboard_player: 'Igralec',
-    leaderboard_score: 'Točke',
     
     // Chat items
     chat_title: 'Pogovor',

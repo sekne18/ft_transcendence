@@ -29,7 +29,6 @@ function createUserListItem(user: User): HTMLLIElement {
     return li;
 }
 
-
 export function createHistory(users : User[]) : void {
       const listContainer = document.getElementById('history-list');
       

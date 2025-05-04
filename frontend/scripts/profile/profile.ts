@@ -1,114 +1,112 @@
+import { thumbsDownSvg, thumbsUpSvg } from "../../images";
 import { createHistory } from "./historyList";
-
+import { Achievement, Match, User } from "./Types";
 
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
 export function initProfile(): void {
-    insertData();
-    getHistory();
+  // Mock data 
+  const user = {
+    username: "Jan Sekne",
+    email: "player@student.s19.be",
+    avatarUrl: "https://i.pravatar.cc/300",
+    rank: "Gold",
+    stats: {
+      gamesPlayed: 414,
+      wins: 349,
+      losses: 65
+    }
+  } as User;
+  // Mock match history data
+  const matchHistory = [
+    { id: 1, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
+    { id: 2, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
+    { id: 3, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
+    { id: 4, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
+    { id: 5, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" },
+    { id: 6, opponent: "Quinten", result: "loss", score: "3-5", date: "2023-04-08" }
+  ] as Match[];
+
+  renderUserProfile(user);
+  renderMatchHistory(matchHistory);
 }
 
-function getHistory(): void {
-    const users = [
-        {
-            index: 1, username: "Jan Sekne",
-            email: "email@student.s19.be",
-            friends: "55",
-            role: "Expert",
-            start_date: "Joined March 2021",
-            location: "Belgium, Antwerpen",
-            games_played: "341",
-            profile_img: "https://img.heroui.chat/image/avatar?w=200&h=200&u=5"
-        },
-        {
-            index: 2, username: "Flynn Mol",
-            email: "email@student.s19.be",
-            friends: "55",
-            role: "Professional",
-            start_date: "Joined April 2025",
-            location: "Belgium, Belgium",
-            games_played: "73",
-            profile_img: "https://img.heroui.chat/image/avatar?w=200&h=200&u=5"
-        },
-        {
-            index: 3, username: "Felix Daems",
-            email: "email@student.s19.be",
-            friends: "55",
-            role: "Amateur",
-            start_date: "Joined February 2022",
-            location: "Belgium, Lier",
-            games_played: "16",
-            profile_img: "https://img.heroui.chat/image/avatar?w=200&h=200&u=5"
-        },
-    ];
-    createHistory(users);
+// DOM Elements
+function getElement(id: string) {
+  const element = document.getElementById(id);
+  if (!element)
+    throw new Error(`Element with id "${id}" not found`);
+  return element;
 }
 
-function insertData(): void {
-    const user = {
-        username: "Jan Sekne",
-        email: "email@student.s19.be",
-        friends: "55",
-        role: "Amateur",
-        start_date: "Joined March 2021",
-        location: "Belgium, Antwerpen",
-        games_played: "341",
-        profile_img: "https://img.heroui.chat/image/avatar?w=200&h=200&u=5"
-    };
-
-    if (user.username) {
-        const usernameElement = document.getElementById("username");
-        if (usernameElement) {
-            usernameElement.innerHTML = user.username;
-        }
+// Render user profile
+function renderUserProfile(user: User) {
+  // Set user details
+  (getElement('user-avatar') as HTMLImageElement).src = user.avatarUrl;
+  getElement('username').textContent = user.username;
+  getElement('user-email').textContent = user.email;
+  getElement('rank').textContent = user.rank;
+  // Set stats
+  getElement('games-played').textContent = user.stats.gamesPlayed.toString();
+  getElement('wins').textContent = user.stats.wins.toString();
+  getElement('losses').textContent = user.stats.losses.toString();
+  // Calculate win rate
+  const winRate = user.stats.gamesPlayed > 0
+    ? Math.round((user.stats.wins / user.stats.gamesPlayed) * 100)
+    : 0;
+  getElement('win-rate').textContent = `${winRate}%`;
+  getElement('win-rate-bar').style.width = `${winRate}%`;
+}
+// Render match history
+function renderMatchHistory(matches: Match[]) {
+  const matchHistoryContainer = getElement('match-history');
+  const recentActivityContainer = getElement('recent-activity');
+  // Clear containers
+  matchHistoryContainer.innerHTML = '';
+  recentActivityContainer.innerHTML = '';
+  // Create match history items
+  matches.forEach(match => {
+    const matchElement = createMatchElement(match);
+    matchHistoryContainer.appendChild(matchElement);
+    // Add only the first 3 matches to recent activity
+    if (matches.indexOf(match) < 5) {
+      const recentMatchElement = createMatchElement(match, false);
+      recentActivityContainer.appendChild(recentMatchElement);
     }
-
-    if (user.profile_img) {
-        const usernameElement = document.getElementById("profile_img");
-        if (usernameElement) {
-            (usernameElement as HTMLImageElement).src = user.profile_img;
-        }
-    }
-
-    if (user.email) {
-        const emailElement = document.getElementById("email");
-        if (emailElement) {
-            emailElement.innerHTML = user.email;
-        }
-    }
-
-    if (user.friends) {
-        const scoreElement = document.getElementById("friends");
-        if (scoreElement) {
-            scoreElement.innerHTML = user.friends;
-        }
-    }
-
-    if (user.games_played) {
-        const scoreElement = document.getElementById("games_played");
-        if (scoreElement) {
-            scoreElement.innerHTML = user.games_played;
-        }
-    }
-
-    if (user.start_date) {
-        const scoreElement = document.getElementById("start_date");
-        if (scoreElement) {
-            scoreElement.innerHTML = user.start_date;
-        }
-    }
-    if (user.location) {
-        const scoreElement = document.getElementById("location");
-        if (scoreElement) {
-            scoreElement.innerHTML = user.location;
-        }
-    }
-    if (user.role) {
-        const scoreElement = document.getElementById("role");
-        if (scoreElement) {
-            scoreElement.innerHTML = user.role;
-        }
-    }
+  });
+}
+// Create match element
+function createMatchElement(match: Match, showDetailsButton = false) {
+  const matchElement = document.createElement('div');
+  matchElement.className = 'rounded-lg p-2';
+  const resultColor = match.result === 'win' ? 'text-[#41C47B]' : 'text-[#FB2C34]';
+  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : 'bg-[#251C2A]';
+  const icon = match.result === 'win' ? thumbsUpSvg : thumbsDownSvg;
+  matchElement.innerHTML = `
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center ${bgColor}">
+          ${icon}
+        </div>
+        <div>
+          <p class="font-semibold">Match vs ${match.opponent}</p>
+          <p class="text-gray-400 text-sm">${match.date}</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <p class="font-semibold ${resultColor}">
+          ${match.result === 'win' ? 'Victory' : 'Defeat'}
+        </p>
+        <p class="text-gray-500 text-sm">${match.score}</p>
+      </div>
+    </div>
+    ${showDetailsButton ? `
+      <button class="mt-4 text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-1 px-3 rounded transition">
+        View Details
+      </button>
+    ` : ''}
+  `;
+  return matchElement;
 }
