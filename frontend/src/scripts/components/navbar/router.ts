@@ -61,7 +61,7 @@ export const router = {
       // Show the selected page
       const selectedPage = document.getElementById(`page-${page}`);
       if (selectedPage) {
-        selectedPage.style.display = 'block';
+        selectedPage.style.display = 'flex';
       }
       
       // Update active state in navigation

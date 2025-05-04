@@ -8,9 +8,9 @@ export default function App() {
     ${Navbar()}
       
     <!-- Page Content -->
-    <div class="container mx-auto p-4">
+    <div class="container mx-auto p-4 h-full">
       <!-- Game Page -->
-      <div id="page-game" class="page-content">
+      <div id="page-game" class="page-content h-full flex items-center justify-center">
         ${Game()}
       </div>
       
