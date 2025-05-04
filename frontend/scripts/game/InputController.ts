@@ -16,5 +16,5 @@ export class InputController {
 		return this.input;
 	}
 
-	public updateInput(): void {
+	public updateInput(): void { }
 };
