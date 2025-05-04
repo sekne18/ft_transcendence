@@ -2,6 +2,7 @@ export type GameParams = {
 	paddle_w: number, paddle_h: number, paddle_maxa: number, paddle_maxv: number,
 	ball_r: number, ball_maxa: number, ball_maxv: number, ball_minv: number,
 	arena_w: number, arena_h: number,
+	deadzone: number,
 };
 
 export type GameState = {

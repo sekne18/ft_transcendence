@@ -230,3 +230,10 @@ input:focus+.slider {
 input:checked+.slider:before {
     transform: translateX(16px);
 }
+
+
+
+.disable-scroll {
+    height: 100vh;
+    overflow: hidden;
+}
