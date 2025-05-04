@@ -24,7 +24,7 @@ export const router = {
      */
     attachNavListeners(): void {
       document.querySelectorAll('[data-page]').forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.addEventListener('click',  (e) => {
           e.preventDefault();
           const page = (link as HTMLElement).dataset.page!;
           this.navigateTo(page);
