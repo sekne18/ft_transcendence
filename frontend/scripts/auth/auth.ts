@@ -62,7 +62,28 @@ function setEvents(): void {
 }
 
 function handleLogin() {
-    localStorage.setItem('access_token', 'your_token_here'); // replace with the actual token
+    // Call to the backend to login the user
+    const loginData = getDataFromForm('login-form');
+
+    // For example, using fetch:
+    fetch('/api/login', {  })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const token = data.id; // Get the token from the response
+                console.log('Login successful:', data);
+                localStorage.setItem('access_token', token); // Store the token
+                // Redirect away from /auth after successful login
+                const newPath = '/';
+                history.pushState(null, '', newPath);
+                loadContent(newPath);
+            } else {
+                console.error('Login failed:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error during login:', error);
+        });
 
     // Redirect away from /auth after successful login
     const newPath = '/';
@@ -72,9 +93,33 @@ function handleLogin() {
 
 function handleRegister() {
     // Call to the backend to register the user 
-
+    fetch('/api/register', {}) .then(response => response.json()).then(data => {
+        if (data.success) {
+            const token = data.id; // Get the token from the response
+            console.log('Registration successful:', data);
+            localStorage.setItem('access_token', token); // Store the token
+            // Redirect away from /auth after successful login
+            const newPath = '/';
+            history.pushState(null, '', newPath);
+            loadContent(newPath);
+        } else {
+            console.error('Registration failed:', data.message);
+        }
+    });
     // Redirect away from /auth after successful login
     const newPath = '/';
     history.pushState(null, '', newPath);
     loadContent(newPath);
+}
+
+function getDataFromForm(formId: string): Record<string, string> {
+    const form = document.getElementById(formId) as HTMLFormElement;
+    const formData = new FormData(form);
+    const data: Record<string, string> = {};
+
+    formData.forEach((value, key) => {
+        data[key] = value.toString();
+    });
+    console.log(data);
+    return data;
 }
