@@ -65,15 +65,26 @@ function handleLogin() {
     // Call to the backend to login the user
     const loginData = getDataFromForm('login-form');
 
+    if (!loginData.email || !loginData.password)
+        return;
     // For example, using fetch:
-    fetch('/api/login', {  })
+    fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+    })
         .then(response => response.json())
         .then(data => {
+            console.log('Login successful:', data);
+
             if (data.success) {
                 const token = data.id; // Get the token from the response
                 console.log('Login successful:', data);
                 localStorage.setItem('access_token', token); // Store the token
-                // Redirect away from /auth after successful login
+                
+
                 const newPath = '/';
                 history.pushState(null, '', newPath);
                 loadContent(newPath);
@@ -84,20 +95,26 @@ function handleLogin() {
         .catch(error => {
             console.error('Error during login:', error);
         });
-
-    // Redirect away from /auth after successful login
-    const newPath = '/';
-    history.pushState(null, '', newPath);
-    loadContent(newPath);
 }
 
 function handleRegister() {
+    const registerData = getDataFromForm('register-form');
+
+    if (!registerData.username || !registerData.password || !registerData.email || !registerData.repassword)
+        return;
+
     // Call to the backend to register the user 
-    fetch('/api/register', {}) .then(response => response.json()).then(data => {
+    fetch('/api/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registerData),
+    }).then(response => response.json()).then(data => {
         if (data.success) {
             const token = data.id; // Get the token from the response
-            console.log('Registration successful:', data);
-            localStorage.setItem('access_token', token); // Store the token
+            //console.log('Registration successful:', data);
+            //localStorage.setItem('access_token', token); // Store the token
             // Redirect away from /auth after successful login
             const newPath = '/';
             history.pushState(null, '', newPath);
@@ -106,10 +123,6 @@ function handleRegister() {
             console.error('Registration failed:', data.message);
         }
     });
-    // Redirect away from /auth after successful login
-    const newPath = '/';
-    history.pushState(null, '', newPath);
-    loadContent(newPath);
 }
 
 function getDataFromForm(formId: string): Record<string, string> {
@@ -120,6 +133,5 @@ function getDataFromForm(formId: string): Record<string, string> {
     formData.forEach((value, key) => {
         data[key] = value.toString();
     });
-    console.log(data);
     return data;
 }
