@@ -1,4 +1,11 @@
 <div id="page-game" class="page-content h-full w-full flex flex-col items-center justify-center">
-    <canvas id="game-canvas" class="w-full aspect-ratio-[16/9] justify-self-center flex z-10">
-    </canvas>
+  <div id="game-scoreboard" class="w-full flex flex-row items-center justify-center">
+    <div id="game-user-info"></div>
+    <div id="game-score"></div>
+    <div id="game-enemy-info"></div>
   </div>
+  <div id="game-container" class="w-full grow flex flex-col items-center justify-center">
+    <canvas id="game-canvas" class="w-full justify-self-center flex z-10"></canvas>
+    <div id="game-overlay" class="hidden"></div>
+  </div>
+</div>

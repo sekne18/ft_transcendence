@@ -60,13 +60,13 @@ export class GameRenderer {
 		const state = this.getGameState();
 
 		this.drawArena(this.canvas.width, this.canvas.height);
-		this.drawBall(state.ball_x, state.ball_y, this.GameParams.ball_r);
+		this.drawBall(state.ball.x, state.ball.y, this.GameParams.ball_r);
 		this.drawPaddle(
-			state.left_x - this.GameParams.paddle_w / 2, state.left_y - this.GameParams.paddle_h / 2,
+			state.left.x - this.GameParams.paddle_w / 2, state.left.y - this.GameParams.paddle_h / 2,
 			this.GameParams.paddle_w, this.GameParams.paddle_h
 		);
 		this.drawPaddle(
-			state.right_x - this.GameParams.paddle_w / 2, state.right_y - this.GameParams.paddle_h / 2,
+			state.right.x - this.GameParams.paddle_w / 2, state.right.y - this.GameParams.paddle_h / 2,
 			this.GameParams.paddle_w, this.GameParams.paddle_h
 		);
 	}

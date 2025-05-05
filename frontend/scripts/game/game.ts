@@ -7,17 +7,10 @@ import { PointerInputController } from "./PointerInputController";
 */
 export function initGame() : void { 
     const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
-    const gameContainer = document.getElementById('page-game') as HTMLDivElement;
     document.body.classList.add('disable-scroll');
 
-    //adjust pixel ratio
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-
     const gameParams = {
-        paddle_offset: 10,
+        paddle_offset: 15,
         paddle_w: 10,
         paddle_h: 50,
         paddle_maxa: 0.3,
@@ -31,6 +24,8 @@ export function initGame() : void {
         deadzone: 5
     };
 
+    resizeCanvas(canvas, gameParams);
+
     const renderDetails = {
         arena_color: "black",
         ball_color: "white",
@@ -43,11 +38,42 @@ export function initGame() : void {
     const inputController = new PointerInputController(canvas, gameParams, game.getState.bind(game), game.receiveInput.bind(game));
     inputController.start();
     game.startGame();
-    const FPS = 60;
+    const FPS = 120;
     const intervalId = setInterval(() => {
-        game.updateState(1000 / FPS); // Assuming 60 FPS, deltaTime is ~0.016 seconds
+        game.updateState(1000 / FPS);
+    }, 1000 / FPS); // 120 FPS
+    const interval2Id = setInterval(() => {
         gameRenderer.render();
         inputController.update();
-    }, 1000 / FPS); // 60 FPS
+    }
+    , 1000 / (FPS / 2)); // 60 FPS
 
+}
+
+function resizeCanvas(canvas: HTMLCanvasElement, gameParams: { arena_w: number; arena_h: number }, margin = 32): void {
+    const gameContainer = document.getElementById('page-game') as HTMLDivElement;
+    const dpr = window.devicePixelRatio || 1;
+
+    // === Compute desired CSS size based on arena aspect ratio and screen ===
+    const maxWidth = gameContainer.clientWidth - margin * 2;
+    const maxHeight = gameContainer.clientHeight - margin * 2;
+    const aspect = gameParams.arena_w / gameParams.arena_h;
+
+    let cssWidth = maxWidth;
+    let cssHeight = cssWidth / aspect;
+
+    if (cssHeight > maxHeight) {
+        cssHeight = maxHeight;
+        cssWidth = cssHeight * aspect;
+    }
+
+    // === Set CSS size (display size in CSS pixels) ===
+    canvas.style.width = `${cssWidth}px`;
+    canvas.style.height = `${cssHeight}px`;
+
+    // === Set actual canvas size in physical pixels ===
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+
+    canvas.style.margin = `${margin}px`;
 }

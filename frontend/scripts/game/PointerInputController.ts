@@ -15,8 +15,8 @@ export class PointerInputController {
 		this.gameParams = gameParams;
 		const gameState = this.getGameState();
 		this.latestCursorPos = {
-			x: gameState.left_x,
-			y: gameState.left_y
+			x: gameState.left.x,
+			y: gameState.left.y
 		};
 		this.sizeRatio = canvas.width / gameParams.arena_w;
 	}
@@ -49,7 +49,7 @@ export class PointerInputController {
 		gameState: GameState,
 		latestCursorPos: { x: number; y: number })
 	: UserInput {
-		const distance = latestCursorPos.y / this.sizeRatio - gameState.left_y;
+		const distance = latestCursorPos.y / this.sizeRatio - gameState.left.y;
 		if (Math.abs(distance) < gameParams.deadzone)
 			return 0;
 		const input = Math.max(-1, Math.min(1, distance * 2 / gameParams.paddle_h));
