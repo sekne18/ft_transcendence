@@ -1,5 +1,5 @@
 import Fastify from 'fastify'
-import { createUser, getUserById, getUserByUsername } from './db/queries/user.js'
+import { createUser, getUserByEmail, getUserById, getUserByUsername } from './db/queries/user.js'
 import { initializeDatabase } from './db/schema.js'
 const fastify = Fastify({
   logger: true
@@ -15,14 +15,13 @@ fastify.get('/api', async function handler(request, reply) {
 })
 
 fastify.post('/api/login', async (req, reply) => {
-  const { username, password } = req.body as {
-    username: string;
+  const { email, password } = req.body as {
+    email: string;
     password: string;
   };
 
   // Find user by username
-  const user = await getUserByUsername(username) as { id: number; username: string; password: string };
-
+  const user = await getUserByEmail(email) as { id: number; email: string; password: string };
   if (!user) {
     return reply.code(401).send({
       success: false,
