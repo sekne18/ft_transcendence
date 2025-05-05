@@ -14,7 +14,7 @@ export interface User {
 export interface Match {
   id: number;
   opponent: string;
-  result: 'win' | 'loss';
+  result: 'win' | 'loss' | 'ongoing';
   score: string;
   date: string;
 }

@@ -1,5 +1,6 @@
 import { initChat } from "../chat/chat";
 import { initGame } from "../game/game";
+import { languageService } from "../i18n";
 import { initLeaderboard } from "../leaderboard/leaderboard";
 import { initProfile } from "../profile/profile";
 
@@ -58,6 +59,7 @@ function loadContent(url: string) {
                 if (appElement) {
                     appElement.innerHTML = html;
                     routes[url].init?.();
+                    languageService.init();
                 }
             })
             .catch(err => {
