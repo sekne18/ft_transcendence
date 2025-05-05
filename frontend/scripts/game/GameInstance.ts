@@ -136,8 +136,8 @@ export class GameInstance {
 		circle_x: number, circle_y: number, circle_r: number
 	): {x: number, y: number} | null {
 		// Find the closest point on the rectangle to the circle's center
-		let closestX = clamp(circle_x, rect_x, rect_x + rect_w);
-		let closestY = clamp(circle_y, rect_y, rect_y + rect_h);
+		let closestX = clamp(circle_x, rect_x - rect_w / 2, rect_x + rect_w / 2);
+		let closestY = clamp(circle_y, rect_y - rect_h / 2, rect_y + rect_h / 2);
 
 		// Calculate the distance between the circle's center and this point
 		let dx = circle_x - closestX;

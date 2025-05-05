@@ -25,7 +25,14 @@ export class GameRenderer {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
+	private scaleGameCoord(x: number): number {
+		return x * this.renderDetails.size_ratio;
+	}
+
 	private drawBall(ball_x: number, ball_y: number, ball_r: number): void {
+		ball_x = this.scaleGameCoord(ball_x);
+		ball_y = this.scaleGameCoord(ball_y);
+		ball_r = this.scaleGameCoord(ball_r);
 		this.ctx.fillStyle = this.renderDetails.ball_color;
 		this.ctx.beginPath();
 		this.ctx.arc(ball_x, ball_y, ball_r, 0, Math.PI * 2);
@@ -34,11 +41,17 @@ export class GameRenderer {
 	}
 
 	private drawPaddle(x: number, y: number, w: number, h: number): void {
+		x = this.scaleGameCoord(x);
+		y = this.scaleGameCoord(y);
+		w = this.scaleGameCoord(w);
+		h = this.scaleGameCoord(h);
 		this.ctx.fillStyle = this.renderDetails.paddle_color;
 		this.ctx.fillRect(x, y, w, h);
 	}
 
 	private drawArena(w: number, h: number): void {
+		w = this.scaleGameCoord(w);
+		h = this.scaleGameCoord(h);
 		this.ctx.fillStyle = this.renderDetails.arena_color;
 		this.ctx.fillRect(0, 0, w, h);
 	}

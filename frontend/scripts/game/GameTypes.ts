@@ -25,4 +25,5 @@ export type RenderDetails = {
 	ball_color: string,
 	paddle_color: string,
 	arena_color: string,
+	size_ratio: number,
 };
