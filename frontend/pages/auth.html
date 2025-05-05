@@ -1,38 +1,93 @@
-<div class="w-full max-w-md rounded-xl shadow-md p-6">
-    <div class="flex flex-col items-center">
-      <div class="bg-blue-500 p-2 rounded-full mb-2">
-        <iconify-icon icon="lucide:table-tennis" class="text-white text-2xl"></iconify-icon>
-      </div>
-      <h1 class="text-2xl font-bold">Welcome to PongMaster</h1>
-      <p class="text-gray-500">Sign in to continue</p>
+<div class="flex w-full h-full justify-center items-center">
+    <div class="min-w-md max-w-lg rounded-xl shadow-md p-6 absolute bg-[#16161F]">
+        <!-- <div class="w-full max-w-md bg-white rounded-xl shadow-md p-6"> -->
+        <!-- Header -->
+        <div class="flex flex-col items-center">
+            <div class="bg-blue-500 p-2 rounded-full mb-2">
+                <iconify-icon icon="lucide:table-tennis" class="text-white text-2xl"></iconify-icon>
+            </div>
+            <h1 class="text-2xl font-bold">Welcome to Pongy</h1>
+            <p class="text-gray-500">Sign in to continue</p>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-500 my-4"></div>
+
+        <!-- Tabs -->
+        <div class="flex space-x-2 justify-center mb-4">
+            <button id="tab-login" class="px-4 py-2 font-medium border-b-2 border-blue-500 hover:font-bold">Login</button>
+            <button id="tab-register" class="px-4 py-2 font-medium text-gray-500 hover:font-bold">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="flex flex-col gap-4">
+            <div>
+                <label for="login-email" class="block text-sm font-medium text-gray-500">Email</label>
+                <div class="mt-1 relative rounded-xl shadow-sm">
+                    <!-- <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        Here could be an icon
+                    </div> -->
+                    <input id="login-email" type="email" placeholder="Enter your email"
+                        class="pl-10 pr-3 py-2  bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+            <div>
+                <label for="login-password" class="block text-sm font-medium text-gray-500">Password</label>
+                <div class="mt-1 relative rounded-xl shadow-sm">
+                    <!-- <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        Here could be an icon
+                    </div> -->
+                    <input id="login-password" type="password" placeholder="Enter your password"
+                        class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+            <button type="submit" id="login-btn" class="bg-[#6366F1] w-full mt-5 text-white py-2 rounded-xl hover:bg-[#5254c6]">Sign In</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" class="hidden flex-col gap-4 ">
+            <div>
+                <label for="register-username" class="block text-sm font-medium text-gray-500">Username</label>
+                <div class="mt-1 relative rounded-xl shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <iconify-icon icon="lucide:user" class="text-gray-400"></iconify-icon>
+                    </div>
+                    <input id="register-username" type="text" placeholder="Choose a username"
+                        class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+            <div>
+                <label for="register-email" class="block text-sm font-medium text-gray-500">Email</label>
+                <div class="mt-1 relative rounded-xl shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <iconify-icon icon="lucide:mail" class="text-gray-400"></iconify-icon>
+                    </div>
+                    <input id="register-email" type="email" placeholder="Enter your email"
+                        class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+            <div>
+                <label for="register-password" class="block text-sm font-medium text-gray-500">Password</label>
+                <div class="mt-1 relative rounded-xl shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <iconify-icon icon="lucide:lock" class="text-gray-400"></iconify-icon>
+                    </div>
+                    <input id="register-password" type="password" placeholder="Create a password"
+                        class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+            <div>
+                <label for="register-confirm" class="block text-sm font-medium text-gray-500">Confirm Password</label>
+                <div class="mt-1 relative rounded-xl shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <iconify-icon icon="lucide:lock" class="text-gray-400"></iconify-icon>
+                    </div>
+                    <input id="register-confirm" type="password" placeholder="Confirm your password"
+                        class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+            <button type="submit" id="register-btn" class="bg-[#6366F1] hover:bg-[#5254c6] text-white py-2 mt-4 rounded-xl">Create
+                Account</button>
+        </form>
     </div>
-
-    <div class="border-t my-4"></div>
-
-    <div class="flex space-x-2 justify-center mb-4">
-      <button id="tab-login" class="px-4 py-2 font-medium border-b-2 border-blue-500">Login</button>
-      <button id="tab-register" class="px-4 py-2 font-medium text-gray-500">Register</button>
-    </div>
-
-    <form id="login-form" class="flex flex-col gap-4" style="display: block">
-      <input id="login-email" type="email" placeholder="Enter your email" class="border p-2 rounded" />
-      <input id="login-password" type="password" placeholder="Enter your password" class="border p-2 rounded" />
-      <button type="submit" class="bg-blue-500 text-white p-2 rounded">Sign In</button>
-    </form>
-
-    <form id="register-form" class="flex flex-col gap-4" style="display: none">
-      <input id="register-username" type="text" placeholder="Choose a username" class="border p-2 rounded" />
-      <input id="register-email" type="email" placeholder="Enter your email" class="border p-2 rounded" />
-      <input id="register-password" type="password" placeholder="Create a password" class="border p-2 rounded" />
-      <input id="register-confirm" type="password" placeholder="Confirm your password" class="border p-2 rounded" />
-      <button type="submit" class="bg-blue-500 text-white p-2 rounded">Create Account</button>
-    </form>
-
-    <div class="mt-4 border-t pt-4 text-center text-sm text-gray-500">
-      For demo purposes, you can use:
-      <div class="mt-2 text-xs bg-gray-100 p-2 rounded-md">
-        <p>Email: player1@example.com</p>
-        <p>Password: password123</p>
-      </div>
-    </div>
-  </div>
+</div>

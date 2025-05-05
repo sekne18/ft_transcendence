@@ -1,3 +1,4 @@
+import { initAuth } from "../auth/auth";
 import { initChat } from "../chat/chat";
 import { initGame } from "../game/game";
 import { languageService } from "../i18n";
@@ -10,16 +11,27 @@ const routes: Record<string, { file: string; init?: () => void }> = {
     '/game': { file: 'pages/game.html', init: initGame },
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
     '/chat': { file: 'pages/chat.html', init: initChat },
+    '/auth': { file: 'pages/auth.html', init: initAuth },
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
 
 export function initRouter() {
     // Initial content load
     let path = window.location.pathname;
-    if (!routes[path]) {
+    const userIsAuthed = isAuthenticated();
+    const isAuthPage = path === "/auth";
+
+    if (!userIsAuthed && !isAuthPage) {
+        path = "/auth";
+        history.replaceState(null, '', path);
+    } else if (userIsAuthed && isAuthPage) {
+        path = "/";
+        history.replaceState(null, '', path);
+    } else if (!routes[path]) {
         path = '/';
         history.replaceState(null, '', path);
     }
+
     loadContent(path);
 
     // Navigation clicks
@@ -43,7 +55,7 @@ export function initRouter() {
     });
 }
 
-function loadContent(url: string) {
+export function loadContent(url: string) {
     const appElement = document.getElementById('app');
     if (appElement) {
         appElement.innerHTML = '<div class="loading">Loading...</div>';
@@ -58,6 +70,11 @@ function loadContent(url: string) {
             .then(html => {
                 if (appElement) {
                     appElement.innerHTML = html;
+                    if (url === '/auth') {
+                        appElement.classList.add("absolute", "top-0", "bg-[#0F0F13]", "w-full", "h-full");
+                    } else {
+                        appElement.classList.remove("absolute", "top-0", "bg-[#0F0F13]", "w-full");
+                    }
                     routes[url].init?.();
                     languageService.init();
                 }
@@ -74,6 +91,10 @@ function loadContent(url: string) {
         }
     }
 }
+
+export function isAuthenticated(): boolean {
+    return !!localStorage.getItem("access_token");
+  }
 
 function updateActiveLink(url: string) {
     document.querySelectorAll('.nav-link').forEach(link => {
