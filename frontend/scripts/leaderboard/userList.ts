@@ -37,7 +37,7 @@ function createLeaderboardRow(player: LeaderboardPlayer): string {
   return `
     <tr class="${highlightClass}">
       <td class="text-center font-medium">
-      <div class="w-10 h-10 justify-center justify-self-center content-center">
+      <div class="w-10 h-10 justify-center justify-items-center justify-self-center content-center">
           <div class="w-8 h-8 rounded-full flex items-center justify-center ${medalBgColor}">
             ${medal}
           </div>

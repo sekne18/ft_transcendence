@@ -1,6 +1,5 @@
-import { thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { createHistory } from "./historyList";
-import { Achievement, Match, User } from "./Types";
+import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
+import { Match, User } from "./Types";
 
 /* 
     Run any logic from this function. 
@@ -21,12 +20,12 @@ export function initProfile(): void {
   } as User;
   // Mock match history data
   const matchHistory = [
-    { id: 1, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
-    { id: 2, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
-    { id: 3, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
-    { id: 4, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
-    { id: 5, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" },
-    { id: 6, opponent: "Quinten", result: "loss", score: "3-5", date: "2023-04-08" }
+    { id: 1, opponent: "Felix Daems", result: "ongoing", score: "1-1", date: "2025-05-05" },
+    { id: 2, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
+    { id: 3, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
+    { id: 4, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
+    { id: 5, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
+    { id: 6, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" }
   ] as Match[];
 
   renderUserProfile(user);
@@ -81,9 +80,9 @@ function renderMatchHistory(matches: Match[]) {
 function createMatchElement(match: Match, showDetailsButton = false) {
   const matchElement = document.createElement('div');
   matchElement.className = 'rounded-lg p-2';
-  const resultColor = match.result === 'win' ? 'text-[#41C47B]' : 'text-[#FB2C34]';
-  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : 'bg-[#251C2A]';
-  const icon = match.result === 'win' ? thumbsUpSvg : thumbsDownSvg;
+  const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
+  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
+  const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
   matchElement.innerHTML = `
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1">
@@ -97,7 +96,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
       </div>
       <div class="text-right">
         <p class="font-semibold ${resultColor}">
-          ${match.result === 'win' ? 'Victory' : 'Defeat'}
+          ${match.result === 'win' ? 'Victory' : match.result === 'ongoing' ? 'Ongoing' : 'Defeat'}
         </p>
         <p class="text-gray-500 text-sm">${match.score}</p>
       </div>
