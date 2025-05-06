@@ -2,13 +2,15 @@ export class UIManager {
 	private overlay: HTMLDivElement;
 	private matchmakeButton: HTMLButtonElement;
 	private matchmakingIntervalId: number | null = null;
-	private score: HTMLDivElement;
+	private scoreLeft: HTMLDivElement;
+	private scoreRight: HTMLDivElement;
 	private userInfo: HTMLDivElement;
 	private enemyInfo: HTMLDivElement;
 
 	constructor(MatchmakeHandler: () => void) {
 		this.overlay = document.getElementById('game-overlay') as HTMLDivElement;
-		this.score = document.getElementById('game-score') as HTMLDivElement;
+		this.scoreLeft = document.getElementById('score-left') as HTMLDivElement;
+		this.scoreRight = document.getElementById('score-right') as HTMLDivElement;
 		this.userInfo = document.getElementById('game-user-info') as HTMLDivElement;
 		this.enemyInfo = document.getElementById('game-enemy-info') as HTMLDivElement;
 		this.matchmakeButton = document.getElementById('game-matchmake-button') as HTMLButtonElement;
@@ -73,7 +75,8 @@ export class UIManager {
 	}
 
 	public updateScore(left: number, right: number): void {
-		this.score.innerText = `${left} : ${right}`;
+		this.scoreLeft.innerText = left.toString();
+		this.scoreRight.innerText = right.toString();
 	}
 
 	public updateEnemyInfo(): void {

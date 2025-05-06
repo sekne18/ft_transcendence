@@ -17,3 +17,49 @@ body {
     height: 100vh;
     overflow: hidden;
 }
+
+.font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 0.5rem;
+    width: 100%;
+    max-width: 30rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    margin: 1rem;
+}
+
+.disable-scroll {
+    overflow: hidden;
+}
+
+#game-canvas {
+    background-color: black;
+    display: block;
+    margin: 0 auto;
+    /* max-height: 80vh; */
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
