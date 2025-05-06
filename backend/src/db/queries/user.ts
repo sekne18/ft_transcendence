@@ -1,18 +1,22 @@
 import db from "../connection.js";
 
 
-export function createUser({ username, email, passwordHash, displayName, avatarUrl }: {
+export function createUser({ username, email, password, avatarUrl }: {
   username: string;
   email: string;
-  passwordHash: string;
-  displayName: string;
+  password: string;
   avatarUrl?: string;
 }) : number{
+  // Check if the username or email already exists and return null if it does
+  const existingUser = getUserByEmail(email) || getUserByUsername(username);
+  if (existingUser) {
+    return 0;
+  }
   const stmt = db.prepare(`
-    INSERT INTO users (username, email, password_hash, display_name, avatar_url)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO users (username, email, password, avatar_url)
+    VALUES (?, ?, ?, ?)
   `);
-  const result = stmt.run(username, email, passwordHash, displayName, avatarUrl || '');
+  const result = stmt.run(username, email, password, avatarUrl);
   return result.lastInsertRowid as number;
 }
 
@@ -34,12 +38,11 @@ export function getUserById(id: number) {
 export function updateUser(id: number, data: {
   username: string;
   email: string;
-  displayName: string;
   avatarUrl: string;
 }) {
   const stmt = db.prepare(`
-    UPDATE users SET username = ?, email = ?, display_name = ?, avatar_url = ?
+    UPDATE users SET username = ?, email = ?, avatar_url = ?
     WHERE id = ?
   `);
-  stmt.run(data.username, data.email, data.displayName, data.avatarUrl, id);
+  stmt.run(data.username, data.email, data.avatarUrl, id);
 }
