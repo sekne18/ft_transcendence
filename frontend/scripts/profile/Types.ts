@@ -3,12 +3,6 @@ export interface User {
   username: string;
   email: string;
   avatarUrl: string;
-  rank: string
-  stats: {
-    gamesPlayed: number;
-    wins: number;
-    losses: number;
-  };
 }
 
 export interface Match {
@@ -19,12 +13,12 @@ export interface Match {
   date: string;
 }
 
-export interface Achievement {
-  id: number;
-  name: string;
-  description: string;
-  completed: boolean;
-  progress?: number;
-  total?: number;
-  icon: string;
+export interface Profile {
+    id: number;
+    username: string;
+    email: string;
+    avatar_url: string;
+    games_played: number;
+    wins: number;
+    losses: number;
 }

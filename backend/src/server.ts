@@ -138,6 +138,45 @@ fastify.get('/api/user/:id', {
 	reply.send(user);
 });
 
+fastify.get('/api/user/profile/:id', async (req, reply) => {
+	const { id } = req.params as { id: string };
+
+	if (!id || isNaN(Number(id))) {
+		return reply.code(400).send({ success: false, message: 'Invalid user ID' });
+	}
+
+	const user = getUserProfileById(Number(id));
+
+	if (!user) {
+		return reply.code(404).send({ success: false, message: 'User not found' });
+	}
+
+	return reply.send({ success: true, user });
+});
+
+fastify.get('/api/user/:id/stats', async (req, reply) => {
+	const { id } = req.params as { id: string };
+
+	// Validate and convert to number
+	if (!id || isNaN(Number(id))) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+
+	const stats = await getStatsByUserId(Number(id));
+
+	// Handle case where user isn't found
+	if (!stats) {
+		return reply.code(404).send({
+			success: false,
+			message: 'Stats not found'
+		});
+	}
+
+	return reply.send({ success: true, stats });
+});
 
 // Run the server!
 try {

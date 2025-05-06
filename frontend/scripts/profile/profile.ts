@@ -1,24 +1,12 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { Match, User } from "./Types";
+import { Match, User, Stats, Profile } from "./Types";
 
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
 export function initProfile(): void {
-  // Mock data 
-  const user = {
-    username: "Jan Sekne",
-    email: "player@student.s19.be",
-    avatarUrl: "https://i.pravatar.cc/300",
-    rank: "Gold",
-    stats: {
-      gamesPlayed: 414,
-      wins: 349,
-      losses: 65
-    }
-  } as User;
-  // Mock match history data
+
   const matchHistory = [
     { id: 1, opponent: "Felix Daems", result: "ongoing", score: "1-1", date: "2025-05-05" },
     { id: 2, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
@@ -28,7 +16,7 @@ export function initProfile(): void {
     { id: 6, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" }
   ] as Match[];
 
-  renderUserProfile(user);
+  renderUserProfile();
   renderMatchHistory(matchHistory);
 }
 
@@ -41,23 +29,42 @@ function getElement(id: string) {
 }
 
 // Render user profile
-function renderUserProfile(user: User) {
-  // Set user details
-  (getElement('user-avatar') as HTMLImageElement).src = user.avatarUrl;
-  getElement('username').textContent = user.username;
-  getElement('user-email').textContent = user.email;
-  getElement('rank').textContent = user.rank;
-  // Set stats
-  getElement('games-played').textContent = user.stats.gamesPlayed.toString();
-  getElement('wins').textContent = user.stats.wins.toString();
-  getElement('losses').textContent = user.stats.losses.toString();
-  // Calculate win rate
-  const winRate = user.stats.gamesPlayed > 0
-    ? Math.round((user.stats.wins / user.stats.gamesPlayed) * 100)
+function renderUserProfile() {
+  const userId = localStorage.getItem('userId');
+  if (userId === null) {
+    window.location.href = '/auth';
+    return;
+  }
+
+  // Fill user details
+  fetch(`/api/user/profile/${userId}`).then(res => res.json()).then((response) => {
+    if (!response.success) {
+      window.location.href = '/auth';
+      return;
+    }
+
+    const profile = response.user as Profile;
+    console.log(profile);
+
+    // Set user details
+    (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
+    getElement('username').textContent = profile.username;
+    getElement('user-email').textContent = profile.email;
+    getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
+    
+    // Set user stats
+    getElement('games-played').textContent = profile.games_played.toString();
+    getElement('wins').textContent = profile.wins.toString();
+    getElement('losses').textContent = profile.losses.toString();
+    // Calculate win rate
+    const winRate = profile.games_played > 0
+    ? Math.round((profile.wins / profile.games_played) * 100)
     : 0;
-  getElement('win-rate').textContent = `${winRate}%`;
-  getElement('win-rate-bar').style.width = `${winRate}%`;
+    getElement('win-rate').textContent = `${winRate}%`;
+    getElement('win-rate-bar').style.width = `${winRate}%`;
+  });
 }
+
 // Render match history
 function renderMatchHistory(matches: Match[]) {
   const matchHistoryContainer = getElement('match-history');

@@ -1,15 +1,51 @@
-<div id="page-game" class="page-content h-full w-full flex flex-col items-center justify-center">
-  <div id="game-scoreboard" class="w-full flex flex-row items-center justify-center">
-    <div id="game-user-info"></div>
-    <div id="game-score"></div>
-    <div id="game-enemy-info"></div>
-  </div>
-  <div id="game-container" class="w-full grow flex flex-col items-center justify-center font-orbitron text-6xl text-white">
-    <canvas id="game-canvas" class="w-full justify-self-center flex z-10"></canvas>
-    <div id="game-overlay" class="invisible w-full absolute h-full bg-[#0000005c] z-20 flex flex-col items-center justify-center">
+<div id="page-game"
+    class="page-content h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-gray-900">
+    <!-- Game Header with Player Info -->
+    <div
+        class="w-full max-w-4xl flex flex-row items-center justify-between mb-4 px-2 py-3 bg-gray-800 rounded-lg shadow-lg">
+        <!-- Player Info -->
+        <div class="flex items-center gap-3">
+            <div id="player-avatar"
+                class="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center text-xl font-bold">P
+            </div>
+            <div>
+                <p id="player-username" class="font-orbitron font-semibold text-white">Player</p>
+                <p id="player-stats" class="text-gray-300 text-sm">W: 0 / L: 0</p>
+            </div>
+        </div>
+
+        <!-- Score Display -->
+        <div class="flex items-center gap-2 sm:gap-4">
+            <span id="score-left" class="text-2xl sm:text-3xl font-orbitron font-bold text-white">0</span>
+            <span class="text-lg sm:text-xl text-gray-400 font-orbitron">vs</span>
+            <span id="score-right" class="text-2xl sm:text-3xl font-orbitron font-bold text-white">0</span>
+        </div>
+
+        <!-- Opponent Info -->
+        <div class="flex items-center gap-3 flex-row-reverse">
+            <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-xl font-bold">AI
+            </div>
+            <div class="text-right">
+                <p id="opponent-name" class="font-orbitron font-semibold text-white">Opponent</p>
+                <p class="text-gray-300 text-sm">Computer</p>
+            </div>
+        </div>
     </div>
-    <button id="game-matchmake-button" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-300 text-black px-4 py-2 rounded z-30">
-      Play
-    </button>
-  </div>
+
+    <!-- Game Container -->
+    <div class="w-full max-w-4xl grow flex flex-col items-center justify-center relative">
+        <!-- Game Canvas -->
+        <canvas id="game-canvas" class="w-full h-full rounded-lg border border-gray-700 shadow-lg"></canvas>
+
+        <!-- Game Overlay -->
+        <div id="game-overlay"
+            class="invisible w-full absolute h-full z-20 flex flex-col items-center justify-center rounded-lg">
+            <h2 id="game-result-text" class="text-4xl sm:text-5xl font-orbitron font-bold mb-3"></h2>
+            <p id="game-result-score" class="text-xl sm:text-2xl font-orbitron mb-6"></p>
+            <button id="game-matchmake-button"
+                class="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-orbitron rounded-md transition-colors shadow-lg">
+                Play Again
+            </button>
+        </div>
+    </div>
 </div>

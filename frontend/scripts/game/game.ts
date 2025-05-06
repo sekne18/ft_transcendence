@@ -34,3 +34,4 @@ export function initGame() : void {
     const gameEngine = new GameEngine(canvas, gameParams, renderDetails);
     gameEngine.start();
 }
+
