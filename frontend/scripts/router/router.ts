@@ -94,7 +94,7 @@ export function loadContent(url: string) {
 
 export function isAuthenticated(): boolean {
     return !!localStorage.getItem("userId");
-  }
+}
 
 function updateActiveLink(url: string) {
     document.querySelectorAll('.nav-link').forEach(link => {

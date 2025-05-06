@@ -1,10 +1,10 @@
 import db from "../connection.js";
 
 
-export function createUser({ username, email, password, avatarUrl }: {
+export function createUser({ username, email, hash, avatarUrl }: {
   username: string;
   email: string;
-  password: string;
+  hash: string;
   avatarUrl?: string;
 }) : number{
   // Check if the username or email already exists and return null if it does
@@ -16,7 +16,7 @@ export function createUser({ username, email, password, avatarUrl }: {
     INSERT INTO users (username, email, password, avatar_url)
     VALUES (?, ?, ?, ?)
   `);
-  const result = stmt.run(username, email, password, avatarUrl);
+  const result = stmt.run(username, email, hash, avatarUrl);
   return result.lastInsertRowid as number;
 }
 

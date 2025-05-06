@@ -80,9 +80,6 @@ function handleLogin(event: Event) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const userId = data.id;
-                localStorage.setItem('userId', userId); //TODO: For now, just store the userId
-
                 const newPath = '/';
                 history.pushState(null, '', newPath);
                 loadContent(newPath);
@@ -122,9 +119,6 @@ function handleRegister(event: Event) {
         body: JSON.stringify(registerData),
     }).then(response => response.json()).then(data => {
         if (data.success) {
-            const userId = data.id;
-            localStorage.setItem('userId', userId); //TODO: For now, just store the userId
-
             // Redirect away from /auth after successful login
             const newPath = '/';
             history.pushState(null, '', newPath);
