@@ -6,18 +6,44 @@ export function createUser({ username, email, password, avatarUrl }: {
   email: string;
   password: string;
   avatarUrl?: string;
-}) : number{
+}): number {
   // Check if the username or email already exists and return null if it does
   const existingUser = getUserByEmail(email) || getUserByUsername(username);
   if (existingUser) {
     return 0;
   }
-  const stmt = db.prepare(`
+  const insertUser = db.prepare(`
     INSERT INTO users (username, email, password, avatar_url)
     VALUES (?, ?, ?, ?)
   `);
-  const result = stmt.run(username, email, password, avatarUrl);
-  return result.lastInsertRowid as number;
+  const result = insertUser.run(username, email, password, avatarUrl);
+  const userId = result.lastInsertRowid as number;
+
+  const insertStats = db.prepare(`
+    INSERT INTO stats (user_id, games_played, wins, losses)
+    VALUES (?, 0, 0, 0)
+  `);
+  insertStats.run(userId);
+
+  return userId;
+}
+
+export function getUserProfileById(id: number) {
+  const stmt = db.prepare(`
+    SELECT 
+      users.id,
+      users.username,
+      users.email,
+      users.avatar_url,
+      stats.games_played,
+      stats.wins,
+      stats.losses
+    FROM users
+    LEFT JOIN stats ON users.id = stats.user_id
+    WHERE users.id = ?
+  `);
+
+  return stmt.get(id);
 }
 
 export function getUserByEmail(email: string) {
