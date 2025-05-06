@@ -1,6 +1,4 @@
-import { GameInstance } from "./GameInstance";
-import { GameRenderer } from "./GameRenderer";
-import { PointerInputController } from "./PointerInputController";
+import { GameEngine } from "./GameEngine";
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
@@ -11,6 +9,7 @@ export function initGame() : void {
 
     const gameParams = {
         paddle_offset: 15,
+        paddle_gap: 2,
         paddle_w: 10,
         paddle_h: 50,
         paddle_maxa: 0.3,
@@ -21,7 +20,8 @@ export function initGame() : void {
         ball_minv: 0.1,
         arena_w: 300,
         arena_h: 150,
-        deadzone: 5
+        deadzone: 5,
+        max_score: 5,
     };
 
     resizeCanvas(canvas, gameParams);
@@ -32,7 +32,7 @@ export function initGame() : void {
         paddle_color: "yellow",
         size_ratio: canvas.width / gameParams.arena_w,
     };
-
+    /*
     const game = new GameInstance(gameParams);
     const gameRenderer = new GameRenderer(canvas, gameParams, renderDetails, game.getState.bind(game));
     const inputController = new PointerInputController(canvas, gameParams, game.getState.bind(game), game.receiveInput.bind(game));
@@ -47,7 +47,9 @@ export function initGame() : void {
         inputController.update();
     }
     , 1000 / (FPS / 2)); // 60 FPS
-
+    */
+    const gameEngine = new GameEngine(canvas, gameParams, renderDetails);
+    gameEngine.start();
 }
 
 function resizeCanvas(canvas: HTMLCanvasElement, gameParams: { arena_w: number; arena_h: number }, margin = 32): void {
