@@ -15,7 +15,8 @@
 
         <!-- Tabs -->
         <div class="flex space-x-2 justify-center mb-4">
-            <button id="tab-login" class="px-4 py-2 font-medium border-b-2 border-blue-500 hover:font-bold">Login</button>
+            <button id="tab-login"
+                class="px-4 py-2 font-medium border-b-2 border-blue-500 hover:font-bold">Login</button>
             <button id="tab-register" class="px-4 py-2 font-medium text-gray-500 hover:font-bold">Register</button>
         </div>
 
@@ -41,7 +42,11 @@
                         class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
             </div>
-            <button type="submit" id="login-btn" class="bg-[#6366F1] w-full mt-5 text-white py-2 rounded-xl hover:bg-[#5254c6]">Sign In</button>
+            <button type="submit" id="login-btn"
+                class="bg-[#6366F1] w-full mt-5 text-white py-2 rounded-xl hover:bg-[#5254c6]">Sign In</button>
+            <div id="error-login-message" class=" text-red-500 text-sm mt-4">
+                    <!-- Error messages will be displayed here -->
+            </div>
         </form>
 
         <!-- Register Form -->
@@ -50,7 +55,7 @@
                 <label for="register-username" class="block text-sm font-medium text-gray-500">Username</label>
                 <div class="mt-1 relative rounded-xl shadow-sm">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        
+
                     </div>
                     <input id="register-username" name="username" type="text" placeholder="Choose a username"
                         class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -60,7 +65,7 @@
                 <label for="register-email" class="block text-sm font-medium text-gray-500">Email</label>
                 <div class="mt-1 relative rounded-xl shadow-sm">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    
+
                     </div>
                     <input id="register-email" name="email" type="email" placeholder="Enter your email"
                         class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -70,7 +75,7 @@
                 <label for="register-password" class="block text-sm font-medium text-gray-500">Password</label>
                 <div class="mt-1 relative rounded-xl shadow-sm">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        
+
                     </div>
                     <input id="register-password" name="password" type="password" placeholder="Create a password"
                         class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -80,14 +85,20 @@
                 <label for="register-confirm" class="block text-sm font-medium text-gray-500">Confirm Password</label>
                 <div class="mt-1 relative rounded-xl shadow-sm">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        
+
                     </div>
                     <input id="register-confirm" type="password" name="repassword" placeholder="Confirm your password"
                         class="pl-10 pr-3 py-2 bg-[#27272A] rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
             </div>
-            <button type="submit" id="register-btn" class="bg-[#6366F1] hover:bg-[#5254c6] text-white py-2 mt-4 rounded-xl">Create
+            <button type="submit" id="register-btn"
+                class="bg-[#6366F1] hover:bg-[#5254c6] text-white py-2 mt-4 rounded-xl">Create
                 Account</button>
+            <div id="error-register-message" class=" text-red-500 text-sm mt-4">
+                <!-- Error messages will be displayed here -->
+            </div>
         </form>
+
     </div>
+
 </div>

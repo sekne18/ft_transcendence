@@ -93,7 +93,7 @@ export function loadContent(url: string) {
 }
 
 export function isAuthenticated(): boolean {
-    return !!localStorage.getItem("access_token");
+    return !!localStorage.getItem("userId");
   }
 
 function updateActiveLink(url: string) {

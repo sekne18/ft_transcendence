@@ -12,11 +12,10 @@ export function initializeDatabase() {
       db.prepare(`
         CREATE TABLE users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT NOT NULL UNIQUE,
+          username TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
-          password_hash TEXT NOT NULL,
+          password TEXT NOT NULL,
           avatar_url TEXT DEFAULT '',
-          display_name TEXT UNIQUE,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
       `).run();
@@ -41,6 +40,7 @@ export function initializeDatabase() {
           player1_score INTEGER NOT NULL,
           player2_score INTEGER NOT NULL,
           played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          status TEXT DEFAULT 'completed', -- 'completed', 'ongoing'
           FOREIGN KEY (player1_id) REFERENCES users(id),
           FOREIGN KEY (player2_id) REFERENCES users(id),
           FOREIGN KEY (winner_id) REFERENCES users(id)

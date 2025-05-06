@@ -30,19 +30,18 @@ fastify.post('/api/login', async (req, reply) => {
   }
 
   //TODO: Compare password hash
-  //const isPasswordValid = await comparePassword(password, user.password_hash);
+  //const isPasswordValid = await comparePassword(password, user.password); // Example function
+  const isPasswordValid = password === user.password; // TODO: Replace with actual hash comparison
 
-  // if (!isPasswordValid) {
-  //   return reply.code(401).send({ 
-  //     success: false, 
-  //     message: 'Invalid username or password' 
-  //   });
-  // }
+  if (!isPasswordValid) {
+    return reply.code(401).send({ 
+      success: false, 
+      message: 'Invalid username or password' 
+    });
+  }
 
   //TODO: Generate auth token with user ID
 
-
-  // Return success with token and user ID
   return reply.send({
     success: true,
     userId: user.id
@@ -50,22 +49,35 @@ fastify.post('/api/login', async (req, reply) => {
 });
 
 fastify.post('/api/register', async (req, reply) => {
-  const { username, email, password, displayName } = req.body as { username: string; email: string; password: string; displayName: string };
+  const { username, email, password, repassword } = req.body as { username: string; email: string; password: string; repassword: string };
 
-  // hash password, validate, etc...
+  console.log('Password: ', password);
+  if (password !== repassword) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Passwords do not match'
+    });
+  }
+    // hash password, validate, etc...
   const userId = await createUser({
     username,
     email,
-    passwordHash: password, // TODO: Replace with actual hash
-    displayName,
+    password, // TODO: Replace with actual hash
+    avatarUrl: '' // TODO: Replace with actual avatar URL
   });
 
-  //TODO: JWT with user ID?
+  if (!userId) {
+    return reply.code(400).send({
+      success: false,
+      message: 'User already exists'
+    });
+  }
 
-  reply.send({ success: true, userId }); // ADD token to return
+  //TODO: JWT with user ID?
+  return reply.send({ success: true, userId }); // ADD token to return
 });
 
-fastify.get('/api/user', async (req, reply) => {
+fastify.get('/api/user/:id', async (req, reply) => {
   const { id } = req.query as { id: string };
 
   // Validate and convert to number
