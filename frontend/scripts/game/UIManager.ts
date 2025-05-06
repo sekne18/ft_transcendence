@@ -74,6 +74,13 @@ export class UIManager {
 		}
 	}
 
+	public getScore() {
+		return {
+			left_score: this.scoreLeft.innerHTML,
+			right_score: this.scoreRight.innerHTML,
+		};
+	}
+
 	public updateScore(left: number, right: number): void {
 		this.scoreLeft.innerText = left.toString();
 		this.scoreRight.innerText = right.toString();

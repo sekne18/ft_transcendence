@@ -22,3 +22,11 @@ export interface Profile {
     wins: number;
     losses: number;
 }
+
+export interface EditForm {
+  username: string;
+  email: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}

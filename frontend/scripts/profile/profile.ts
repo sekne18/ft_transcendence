@@ -1,5 +1,6 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { Match, User, Stats, Profile } from "./Types";
+import { ModalManager } from "./modal";
+import { Match, Profile } from "./Types";
 
 /* 
     Run any logic from this function. 
@@ -18,6 +19,14 @@ export function initProfile(): void {
 
   renderUserProfile();
   renderMatchHistory(matchHistory);
+
+  const modalManager = new ModalManager("edit-profile-modal");
+
+  modalManager.init(
+    onEditProfileSubmit,
+    resetEditProfileForm,
+    () => console.log("Change avatar clicked") // Optional: Replace with real logic
+  );
 }
 
 // DOM Elements
@@ -29,7 +38,7 @@ function getElement(id: string) {
 }
 
 // Render user profile
-function renderUserProfile() {
+export function renderUserProfile() {
   const userId = localStorage.getItem('userId');
   if (userId === null) {
     window.location.href = '/auth';
@@ -44,7 +53,6 @@ function renderUserProfile() {
     }
 
     const profile = response.user as Profile;
-    console.log(profile);
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
@@ -115,4 +123,29 @@ function createMatchElement(match: Match, showDetailsButton = false) {
     ` : ''}
   `;
   return matchElement;
+}
+
+// Update the data
+function onEditProfileSubmit(e: Event) {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const formData = new FormData(form);
+  // Send update to backend
+  fetch('/api/user/update', {
+    method: 'POST',
+    body: formData,
+  })
+    .then(res => res.json())
+    .then((response) => {
+      if (response.success) {
+        renderUserProfile();
+      }
+      const modal = new ModalManager("edit-profile-modal");
+      modal.hide();
+    });
+}
+
+function resetEditProfileForm() {
+  const form = document.getElementById('edit-profile-form') as HTMLFormElement;
+  form?.reset();
 }
