@@ -1,5 +1,5 @@
 import Fastify from 'fastify'
-import { createUser, getUserByEmail, getUserById, getUserByUsername, getUserProfileById } from './db/queries/user.js'
+import { createUser, getUserByEmail, getUserById, getUserByUsername, getUserProfileById, updateUser } from './db/queries/user.js'
 import { initializeDatabase } from './db/schema.js'
 import { getStatsByUserId } from './db/queries/stats.js'
 const fastify = Fastify({
@@ -75,6 +75,26 @@ fastify.post('/api/register', async (req, reply) => {
 
   //TODO: JWT with user ID?
   return reply.send({ success: true, id: userId }); // ADD token to return
+});
+
+fastify.post('/api/user/update', async (req, reply) => {
+  const { id, username, password, avatarUrl } = req.body as {
+    id: number;
+    username: string;
+    password: string;
+    avatarUrl: string;
+  };
+
+  if (!id || !username || !password || !avatarUrl) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Missing fields'
+    });
+  }
+
+  updateUser(id, { username, password, avatarUrl });
+  
+  return reply.send({ success: true }); 
 });
 
 fastify.get('/api/user/:id', async (req, reply) => {
