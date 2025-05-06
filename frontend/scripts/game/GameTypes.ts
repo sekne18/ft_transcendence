@@ -25,7 +25,8 @@ export type RenderDetails = {
 	ball_color: string,
 	paddle_color: string,
 	arena_color: string,
-	size_ratio: number,
+	max_canvas_width: number,
+	canvas_margin: number,
 };
 
 export type GameStatus = 'idle' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)

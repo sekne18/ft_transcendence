@@ -72,6 +72,11 @@ export class GameInstance {
 		this.state.ball_a.y = 1;
 	}
 
+	public resetScore(): void { //temporary while its on the frontend
+		this.state.left_score = 0;
+		this.state.right_score = 0;
+	}
+
 	public resetGame(): void {
 		if (this.state.left_score >= this.params.max_score || this.state.right_score >= this.params.max_score) {
 			this.onGameOver();

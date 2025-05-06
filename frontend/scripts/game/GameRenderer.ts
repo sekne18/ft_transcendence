@@ -5,12 +5,21 @@ export class GameRenderer {
 	private ctx: CanvasRenderingContext2D;
 	private GameParams: GameParams;
 	private renderDetails: RenderDetails;
+	private size_ratio: number;
 
 
 	constructor(canvas: HTMLCanvasElement, GameParams: GameParams, renderDetails: RenderDetails, private getGameState: () => GameState) {
 		this.GameParams = GameParams;
 		this.renderDetails = renderDetails;
 		this.canvas = canvas;
+		this.resizeCanvas();
+		this.size_ratio = this.canvas.width / this.GameParams.arena_w;
+		window.addEventListener('resize', () => {
+			console.log('Resizing canvas');
+			this.resizeCanvas();
+			this.size_ratio = this.canvas.width / this.GameParams.arena_w;
+			this.render();
+		});
 		this.ctx = canvas.getContext("2d")!;
 	}
 
@@ -26,7 +35,7 @@ export class GameRenderer {
 	}
 
 	private scaleGameCoord(x: number): number {
-		return x * this.renderDetails.size_ratio;
+		return x * this.size_ratio;
 	}
 
 	private drawBall(ball_x: number, ball_y: number, ball_r: number): void {
@@ -69,5 +78,33 @@ export class GameRenderer {
 			state.right.x - this.GameParams.paddle_w / 2, state.right.y - this.GameParams.paddle_h / 2,
 			this.GameParams.paddle_w, this.GameParams.paddle_h
 		);
+	}
+
+	private resizeCanvas(): void {
+		const gameContainer = document.getElementById('page-game') as HTMLDivElement;
+		const dpr = window.devicePixelRatio || 1;
+
+		// === Compute desired CSS size based on arena aspect ratio and screen ===
+		const maxWidth = Math.min(this.renderDetails.max_canvas_width, gameContainer.clientWidth - this.renderDetails.canvas_margin * 2);
+		const maxHeight = gameContainer.clientHeight - this.renderDetails.canvas_margin * 2;
+		const aspect = this.GameParams.arena_w / this.GameParams.arena_h;
+
+		let cssWidth = maxWidth;
+		let cssHeight = cssWidth / aspect;
+
+		if (cssHeight > maxHeight) {
+			cssHeight = maxHeight;
+			cssWidth = cssHeight * aspect;
+		}
+
+		// === Set CSS size (display size in CSS pixels) ===
+		this.canvas.style.width = `${cssWidth}px`;
+		this.canvas.style.height = `${cssHeight}px`;
+
+		// === Set actual canvas size in physical pixels ===
+		this.canvas.width = cssWidth * dpr;
+		this.canvas.height = cssHeight * dpr;
+
+		this.canvas.style.margin = `${this.renderDetails.canvas_margin}px`;
 	}
 }

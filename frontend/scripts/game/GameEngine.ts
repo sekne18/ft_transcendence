@@ -33,7 +33,9 @@ export class GameEngine {
 
 	public async onMatchFound(): Promise<void> {
 		this.UIManager.setMatchmakingOverlay('found');
+		this.game.resetScore();
 		await new Promise(r => setTimeout(r, 1000));
+		this.gameRenderer.render();
 		this.changeState('countdown');
 	}
 
@@ -103,11 +105,15 @@ export class GameEngine {
 				this.resetGame();
 				this.UIManager.toggleOverlayVisibility('visible');
 				await new Promise(r => setTimeout(r, 1000));
-				this.changeState('countdown');
+				const gameState1 = this.game.getState();
+				if (gameState1.left_score < this.game.getParams().max_score && gameState1.right_score < this.game.getParams().max_score) {
+					this.changeState('countdown');
+				}
 				break;
 			case 'gameover':
 				const gameState = this.game.getState();
 				this.UIManager.setGameOverOverlay(this.player === 'left' ? gameState.left_score > gameState.right_score : gameState.right_score > gameState.left_score);
+				this.UIManager.setMatchmakingOverlay('button');
 				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			case 'countdown':
