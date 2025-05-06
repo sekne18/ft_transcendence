@@ -4,8 +4,12 @@
     <div id="game-score"></div>
     <div id="game-enemy-info"></div>
   </div>
-  <div id="game-container" class="w-full grow flex flex-col items-center justify-center">
+  <div id="game-container" class="w-full grow flex flex-col items-center justify-center font-orbitron text-6xl text-white">
     <canvas id="game-canvas" class="w-full justify-self-center flex z-10"></canvas>
-    <div id="game-overlay" class="hidden"></div>
+    <div id="game-overlay" class="invisible w-full absolute h-full bg-[#0000005c] z-20 flex flex-col items-center justify-center">
+    </div>
+    <button id="game-matchmake-button" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-300 text-black px-4 py-2 rounded z-30">
+      Play
+    </button>
   </div>
 </div>

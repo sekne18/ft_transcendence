@@ -38,6 +38,10 @@ export class GameInstance {
 	}
 
 	public startGame(): void {
+		const FPS = 120;
+		this.interval_id = setInterval(() => {
+			this.updateState(1000 / FPS);
+		}, 1000 / FPS); // 120 FPS
 		this.resetGame();
 		this.launchBall();
 	}
@@ -68,6 +72,11 @@ export class GameInstance {
 		this.state.ball_a.y = 1;
 	}
 
+	public resetScore(): void { //temporary while its on the frontend
+		this.state.left_score = 0;
+		this.state.right_score = 0;
+	}
+
 	public resetGame(): void {
 		if (this.state.left_score >= this.params.max_score || this.state.right_score >= this.params.max_score) {
 			this.onGameOver();
@@ -77,8 +86,6 @@ export class GameInstance {
 		this.state.left.y = this.params.arena_h / 2;
 		this.state.right.x = this.params.arena_w - this.params.paddle_offset;
 		this.state.right.y = this.params.arena_h / 2;
-		this.state.left_score = 0;
-		this.state.right_score = 0;
 		this.resetBall();
 	}
 
@@ -108,6 +115,30 @@ export class GameInstance {
 		// Update paddle positions
 		this.state.left.y += this.state.left_v.y * deltaTime;
 		this.state.right.y += this.state.right_v.y * deltaTime;
+
+		if (this.state.left.y - this.params.paddle_h / 2 <= this.params.paddle_gap) {
+			this.state.left.y = this.params.paddle_gap + this.params.paddle_h / 2;
+			this.state.left_v.y = 0;
+			this.state.left_a.y = 0;
+		}
+
+		if (this.state.left.y + this.params.paddle_h / 2 >= this.params.arena_h - this.params.paddle_gap) {
+			this.state.left.y = this.params.arena_h - this.params.paddle_gap - this.params.paddle_h / 2;
+			this.state.left_v.y = 0;
+			this.state.left_a.y = 0;
+		}
+
+		if (this.state.right.y - this.params.paddle_h / 2 <= this.params.paddle_gap) {
+			this.state.right.y = this.params.paddle_gap + this.params.paddle_h / 2;
+			this.state.right_v.y = 0;
+			this.state.right_a.y = 0;
+		}
+
+		if (this.state.right.y + this.params.paddle_h / 2 >= this.params.arena_h - this.params.paddle_gap) {
+			this.state.right.y = this.params.arena_h - this.params.paddle_gap - this.params.paddle_h / 2;
+			this.state.right_v.y = 0;
+			this.state.right_a.y = 0;
+		}
 
 		this.state.left_v.y *= 0.5;
 		this.state.right_v.y *= 0.5;

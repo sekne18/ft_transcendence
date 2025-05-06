@@ -4,7 +4,8 @@ export type vec2d = {
 };
 
 export type GameParams = {
-	paddle_offset: number,
+	paddle_offset: number, //!! arena_w > (paddle_offset + paddle_w) * 2 + ball_r !!
+	paddle_gap: number, //!! arena_h > paddle_gap * 2 + paddle_h !!
 	paddle_w: number, paddle_h: number, paddle_maxa: number, paddle_maxv: number,
 	ball_r: number, ball_maxa: number, ball_maxv: number, ball_minv: number,
 	arena_w: number, arena_h: number,
@@ -24,7 +25,8 @@ export type RenderDetails = {
 	ball_color: string,
 	paddle_color: string,
 	arena_color: string,
-	size_ratio: number,
+	max_canvas_width: number,
+	canvas_margin: number,
 };
 
-export type GameStatus = 'idle' | 'matchmaking' | 'playing' | 'gameover' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
+export type GameStatus = 'idle' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
