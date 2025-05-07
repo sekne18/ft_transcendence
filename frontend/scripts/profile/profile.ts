@@ -8,18 +8,8 @@ import { Match, Profile } from "./Types";
     This function is called when a tab is pressed.
 */
 export function initProfile(): void {
-
-  const matchHistory = [
-    { id: 1, opponent: "Felix Daems", result: "ongoing", score: "1-1", date: "2025-05-05" },
-    { id: 2, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
-    { id: 3, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
-    { id: 4, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
-    { id: 5, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
-    { id: 6, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" }
-  ] as Match[];
-
   renderUserProfile();
-  renderMatchHistory(matchHistory)
+  renderMatchHistory()
 
   const modalManager = new ModalManager("edit-profile-modal");
 
@@ -80,22 +70,57 @@ export function renderUserProfile() {
 }
 
 // Render match history
-function renderMatchHistory(matches: Match[]) {
+function renderMatchHistory() {
   const matchHistoryContainer = getElement('match-history');
   const recentActivityContainer = getElement('recent-activity');
   // Clear containers
   matchHistoryContainer.innerHTML = '';
   recentActivityContainer.innerHTML = '';
-  // Create match history items
-  matches.forEach(match => {
+
+
+  const matchHistory = [
+    { id: 1, opponent: "Felix Daems", result: "ongoing", score: "1-1", date: "2025-05-05" },
+    { id: 2, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
+    { id: 3, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
+    { id: 4, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
+    { id: 5, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
+    { id: 6, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" }
+  ] as Match[];
+
+  matchHistory.forEach(match => {
     const matchElement = createMatchElement(match);
     matchHistoryContainer.appendChild(matchElement);
     // Add only the first 3 matches to recent activity
-    if (matches.indexOf(match) < 5) {
+    if (matchHistory.indexOf(match) < 5) {
       const recentMatchElement = createMatchElement(match, false);
       recentActivityContainer.appendChild(recentMatchElement);
     }
   });
+
+  // fetch('/api/user/match-history', {
+  //   method: 'GET',
+  //   credentials: 'include',
+  // }).then(res => {
+  //   if (res.status === 401) {
+  //     window.location.href = '/auth';
+  //     return null;
+  //   }
+  //   return res.json();
+  // }).then((res) => {
+  //   const matchHistory = res.match_history as Match[];
+  //   // console.log(matchHistory);
+  //   // Create match history items
+  //   matchHistory.forEach(match => {
+  //     const matchElement = createMatchElement(match);
+  //     matchHistoryContainer.appendChild(matchElement);
+  //     // Add only the first 3 matches to recent activity
+  //     if (matchHistory.indexOf(match) < 5) {
+  //       const recentMatchElement = createMatchElement(match, false);
+  //       recentActivityContainer.appendChild(recentMatchElement);
+  //     }
+  //   });
+  // });
+
 }
 // Create match element
 function createMatchElement(match: Match, showDetailsButton = false) {
