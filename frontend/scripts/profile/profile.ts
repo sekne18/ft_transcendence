@@ -71,6 +71,7 @@ export function renderUserProfile() {
     (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
     (getElement('username-input') as HTMLInputElement).value = profile.username;
     (getElement('email-input') as HTMLInputElement).value = profile.email;
+    (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
   })
     .catch(() => {
       window.location.href = '/auth';
@@ -164,4 +165,8 @@ function resetEditProfileForm() {
   (getElement('avatar-input') as HTMLImageElement).src = (getElement('user-avatar') as HTMLImageElement).src;
   (getElement('username-input') as HTMLInputElement).value = getElement('username').textContent || '';
   (getElement('email-input') as HTMLInputElement).value = getElement('user-email').textContent || '';
+  (getElement('current-password-input') as HTMLInputElement).value = '';
+  (getElement('new-password-input') as HTMLInputElement).value = '';
+  (getElement('confirm-password-input') as HTMLInputElement).value = '';
+  (getElement('display-name-input') as HTMLInputElement).value = getElement('display_name').textContent || '';
 }
