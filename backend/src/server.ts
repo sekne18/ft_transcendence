@@ -87,7 +87,7 @@ fastify.post('/api/login', async (req, reply) => {
 			return reply.code(200).setCookie('access', token, {
 				httpOnly: true,
 				secure: false, // Set to true in production (requires HTTPS)
-				maxAge: 15, // * 60, // 15 min
+				maxAge: 15 * 60, // * 60, // 15 min
 				sameSite: 'strict'
 			}).send({
 				success: true,
@@ -145,7 +145,7 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 		return reply.code(200).setCookie('access', finalToken, {
 			httpOnly: true,
 			secure: false, // Set to true in production (requires HTTPS)
-			maxAge: 15, //* 60, // 15 min
+			maxAge: 15 * 60, //* 60, // 15 min
 			sameSite: 'strict'
 		}).send({ success: true });
 
@@ -184,6 +184,7 @@ fastify.post('/api/2fa/confirm', { onRequest: [fastify.authenticate] }, async (r
 	const { code } = req.body as { code: string };
 
 	const user = await getUserById(id) as { id: number; totp_secret: string; };
+	console.log('User for 2FA confirmation:', user);
 	if (!user || !user.totp_secret) {
 		return reply.code(400).send({ success: false, message: 'TOTP secret not found' });
 	}

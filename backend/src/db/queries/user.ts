@@ -85,6 +85,14 @@ export function updateUser(id: number, data: Partial<{
     fields.push('avatar_url = ?');
     values.push(data.avatarUrl);
   }
+  if (data.has2fa !== undefined) {
+    fields.push('has2fa = ?');
+    values.push(data.has2fa);
+  }
+  if (data.totp_secret !== undefined) {
+    fields.push('totp_secret = ?');
+    values.push(data.totp_secret);
+  }
 
   if (fields.length === 0) {
     // Nothing to update
