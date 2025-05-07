@@ -87,9 +87,6 @@ function handleLogin(event: Event) {
         })
         .then(data => {
             if (data.success) {
-                const id = data.id;
-                localStorage.setItem('userId', id); //TODO: For now, just store the userId
-
                 const newPath = '/';
                 history.pushState(null, '', newPath);
                 loadContent(newPath);
@@ -136,11 +133,8 @@ function handleRegister(event: Event) {
         return res.json();
     }).then(data => {
         if (data.success) {
-            const id = data.id;
-            localStorage.setItem('userId', id); //TODO: For now, just store the userId
-
             // Redirect away from /auth after successful login
-            const newPath = '/';
+            const newPath = '/auth';
             history.pushState(null, '', newPath);
             loadContent(newPath);
         } else {
