@@ -60,6 +60,17 @@ export function initializeDatabase() {
         );
       `).run();
 
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          jti TEXT NOT NULL UNIQUE,               -- unique token ID (JWT 'jti')
+          exp DATETIME NOT NULL,                  -- expiration time
+          iat DATETIME DEFAULT CURRENT_TIMESTAMP, -- issued at
+          last_used_at DATETIME                   -- for auditing
+        );
+      `).run();
+
       console.log('Database tables created successfully');
     } else {
       console.log('Database tables already exist');

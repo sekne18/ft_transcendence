@@ -9,7 +9,11 @@ import { readFile } from 'fs/promises';
 import { getStatsByUserId } from './db/queries/stats.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
+import { getTokenByjti, pushTokenToDB } from './db/queries/tokens.js';
 import './types.ts';
+
+const access_exp = 15 * 60; // 15 minutes
+const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -27,27 +31,57 @@ await fastify.register(fastifyCookie);
 			private: privateKey,
 			public: publicKey
 		},
-		cookie: {
-			cookieName: 'access',
-			signed: false,
-		},
 		sign: {
 			algorithm: 'RS256'
 		}
 	});
 }
 
+function generateTokenPair(userId: number) {
+	const token = fastify.jwt.sign({ id: userId }, { expiresIn: access_exp });
+	const jti = crypto.randomUUID();
+	const refreshToken = fastify.jwt.sign({ id: userId, jti: jti }, { expiresIn: refresh_exp });
+	pushTokenToDB({
+		user_id: userId,
+		jti: jti as string,
+		exp: Math.floor(Date.now() / 1000) + refresh_exp,
+		iat: Math.floor(Date.now() / 1000)
+	});
+	return { token, refreshToken };
+}
+
 fastify.decorate('authenticate', async function handler(request: any, reply: any) {
-	try {
-		await request.jwtVerify();
-	} catch (err) {
-		fastify.log.error('JWT verification failed:', err);
-		fastify.log.error('Request headers:', request.headers);
-		fastify.log.error('Request body:', request.body);
-		fastify.log.error('Request query:', request.query);
-		fastify.log.error('Request params:', request.params);
+	const accessToken = request.cookies.access;
+	const refreshToken = request.cookies.refresh;
+
+	console.log('Access Token:', accessToken);
+	console.log('Refresh Token:', refreshToken);
+
+	// First try to verify the access token
+	if (accessToken) {
+		try {
+			request.user = await fastify.jwt.verify(accessToken);
+			return;
+		} catch (err) {
+			fastify.log.warn('Access token invalid or expired');
+		}
+	}
+	else {
 		return reply.code(401).send({ error: 'Unauthorized' });
 	}
+
+	// If access token fails, try to verify the refresh token
+	if (refreshToken) {
+		try {
+			request.userRefresh = await fastify.jwt.verify(refreshToken);
+			return;
+		} catch (err) {
+			fastify.log.warn('Refresh token invalid or expired');
+		}
+	}
+
+	// If both fail, reject the request
+	return reply.code(401).send({ error: 'Unauthorized' });
 });
 
 fastify.post('/api/login', async (req, reply) => {
@@ -72,7 +106,7 @@ fastify.post('/api/login', async (req, reply) => {
 				// Don't authenticate yet — send short-lived temp token
 				const tempToken = fastify.jwt.sign(
 					{ id: user.id, twoFA: true },
-					{ expiresIn: '5m' } // Short-lived token
+					{ expiresIn: '15m' } // Short-lived token
 				);
 
 				return reply.code(200).send({
@@ -81,18 +115,28 @@ fastify.post('/api/login', async (req, reply) => {
 					tempToken
 				});
 			}
-			const token = fastify.jwt.sign({ id: user.id });
-			fastify.log.info('Token generated:', token);
+
+			const { token, refreshToken } = generateTokenPair(user.id);
+
+			fastify.log.info('Tokens generated:', token, refreshToken);
 			// password match
-			return reply.code(200).setCookie('access', token, {
-				httpOnly: true,
-				secure: false, // Set to true in production (requires HTTPS)
-				maxAge: 15, // * 60, // 15 min
-				sameSite: 'strict'
-			}).send({
-				success: true,
-				twoFA: false
-			});
+			return reply.code(200)
+				.setCookie('access', token, {
+					httpOnly: true,
+					secure: false, // Set to true in production (requires HTTPS)
+					maxAge: access_exp, // 15 min
+					sameSite: 'strict'
+				})
+				.setCookie('refresh', refreshToken, {
+					httpOnly: true,
+					secure: false, // Set to true in production (requires HTTPS)
+					sameSite: 'strict',
+					maxAge: refresh_exp // 7 days
+				})
+				.send({
+					success: true,
+					twoFA: false
+				});
 		} else {
 			// password did not match
 			fastify.log.info('Password did not match');
@@ -111,16 +155,23 @@ fastify.post('/api/login', async (req, reply) => {
 	}
 });
 
+fastify.post('/api/logout', async (req, reply) => {
+	reply
+		.clearCookie('access')
+		.clearCookie('refresh')
+		.send({ success: true });
+});
+
 fastify.post('/api/2fa/verify', async (req, reply) => {
 	const { code } = req.body as { code: string };
-	const token = req.headers.authorization?.split(' ')[1];
+	const tmp_token = req.headers.authorization?.split(' ')[1];
 
-	if (!token) {
+	if (!tmp_token) {
 		return reply.code(401).send({ success: false, message: 'Missing temp token' });
 	}
 
 	try {
-		const payload = fastify.jwt.verify(token) as { id: number, twoFA: boolean };
+		const payload = fastify.jwt.verify(tmp_token) as { id: number, twoFA: boolean };
 
 		if (!payload.twoFA) {
 			return reply.code(400).send({ success: false, message: 'Invalid token context' });
@@ -141,13 +192,22 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 			return reply.code(401).send({ success: false, message: 'Invalid 2FA code' });
 		}
 
-		const finalToken = fastify.jwt.sign({ id: payload.id });
-		return reply.code(200).setCookie('access', finalToken, {
-			httpOnly: true,
-			secure: false, // Set to true in production (requires HTTPS)
-			maxAge: 15, //* 60, // 15 min
-			sameSite: 'strict'
-		}).send({ success: true });
+		const { token, refreshToken } = generateTokenPair(user.id);
+
+		return reply.code(200)
+			.setCookie('access', token, {
+				httpOnly: true,
+				secure: false, // Set to true in production (requires HTTPS)
+				maxAge: access_exp,
+				sameSite: 'strict'
+			})
+			.setCookie('refresh', refreshToken, {
+				httpOnly: true,
+				secure: false, // Set to true in production (requires HTTPS)
+				sameSite: 'strict',
+				maxAge: refresh_exp
+			})
+			.send({ success: true });
 
 	} catch (err) {
 		fastify.log.error('2FA verification failed:', err);
@@ -209,6 +269,41 @@ fastify.get('/api/auth/status', { onRequest: [fastify.authenticate] }, async (re
 		success: true,
 	});
 });
+
+
+fastify.post('/api/token/refresh', async (req, reply) => {
+	const oldRefresh = req.userRefresh;
+	if (!oldRefresh) {
+		return reply.code(401).send({ success: false, message: 'No refresh token' });
+	}
+
+	try {
+		const payload = fastify.jwt.verify(oldRefresh) as { id: number, jti: string };
+
+		// Optional: check that oldRefresh is in DB and not reused (to detect token theft)
+		const dbToken = getTokenByjti(payload.jti) as { user_id: number; jti: string; exp: number; iat: number };
+		if (!dbToken) {
+			return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+		}
+		if (dbToken.exp < Math.floor(Date.now() / 1000)) {
+			return reply.code(401).send({ success: false, message: 'Refresh token expired' });
+		}
+		if (dbToken.user_id !== payload.id || dbToken.jti !== payload.jti) {
+			return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+		}
+
+		// Rotate token: issue new one
+		const { token, refreshToken } = generateTokenPair(payload.id);
+
+		return reply
+			.setCookie('access', token, { httpOnly: true, sameSite: 'strict', maxAge: access_exp })
+			.setCookie('refresh', refreshToken, { httpOnly: true, sameSite: 'strict', maxAge: refresh_exp })
+			.send({ success: true });
+	} catch (err) {
+		return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+	}
+});
+
 
 fastify.post('/api/register', async (req, reply) => {
 	const { username, email, password, repassword } = req.body as { username: string; email: string; password: string; repassword: string };

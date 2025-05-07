@@ -103,10 +103,19 @@ async function checkAuth(): Promise<boolean> {
                 credentials: 'include'
             }
         );
-        // If the user is authenticated, backend should return 200 OK
-        return res.status === 200;
+        if (!res.ok) throw new Error('Access token expired');
+        const data = await res.json();
+        return data.success;
     } catch (err) {
-        return false;
+        const refreshRes = await fetch('/api/token/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (!refreshRes.ok) return false;
+
+        const res = await fetch('/api/auth/status', { credentials: 'include' });
+        return res.ok;
     }
 }
 
