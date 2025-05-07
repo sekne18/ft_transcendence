@@ -1,13 +1,16 @@
 import Fastify from 'fastify';
 import { createUser, getUserByEmail, getUserById, getUserByUsername } from './db/queries/user.js';
+import { FastifyInstance } from 'fastify';
 import { initializeDatabase } from './db/schema.js';
 import * as argon2 from "argon2";
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import { readFile } from 'fs/promises';
+import { getStatsByUserId } from './db/queries/stats.js';
+import { getUserProfileById } from './db/queries/user.js';
+import './types.ts';
 
-
-const fastify = Fastify({
+const fastify: FastifyInstance = Fastify({
 	logger: true
 });
 
@@ -112,71 +115,75 @@ fastify.post('/api/register', async (req, reply) => {
 	}
 });
 
-fastify.get('/api/user/:id', {
-	onRequest: [fastify?.authenticate]
-}, async (req, reply) => {
-	const { id } = req.query as { id: string };
+fastify.get('/api/user/:id',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const { id } = req.query as { id: string };
 
-	// Validate and convert to number
-	if (!id || isNaN(Number(id))) {
-		return reply.code(400).send({
-			success: false,
-			message: 'Invalid user ID'
-		});
-	}
+		// Validate and convert to number
+		if (!id || isNaN(Number(id))) {
+			return reply.code(400).send({
+				success: false,
+				message: 'Invalid user ID'
+			});
+		}
 
-	const user = await getUserById(Number(id));
+		const user = await getUserById(Number(id));
 
-	// Handle case where user isn't found
-	if (!user) {
-		return reply.code(404).send({
-			success: false,
-			message: 'User not found'
-		});
-	}
+		// Handle case where user isn't found
+		if (!user) {
+			return reply.code(404).send({
+				success: false,
+				message: 'User not found'
+			});
+		}
 
-	reply.send(user);
-});
+		reply.send(user);
+	});
 
-fastify.get('/api/user/profile/:id', async (req, reply) => {
-	const { id } = req.params as { id: string };
+fastify.get('/api/user/profile/:id',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const { id } = req.params as { id: string };
 
-	if (!id || isNaN(Number(id))) {
-		return reply.code(400).send({ success: false, message: 'Invalid user ID' });
-	}
+		if (!id || isNaN(Number(id))) {
+			return reply.code(400).send({ success: false, message: 'Invalid user ID' });
+		}
 
-	const user = getUserProfileById(Number(id));
+		const user = getUserProfileById(Number(id));
 
-	if (!user) {
-		return reply.code(404).send({ success: false, message: 'User not found' });
-	}
+		if (!user) {
+			return reply.code(404).send({ success: false, message: 'User not found' });
+		}
 
-	return reply.send({ success: true, user });
-});
+		return reply.send({ success: true, user });
+	});
 
-fastify.get('/api/user/:id/stats', async (req, reply) => {
-	const { id } = req.params as { id: string };
+fastify.get('/api/user/:id/stats',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const { id } = req.params as { id: string };
 
-	// Validate and convert to number
-	if (!id || isNaN(Number(id))) {
-		return reply.code(400).send({
-			success: false,
-			message: 'Invalid user ID'
-		});
-	}
+		// Validate and convert to number
+		if (!id || isNaN(Number(id))) {
+			return reply.code(400).send({
+				success: false,
+				message: 'Invalid user ID'
+			});
+		}
 
-	const stats = await getStatsByUserId(Number(id));
+		const stats = await getStatsByUserId(Number(id));
 
-	// Handle case where user isn't found
-	if (!stats) {
-		return reply.code(404).send({
-			success: false,
-			message: 'Stats not found'
-		});
-	}
+		// Handle case where user isn't found
+		if (!stats) {
+			return reply.code(404).send({
+				success: false,
+				message: 'Stats not found'
+			});
+		}
 
-	return reply.send({ success: true, stats });
-});
+		return reply.send({ success: true, stats });
+	});
 
 // Run the server!
 try {
