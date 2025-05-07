@@ -33,7 +33,7 @@ export function initProfile(): void {
 // Render user profile
 export function renderUserProfile() {
   // Fill user details
-  fetch('/api/user/profile/', {
+  fetch('/api/user/profile', {
     method: 'GET',
     credentials: 'include',
   }).then(res => {

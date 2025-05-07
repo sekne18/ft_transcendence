@@ -97,7 +97,12 @@ export function loadContent(url: string) {
 
 async function checkAuth(): Promise<boolean> {
     try {
-        const res = await fetch('/api/auth/status');
+        const res = await fetch('/api/auth/status',
+            {
+                method: 'GET',
+                credentials: 'include'
+            }
+        );
         // If the user is authenticated, backend should return 200 OK
         return res.status === 200;
     } catch (err) {

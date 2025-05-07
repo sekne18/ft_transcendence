@@ -1,8 +1,9 @@
 import db from "../connection.js";
 
 
-export function createUser({ username, email, hash, avatarUrl }: {
+export function createUser({ username, display_name, email, hash, avatarUrl }: {
   username: string;
+  display_name: string;
   email: string;
   hash: string;
   avatarUrl?: string;
@@ -13,10 +14,10 @@ export function createUser({ username, email, hash, avatarUrl }: {
     return 0;
   }
   const insertUser = db.prepare(`
-    INSERT INTO users (display_name, email, password, avatar_url)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO users (username, display_name, email, password, avatar_url)
+    VALUES (?, ?, ?, ?, ?)
   `);
-  const result = insertUser.run(username, email, hash, avatarUrl);
+  const result = insertUser.run(username, display_name, email, hash, avatarUrl);
   const userId = result.lastInsertRowid as number;
 
   const insertStats = db.prepare(`
@@ -65,6 +66,8 @@ export function updateUser(id: number, data: Partial<{
   display_name: string;
   password: string;
   avatarUrl: string;
+  has2fa: boolean;
+  totp_secret: string;
 }>) {
   const fields = [];
   const values = [];

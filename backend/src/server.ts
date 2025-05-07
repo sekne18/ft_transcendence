@@ -42,7 +42,11 @@ fastify.decorate('authenticate', async function handler(request: any, reply: any
 		await request.jwtVerify();
 	} catch (err) {
 		fastify.log.error('JWT verification failed:', err);
-		return reply.code(301).send({ error: 'Unauthorized' });
+		fastify.log.error('Request headers:', request.headers);
+		fastify.log.error('Request body:', request.body);
+		fastify.log.error('Request query:', request.query);
+		fastify.log.error('Request params:', request.params);
+		return reply.code(401).send({ error: 'Unauthorized' });
 	}
 });
 
@@ -53,7 +57,7 @@ fastify.post('/api/login', async (req, reply) => {
 	};
 
 	// Find user by username
-	const user = await getUserByEmail(email) as { id: number; email: string; password: string };
+	const user = await getUserByEmail(email) as { id: number; email: string; password: string; has2fa: boolean; };
 	if (!user) {
 		return reply.code(401).send({
 			success: false,
@@ -122,13 +126,13 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 			return reply.code(400).send({ success: false, message: 'Invalid token context' });
 		}
 
-		const user = await getUserById(payload.id);
-		if (!user || !user.totpSecret) {
+		const user = await getUserById(payload.id) as { id: number; totp_secret: string; };
+		if (!user || !user.totp_secret) {
 			return reply.code(400).send({ success: false, message: '2FA not configured' });
 		}
 
 		const valid = speakeasy.totp.verify({
-			secret: user.totpSecret,
+			secret: user.totp_secret,
 			encoding: 'base32',
 			token: code
 		});
@@ -163,10 +167,10 @@ fastify.get('/api/2fa/setup', { onRequest: [fastify.authenticate] }, async (req,
 	});
 
 	// Store the base32 secret temporarily (you could store it permanently if you skip confirmation)
-	await updateUser(id, { totpSecret: secret.base32 }); // Securely store base32
+	await updateUser(id, { totp_secret: secret.base32 }); // Securely store base32
 
 	// Create QR code from otpauth URL
-	const qrCodeDataURL = await qrcode.toDataURL(secret.otpauth_url);
+	const qrCodeDataURL = await qrcode.toDataURL(secret.otpauth_url as string);
 
 	return reply.send({
 		success: true,
@@ -175,7 +179,36 @@ fastify.get('/api/2fa/setup', { onRequest: [fastify.authenticate] }, async (req,
 	});
 });
 
+fastify.post('/api/2fa/confirm', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const { code } = req.body as { code: string };
 
+	const user = await getUserById(id) as { id: number; totp_secret: string; };
+	if (!user || !user.totp_secret) {
+		return reply.code(400).send({ success: false, message: 'TOTP secret not found' });
+	}
+
+	const verified = speakeasy.totp.verify({
+		secret: user.totp_secret,
+		encoding: 'base32',
+		token: code
+	});
+
+	if (!verified) {
+		return reply.code(401).send({ success: false, message: 'Invalid 2FA code' });
+	}
+
+	// Mark 2FA as enabled
+	await updateUser(id, { has2fa: true });
+
+	return reply.send({ success: true });
+});
+
+fastify.get('/api/auth/status', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	return reply.send({
+		success: true,
+	});
+});
 
 fastify.post('/api/register', async (req, reply) => {
 	const { username, email, password, repassword } = req.body as { username: string; email: string; password: string; repassword: string };
@@ -193,6 +226,7 @@ fastify.post('/api/register', async (req, reply) => {
 
 		const userId = await createUser({
 			username,
+			display_name: username,
 			email,
 			hash,
 			avatarUrl: '' // TODO: Replace with actual avatar URL
@@ -216,51 +250,51 @@ fastify.post('/api/register', async (req, reply) => {
 });
 
 fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-  const { id, display_name, password, newpassword, newrepassword, avatarUrl } = req.body as {
-    id: number;
-    display_name?: string;
-    password?: string;
-    newpassword?: string;
-    newrepassword?: string;
-    avatarUrl?: string;
-  };
+	const { id, display_name, password, newpassword, newrepassword, avatarUrl } = req.body as {
+		id: number;
+		display_name?: string;
+		password?: string;
+		newpassword?: string;
+		newrepassword?: string;
+		avatarUrl?: string;
+	};
 
-  if (!id) {
-    return reply.code(400).send({
-      success: false,
-      message: 'Missing user ID'
-    });
-  }
+	if (!id) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Missing user ID'
+		});
+	}
 
-  // Validate the password if provided
-  if (password && newpassword && newrepassword) {
-    if (newpassword !== newrepassword) {
-      return reply.code(400).send({
-        success: false,
-        message: 'New passwords do not match'
-      });
-    }
-  }
+	// Validate the password if provided
+	if (password && newpassword && newrepassword) {
+		if (newpassword !== newrepassword) {
+			return reply.code(400).send({
+				success: false,
+				message: 'New passwords do not match'
+			});
+		}
+	}
 
-  // TODO: Validate the password hash
+	// TODO: Validate the password hash
 
-  // Build the update object dynamically since we don't know which fields will be updated
-  const updateData: Record<string, string> = {};
+	// Build the update object dynamically since we don't know which fields will be updated
+	const updateData: Record<string, string> = {};
 
-  if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
-  if (password && password.trim() !== '') updateData.password = password.trim();
-  if (avatarUrl && avatarUrl.trim() !== '') updateData.avatarUrl = avatarUrl.trim();
+	if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
+	if (password && password.trim() !== '') updateData.password = password.trim();
+	if (avatarUrl && avatarUrl.trim() !== '') updateData.avatarUrl = avatarUrl.trim();
 
-  if (Object.keys(updateData).length === 0) {
-    return reply.code(400).send({
-      success: false,
-      message: 'No valid fields to update'
-    });
-  }
+	if (Object.keys(updateData).length === 0) {
+		return reply.code(400).send({
+			success: false,
+			message: 'No valid fields to update'
+		});
+	}
 
-  updateUser(id, updateData);
+	updateUser(id, updateData);
 
-  return reply.send({ success: true });
+	return reply.send({ success: true });
 });
 
 fastify.get('/api/user',
