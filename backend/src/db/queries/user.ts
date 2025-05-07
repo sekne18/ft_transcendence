@@ -33,6 +33,7 @@ export function getUserProfileById(id: number) {
   const stmt = db.prepare(`
     SELECT 
       users.id,
+      users.username,
       users.display_name,
       users.email,
       users.avatar_url,

@@ -87,7 +87,7 @@ fastify.post('/api/login', async (req, reply) => {
 			return reply.code(200).setCookie('access', token, {
 				httpOnly: true,
 				secure: false, // Set to true in production (requires HTTPS)
-				maxAge: 15, // * 60, // 15 min
+				maxAge: 15 * 60, // * 60, // 15 min
 				sameSite: 'strict'
 			}).send({
 				success: true,
@@ -213,7 +213,6 @@ fastify.get('/api/auth/status', { onRequest: [fastify.authenticate] }, async (re
 fastify.post('/api/register', async (req, reply) => {
 	const { username, email, password, repassword } = req.body as { username: string; email: string; password: string; repassword: string };
 
-	console.log('Password: ', password);
 	if (password !== repassword) {
 		return reply.code(400).send({
 			success: false,
@@ -229,7 +228,7 @@ fastify.post('/api/register', async (req, reply) => {
 			display_name: username,
 			email,
 			hash,
-			avatarUrl: '' // TODO: Replace with actual avatar URL
+			avatarUrl: 'https://land.campus19.be/wp-content/uploads/2024/08/Design-sans-titre-26-150x150.png' // TODO: Replace with actual avatar URL
 		});
 
 		if (!userId) {
@@ -250,12 +249,12 @@ fastify.post('/api/register', async (req, reply) => {
 });
 
 fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-	const { id, display_name, password, newpassword, newrepassword, avatarUrl } = req.body as {
-		id: number;
+	const id = (req.user as { id: number }).id;
+	const { display_name, currentPassword, newPassword, confirmPassword, avatarUrl } = req.body as {
 		display_name?: string;
-		password?: string;
-		newpassword?: string;
-		newrepassword?: string;
+		currentPassword?: string;
+		newPassword?: string;
+		confirmPassword?: string;
 		avatarUrl?: string;
 	};
 
@@ -266,23 +265,24 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 		});
 	}
 
+	const updateData: Record<string, string> = {};
+	
 	// Validate the password if provided
-	if (password && newpassword && newrepassword) {
-		if (newpassword !== newrepassword) {
+	if (currentPassword && newPassword && confirmPassword) {
+		console.log(currentPassword, newPassword, confirmPassword);
+		if (newPassword !== confirmPassword) {
 			return reply.code(400).send({
 				success: false,
 				message: 'New passwords do not match'
 			});
 		}
+		else if (newPassword.trim() !== '') {
+			updateData.password = await argon2.hash(newPassword.trim());
+		}
 	}
 
-	// TODO: Validate the password hash
-
 	// Build the update object dynamically since we don't know which fields will be updated
-	const updateData: Record<string, string> = {};
-
 	if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
-	if (password && password.trim() !== '') updateData.password = password.trim();
 	if (avatarUrl && avatarUrl.trim() !== '') updateData.avatarUrl = avatarUrl.trim();
 
 	if (Object.keys(updateData).length === 0) {
@@ -292,6 +292,7 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 		});
 	}
 
+	console.log('Updating user with data:', updateData);
 	updateUser(id, updateData);
 
 	return reply.send({ success: true });
@@ -320,7 +321,7 @@ fastify.get('/api/user',
 			});
 		}
 
-		reply.send(user);
+		return reply.send({ success: true, user });
 	});
 
 fastify.get('/api/user/profile',
