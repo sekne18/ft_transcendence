@@ -36,6 +36,7 @@ export function getUserProfileById(id: number) {
       users.username,
       users.display_name,
       users.email,
+      users.has2fa,
       users.avatar_url,
       stats.games_played,
       stats.wins,

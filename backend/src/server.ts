@@ -158,7 +158,7 @@ fastify.post('/api/logout', async (req, reply) => {
 
 fastify.post('/api/2fa/verify', async (req, reply) => {
 	const { code } = req.body as { code: string };
-	const tmp_token = req.headers.authorization?.split(' ')[1];
+	const tmp_token = req.headers.authorization?.split(' ')[1]; // TODO: Fix this to get the temp token from the cookie (or whwhatever)
 
 	if (!tmp_token) {
 		return reply.code(401).send({ success: false, message: 'Missing temp token' });
