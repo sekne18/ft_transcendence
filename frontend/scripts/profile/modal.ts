@@ -1,5 +1,3 @@
-import { getElement } from "../utils";
-
 export class ModalManager {
     private modal: HTMLElement | null;
 
@@ -42,19 +40,6 @@ export class ModalManager {
     }
 
     show() {
-       
-
-        // Fill the form with the current user data
-        const avatarInput = document.getElementById('avatar-input') as HTMLInputElement;
-        const usernameInput = document.getElementById('username-input') as HTMLInputElement;
-        const emailInput = document.getElementById('email-input') as HTMLInputElement;
-
-        if (avatarInput && usernameInput && emailInput) {
-            avatarInput.src = avatarInput.src;
-            usernameInput.textContent = usernameInput.textContent;
-            emailInput.textContent = emailInput.textContent;
-        }
-
         this.modal?.classList.remove('hidden');
     }
 

@@ -1,4 +1,5 @@
 import { loadContent } from "../router/router";
+import { getDataFromForm } from "../utils";
 
 /* 
     Run any logic from this function. 
@@ -68,16 +69,22 @@ function handleLogin(event: Event) {
 
     if (!loginData.email || !loginData.password)
         return;
-
     // For example, using fetch:
     fetch('/api/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(loginData),
     })
-        .then(response => response.json())
+        .then(res => {
+            if (res.status === 401) {
+                window.location.href = '/auth';
+                return null;
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 const id = data.id;
@@ -116,11 +123,18 @@ function handleRegister(event: Event) {
     // Call to the backend to register the user 
     fetch('/api/register', {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(registerData),
-    }).then(response => response.json()).then(data => {
+    }).then(res => {
+        if (res.status === 401) {
+            window.location.href = '/auth';
+            return null;
+        }
+        return res.json();
+    }).then(data => {
         if (data.success) {
             const id = data.id;
             localStorage.setItem('userId', id); //TODO: For now, just store the userId
@@ -150,18 +164,6 @@ function handleRegister(event: Event) {
     }).catch(error => {
         console.error('Error during registration:', error);
     });
-}
-
-// This function gets the data from the form and returns it as an object
-function getDataFromForm(formId: string): Record<string, string> {
-    const form = document.getElementById(formId) as HTMLFormElement;
-    const formData = new FormData(form);
-    const data: Record<string, string> = {};
-
-    formData.forEach((value, key) => {
-        data[key] = value.toString();
-    });
-    return data;
 }
 
 // This function removes the red outline when the user clicks on the input field

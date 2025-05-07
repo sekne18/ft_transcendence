@@ -1,5 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { getElement } from "../utils";
+import { getDataFromForm, getElement } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
 
@@ -32,15 +32,18 @@ export function initProfile(): void {
 
 // Render user profile
 export function renderUserProfile() {
-  const userId = localStorage.getItem('userId');
-  if (userId === null) {
-    window.location.href = '/auth';
-    return;
-  }
-
   // Fill user details
-  fetch(`/api/user/profile/${userId}`).then(res => res.json()).then((response) => {
-    if (!response.success) {
+  fetch('/api/user/profile/', {
+    method: 'GET',
+    credentials: 'include',
+  }).then(res => {
+    if (res.status === 401) {
+      window.location.href = '/auth';
+      return null;
+    }
+    return res.json();
+  }).then((response) => {
+    if (!response || !response.success) {
       window.location.href = '/auth';
       return;
     }
@@ -52,18 +55,26 @@ export function renderUserProfile() {
     getElement('username').textContent = profile.username;
     getElement('user-email').textContent = profile.email;
     getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
-    
+
     // Set user stats
     getElement('games-played').textContent = profile.games_played.toString();
     getElement('wins').textContent = profile.wins.toString();
     getElement('losses').textContent = profile.losses.toString();
     // Calculate win rate
     const winRate = profile.games_played > 0
-    ? Math.round((profile.wins / profile.games_played) * 100)
-    : 0;
+      ? Math.round((profile.wins / profile.games_played) * 100)
+      : 0;
     getElement('win-rate').textContent = `${winRate}%`;
     getElement('win-rate-bar').style.width = `${winRate}%`;
-  });
+
+    // Set modal details
+    (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
+    (getElement('username-input') as HTMLInputElement).value = profile.username;
+    (getElement('email-input') as HTMLInputElement).value = profile.email;
+  })
+    .catch(() => {
+      window.location.href = '/auth';
+    });
 }
 
 // Render match history
@@ -121,14 +132,22 @@ function createMatchElement(match: Match, showDetailsButton = false) {
 // Update the data
 function onEditProfileSubmit(e: Event) {
   e.preventDefault();
-  const form = e.target as HTMLFormElement;
-  const formData = new FormData(form);
+  const form = getDataFromForm("edit-profile-form");
+  const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
+
   // Send update to backend
   fetch('/api/user/update', {
     method: 'POST',
-    body: formData,
+    credentials: 'include',
+    body: JSON.stringify({ form, avatarUrl }),
   })
-    .then(res => res.json())
+    .then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    })
     .then((response) => {
       if (response.success) {
         renderUserProfile();
@@ -139,6 +158,7 @@ function onEditProfileSubmit(e: Event) {
 }
 
 function resetEditProfileForm() {
-  const form = document.getElementById('edit-profile-form') as HTMLFormElement;
-  form?.reset();
+  (getElement('avatar-input') as HTMLImageElement).src = (getElement('user-avatar') as HTMLImageElement).src;
+  (getElement('username-input') as HTMLInputElement).value = getElement('username').textContent || '';
+  (getElement('email-input') as HTMLInputElement).value = getElement('user-email').textContent || '';
 }
