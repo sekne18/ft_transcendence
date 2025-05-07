@@ -215,27 +215,53 @@ fastify.post('/api/register', async (req, reply) => {
 	}
 });
 
-fastify.post('/api/user/update',
-	{ onRequest: [fastify.authenticate] },
-	async (req, reply) => {
-		const { id, username, password, avatarUrl } = req.body as {
-			id: number;
-			username: string;
-			password: string;
-			avatarUrl: string;
-		};
+fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+  const { id, display_name, password, newpassword, newrepassword, avatarUrl } = req.body as {
+    id: number;
+    display_name?: string;
+    password?: string;
+    newpassword?: string;
+    newrepassword?: string;
+    avatarUrl?: string;
+  };
 
-		if (!id || !username || !password || !avatarUrl) {
-			return reply.code(400).send({
-				success: false,
-				message: 'Missing fields'
-			});
-		}
+  if (!id) {
+    return reply.code(400).send({
+      success: false,
+      message: 'Missing user ID'
+    });
+  }
 
-		updateUser(id, { username, password, avatarUrl });
+  // Validate the password if provided
+  if (password && newpassword && newrepassword) {
+    if (newpassword !== newrepassword) {
+      return reply.code(400).send({
+        success: false,
+        message: 'New passwords do not match'
+      });
+    }
+  }
 
-		return reply.send({ success: true });
-	});
+  // TODO: Validate the password hash
+
+  // Build the update object dynamically since we don't know which fields will be updated
+  const updateData: Record<string, string> = {};
+
+  if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
+  if (password && password.trim() !== '') updateData.password = password.trim();
+  if (avatarUrl && avatarUrl.trim() !== '') updateData.avatarUrl = avatarUrl.trim();
+
+  if (Object.keys(updateData).length === 0) {
+    return reply.code(400).send({
+      success: false,
+      message: 'No valid fields to update'
+    });
+  }
+
+  updateUser(id, updateData);
+
+  return reply.send({ success: true });
+});
 
 fastify.get('/api/user',
 	{ onRequest: [fastify.authenticate] },

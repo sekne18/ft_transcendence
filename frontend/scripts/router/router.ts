@@ -15,32 +15,36 @@ const routes: Record<string, { file: string; init?: () => void }> = {
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
 
-export function initRouter() {
-    // Initial content load
+export async function initRouter() {
     let path = window.location.pathname;
-    const userIsAuthed = isAuthenticated();
-    const isAuthPage = path === "/auth";
 
-    if (!userIsAuthed && !isAuthPage) {
-        path = "/auth";
-        history.replaceState(null, '', path);
-    } else if (userIsAuthed && isAuthPage) {
-        path = "/";
-        history.replaceState(null, '', path);
-    } else if (!routes[path]) {
-        path = '/';
-        history.replaceState(null, '', path);
+    const protectedRoutes = ['/', '/game', '/leaderboard', '/chat', '/profile'];
+    const isProtected = protectedRoutes.includes(path);
+
+    if (isProtected) {
+        const isAuthed = await checkAuth();
+        if (!isAuthed) {
+            path = '/auth';
+            history.replaceState(null, '', path);
+        }
     }
 
     loadContent(path);
 
-    // Navigation clicks
-    document.addEventListener('click', (e: MouseEvent) => {
+    document.addEventListener('click', async (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (target.classList.contains('nav-link')) {
             e.preventDefault();
             const url = target.getAttribute('href');
             if (!url) return;
+
+            const isProtected = protectedRoutes.includes(url);
+            if (isProtected && !(await checkAuth())) {
+                history.pushState(null, '', '/auth');
+                loadContent('/auth');
+                updateActiveLink('/auth');
+                return;
+            }
 
             history.pushState(null, '', url);
             loadContent(url);
@@ -48,12 +52,12 @@ export function initRouter() {
         }
     });
 
-    // Back/forward buttons
     window.addEventListener('popstate', () => {
         loadContent(window.location.pathname);
         updateActiveLink(window.location.pathname);
     });
 }
+
 
 export function loadContent(url: string) {
     const appElement = document.getElementById('app');
@@ -80,7 +84,6 @@ export function loadContent(url: string) {
                 }
             })
             .catch(err => {
-                console.error('Error loading page:', err);
                 if (appElement) {
                     appElement.innerHTML = '<h2>Error Loading Page</h2><p><a href="/">Return to Home</a></p>';
                 }
@@ -92,9 +95,16 @@ export function loadContent(url: string) {
     }
 }
 
-export function isAuthenticated(): boolean {
-    return !!localStorage.getItem("userId");
+async function checkAuth(): Promise<boolean> {
+    try {
+        const res = await fetch('/api/auth/status');
+        // If the user is authenticated, backend should return 200 OK
+        return res.status === 200;
+    } catch (err) {
+        return false;
+    }
 }
+
 
 function updateActiveLink(url: string) {
     document.querySelectorAll('.nav-link').forEach(link => {
