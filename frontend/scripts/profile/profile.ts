@@ -1,4 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
+import { getElement } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
 
@@ -18,7 +19,7 @@ export function initProfile(): void {
   ] as Match[];
 
   renderUserProfile();
-  renderMatchHistory(matchHistory);
+  renderMatchHistory(matchHistory)
 
   const modalManager = new ModalManager("edit-profile-modal");
 
@@ -27,14 +28,6 @@ export function initProfile(): void {
     resetEditProfileForm,
     () => console.log("Change avatar clicked") // Optional: Replace with real logic
   );
-}
-
-// DOM Elements
-function getElement(id: string) {
-  const element = document.getElementById(id);
-  if (!element)
-    throw new Error(`Element with id "${id}" not found`);
-  return element;
 }
 
 // Render user profile
