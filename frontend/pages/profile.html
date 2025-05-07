@@ -5,7 +5,7 @@
             <div class="bg-[#15151E] rounded-lg shadow-md">
                 <div class="flex flex-col items-center gap-4 py-8 px-4">
                     <div class="relative">
-                        <img id="user-avatar" src="" alt="User Avatar"
+                        <img id="user-avatar" src="/api/placeholder/150/150" alt="User Avatar"
                             class="w-24 h-24 rounded-full object-cover border-4 border-blue-500">
                     </div>
                     <div class="text-center">
@@ -43,8 +43,8 @@
                         </div>
                     </div>
 
-                    <button
-                        class="mt-4 w-full bg-[#262649] hover:bg-[#232344] text-[#51569D] font-semibold py-2 px-4 rounded transition">
+                    <button id="edit-profile-btn"
+                        class="mt-4 w-full bg-[#262649] hover:bg-[#232344] text-white font-semibold py-2 px-4 rounded transition">
                         Edit Profile
                     </button>
                 </div>
@@ -57,14 +57,14 @@
                 <div class="pb-0 pt-4 px-4 flex-col items-start">
                     <div class="border-b border-[#43454b]">
                         <ul class="flex flex-wrap mb-4 rounded-lg bg-[#27272A]" id="tabs-list">
-                            <li class=" bg-[#3F3F46] m-1 rounded-lg">
+                            <li class="bg-[#3F3F46] m-1 rounded-lg">
                                 <button
-                                    class="p-2 border-b-2 border-transparent  tab-button active"
+                                    class="p-2 border-b-2 border-transparent tab-button active"
                                     data-tab="stats">Statistics</button>
                             </li>
                             <li class="m-1">
                                 <button
-                                    class="p-2 border-b-2 border-transparent hover:text-gray-600"
+                                    class="p-2 border-b-2 border-transparent hover:text-gray-300 tab-button"
                                     data-tab="history">Match History</button>
                             </li>
                         </ul>
@@ -111,7 +111,7 @@
                             </div>
                             <div class="bg-[#1E1E2A] rounded-lg p-4">
                                 <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
-                                <div id="recent-activity">
+                                <div id="recent-activity" class="space-y-3">
                                     <!-- Recent match history items will be populated here -->
                                 </div>
                             </div>
@@ -128,101 +128,105 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- <div class="flex flex-col gap-8"> -->
-    <!-- Profile Header -->
-    <!-- <div class="card border-none shadow-md">
-            <div class="p-0"> -->
-    <!-- Cover Image -->
-    <!-- <div class="h-48 w-full relative">
-                    <div class="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-primary-800/40">
-                        <img src="https://img.heroui.chat/image/landscape?w=1200&h=400&u=1" alt="Cover"
-                            class="w-full h-full object-cover opacity-60" />
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-[#15151E] rounded-lg shadow-lg max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center p-4 border-b border-[#43454b]">
+            <h2 class="text-xl font-bold">Edit Profile</h2>
+            <button id="close-modal" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="edit-profile-form">
+            <div class="p-4">
+                <div class="flex flex-col md:flex-row gap-6 py-4">
+                    <div class="flex flex-col items-center gap-4 md:w-1/3">
+                        <img id="avatar-input" src="/api/placeholder/150/150" alt="Avatar" 
+                            class="w-32 h-32 rounded-full object-cover border-4 border-blue-500">
+                        <button type="button" id="change-avatar-btn"
+                            class="bg-[#262649] hover:bg-[#232344] text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                            Change Avatar
+                        </button>
                     </div>
-                    <button class="absolute top-4 right-4 bg-background-30 backdrop-blur-md rounded-full p-2">
-                        <i data-lucide="camera"></i>
-                    </button>
-                </div> -->
-
-    <!-- Profile Details -->
-    <!-- <div class="px-6 pb-6 pt-0 relative">
-                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-                        <div class="-mt-12 relative">
-                            <div class="relative">
-                                <img id="profile_img"
-                                    class="w-24 h-24 text-large rounded-full border-4 border-background"
-                                    alt="Alex Morgan" />
-                                <div class="absolute bottom-0 right-0 bg-primary-500 rounded-full p-1">
-                                    <i data-lucide="check" class="text-xs text-white"></i>
+                    
+                    <div class="flex-1 space-y-4">
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-semibold">Basic Information</h4>
+                            <div>
+                                <label for="username-input" class="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fas fa-user text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="username-input" name="username"
+                                        class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
+                                        placeholder="Enter your username">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="email-input" class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fas fa-envelope text-gray-400"></i>
+                                    </div>
+                                    <input type="email" id="email-input" name="email"
+                                        class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
+                                        placeholder="Enter your email">
                                 </div>
                             </div>
                         </div>
-
-                        <div
-                            class="flex-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 sm:mt-0">
-                            <div>
-                                <h1 class="text-2xl font-bold" id="username"></h1>
+                        
+                        <div class="border-t border-[#43454b] my-4 pt-4">
+                            <h4 class="text-lg font-semibold">Change Password</h4>
+                            <div class="mt-4">
+                                <label for="current-password" class="block text-sm font-medium text-gray-400 mb-1">Current Password</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fas fa-lock text-gray-400"></i>
+                                    </div>
+                                    <input type="password" id="current-password" name="currentPassword"
+                                        class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
+                                        placeholder="Enter current password">
+                                </div>
                             </div>
-
-                            <div class="flex gap-2">
-                                <button class="button button-flat button-primary flex items-center gap-2">
-                                    <i data-lucide="edit-3"></i>
-                                    <span>Edit Profile</span>
-                                </button>
+                            <div class="mt-4">
+                                <label for="new-password" class="block text-sm font-medium text-gray-400 mb-1">New Password</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fas fa-key text-gray-400"></i>
+                                    </div>
+                                    <input type="password" id="new-password" name="newPassword"
+                                        class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
+                                        placeholder="Enter new password">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label for="confirm-password" class="block text-sm font-medium text-gray-400 mb-1">Confirm New Password</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fas fa-check-circle text-gray-400"></i>
+                                    </div>
+                                    <input type="password" id="confirm-password" name="confirmPassword"
+                                        class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
+                                        placeholder="Confirm new password">
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="mt-6 flex flex-wrap gap-6">
-                        <div class="flex items-center gap-2">
-                            <div class="h-full flex">
-                                <img src="../public/images/location.svg" class="self-center invert w-4 h-4"></img>
-                            </div>
-                            <span id="location"></span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="h-full flex">
-                                <img src="../public/images/suitcase.svg" class="self-center invert w-4 h-4"></img>
-                            </div>
-                            <span id="role"></span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="h-full flex">
-                                <img src="../public/images/calendar.svg" class="self-center invert w-4 h-4"></img>
-                            </div>
-                            <span id="start_date"></span>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex gap-6">
-                        <div class="flex flex-col">
-                            <span id="friends" class="font-semibold"></span>
-                            <span class="text-gray-400 text-sm">Friends</span>
-                        </div>
-                        <div class="w-[1px] bg-gray-600 mx-6"></div>
-                        <div class="flex flex-col">
-                            <span id="games_played" class="font-semibold"></span>
-                            <span class="text-gray-400 text-sm">Games Played</span>
-                        </div> -->
-    <!-- <div class="divider-vertical"></div>
-                        <div class="flex flex-col">
-                            <span class="font-semibold">142</span>
-                            <span class="text-default-500 text-sm">Projects</span>
-                        </div> -->
-    <!-- </div>
                 </div>
             </div>
-        </div> -->
-
-    <!-- Profile Content -->
-    <!-- <div class="card shadow-md border-none">
-            <h2 class="font-bold text-2xl  pt-5 pl-5">Match History</h2>
-            <div class="px-6 py-6">
-                <ul id="history-list"
-                    class="bg-neutral-100 dark:bg-neutral-800 rounded-lg shadow-md divide-y divide-neutral-200 dark:divide-neutral-700">
-
-                </ul>
+            <div class="flex justify-end gap-2 p-4 border-t border-[#43454b]">
+                <button type="button" id="cancel-edit"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Save Changes
+                </button>
             </div>
-        </div> -->
-    <!-- </div> -->
+        </form>
+    </div>
 </div>

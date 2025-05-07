@@ -1,5 +1,7 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { Match, User, Stats, Profile } from "./Types";
+import { getElement } from "../utils";
+import { ModalManager } from "./modal";
+import { Match, Profile } from "./Types";
 
 /* 
     Run any logic from this function. 
@@ -17,19 +19,19 @@ export function initProfile(): void {
   ] as Match[];
 
   renderUserProfile();
-  renderMatchHistory(matchHistory);
-}
+  renderMatchHistory(matchHistory)
 
-// DOM Elements
-function getElement(id: string) {
-  const element = document.getElementById(id);
-  if (!element)
-    throw new Error(`Element with id "${id}" not found`);
-  return element;
+  const modalManager = new ModalManager("edit-profile-modal");
+
+  modalManager.init(
+    onEditProfileSubmit,
+    resetEditProfileForm,
+    () => console.log("Change avatar clicked") // Optional: Replace with real logic
+  );
 }
 
 // Render user profile
-function renderUserProfile() {
+export function renderUserProfile() {
   const userId = localStorage.getItem('userId');
   if (userId === null) {
     window.location.href = '/auth';
@@ -44,7 +46,6 @@ function renderUserProfile() {
     }
 
     const profile = response.user as Profile;
-    console.log(profile);
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
@@ -115,4 +116,29 @@ function createMatchElement(match: Match, showDetailsButton = false) {
     ` : ''}
   `;
   return matchElement;
+}
+
+// Update the data
+function onEditProfileSubmit(e: Event) {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const formData = new FormData(form);
+  // Send update to backend
+  fetch('/api/user/update', {
+    method: 'POST',
+    body: formData,
+  })
+    .then(res => res.json())
+    .then((response) => {
+      if (response.success) {
+        renderUserProfile();
+      }
+      const modal = new ModalManager("edit-profile-modal");
+      modal.hide();
+    });
+}
+
+function resetEditProfileForm() {
+  const form = document.getElementById('edit-profile-form') as HTMLFormElement;
+  form?.reset();
 }

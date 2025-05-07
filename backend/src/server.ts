@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { createUser, getUserByEmail, getUserById, getUserByUsername } from './db/queries/user.js';
+import { createUser, getUserByEmail, getUserById, getUserByUsername, getUserProfileById, updateUser } from './db/queries/user.js';
 import { FastifyInstance } from 'fastify';
 import { initializeDatabase } from './db/schema.js';
 import * as argon2 from "argon2";
@@ -7,7 +7,6 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import { readFile } from 'fs/promises';
 import { getStatsByUserId } from './db/queries/stats.js';
-import { getUserProfileById } from './db/queries/user.js';
 import './types.ts';
 
 const fastify: FastifyInstance = Fastify({
@@ -15,6 +14,7 @@ const fastify: FastifyInstance = Fastify({
 });
 
 await fastify.register(fastifyCookie);
+
 {
 
 	const privateKey = await readFile('jwtRS256.key', 'utf8');
@@ -24,6 +24,10 @@ await fastify.register(fastifyCookie);
 		secret: {
 			private: privateKey,
 			public: publicKey
+		},
+		cookie: {
+			cookieName: 'access',
+			signed: false,
 		},
 		sign: {
 			algorithm: 'RS256'
@@ -56,8 +60,14 @@ fastify.post('/api/login', async (req, reply) => {
 
 	try {
 		if (await argon2.verify(user.password, password)) {
+			const token = fastify.jwt.sign({ id: user.id });
 			// password match
-			return reply.code(200).send({
+			return reply.code(200).setCookie('access', token, {
+				httpOnly: true,
+				secure: false, // Set to true in production (requires HTTPS)
+				maxAge: 15, // * 15, // 15 min
+				sameSite: 'strict'
+			}).send({
 				success: true
 			});
 		} else {
@@ -104,8 +114,7 @@ fastify.post('/api/register', async (req, reply) => {
 			});
 		}
 
-		//TODO: JWT with user ID?
-		return reply.send({ success: true }); // ADD token to return
+		return reply.send({ success: true });
 	} catch (err) {
 		console.error('Error creating user:', err);
 		return reply.code(500).send({
@@ -114,6 +123,28 @@ fastify.post('/api/register', async (req, reply) => {
 		});
 	}
 });
+
+fastify.post('/api/user/update',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const { id, username, password, avatarUrl } = req.body as {
+			id: number;
+			username: string;
+			password: string;
+			avatarUrl: string;
+		};
+
+		if (!id || !username || !password || !avatarUrl) {
+			return reply.code(400).send({
+				success: false,
+				message: 'Missing fields'
+			});
+		}
+
+		updateUser(id, { username, password, avatarUrl });
+
+		return reply.send({ success: true });
+	});
 
 fastify.get('/api/user/:id',
 	{ onRequest: [fastify.authenticate] },

@@ -63,12 +63,12 @@ export function getUserById(id: number) {
 
 export function updateUser(id: number, data: {
   username: string;
-  email: string;
+  password: string;
   avatarUrl: string;
 }) {
   const stmt = db.prepare(`
-    UPDATE users SET username = ?, email = ?, avatar_url = ?
+    UPDATE users SET username = ?, password = ?, avatar_url = ?
     WHERE id = ?
   `);
-  stmt.run(data.username, data.email, data.avatarUrl, id);
+  stmt.run(data.username, data.password, data.avatarUrl, id);
 }

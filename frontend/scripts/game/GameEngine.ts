@@ -49,6 +49,34 @@ export class GameEngine {
 
 	private onGameOver(): void {
 		this.changeState('gameover');
+		this.saveMatchStats();
+	}
+
+	/*
+	 player1_id INTEGER NOT NULL,
+          player2_id INTEGER NOT NULL,
+          winner_id INTEGER NOT NULL,
+          player1_score INTEGER NOT NULL,
+          player2_score INTEGER NOT NULL,
+          played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          status TEXT DEFAULT 'completed', -- 'completed', 'ongoing'
+          FOREIGN KEY (player1_id) REFERENCES users(id),
+          FOREIGN KEY (player2_id) REFERENCES users(id),
+          FOREIGN KEY (winner_id) REFERENCES users(id)
+	*/
+	private saveMatchStats(): void {
+		//const { left_score, right_score } = this.UIManager.getScore();
+		
+		// TODO: Once both players are connected, use their ids and winner id to save the match stats 
+		// fetch('/api/match', {
+		// 	method: 'POST',
+		// 	headers: { 'Content-Type': 'application/json' },
+		// 	body: JSON.stringify({ player1_id, player2_id, winner_id, left_score, right_score, 'completed' })
+		// }).then((res) => res.json()).then((data) => {
+		// 	if (data.success) {
+		// 		console.log('Match stats saved successfully');
+		// 	}
+		// });
 	}
 
 	private changeState(newStatus: GameStatus): void {
