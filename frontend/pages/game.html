@@ -1,8 +1,8 @@
 <div id="page-game"
-    class="page-content h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-gray-900">
+    class="page-content h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#16161F]">
     <!-- Game Header with Player Info -->
     <div
-        class="w-full max-w-4xl flex flex-row items-center justify-between mb-4 px-2 py-3 bg-gray-800 rounded-lg shadow-lg">
+        class="w-full max-w-4xl flex flex-row items-center justify-between mb-4 px-2 py-3 rounded-lg">
         <!-- Player Info -->
         <div class="flex items-center gap-3">
             <div id="player-avatar"
@@ -12,15 +12,14 @@
                 <p id="player-username" class="font-orbitron font-semibold text-white">Player</p>
                 <p id="player-stats" class="text-gray-300 text-sm">W: 0 / L: 0</p>
             </div>
+            <span id="score-left" class="text-2xl sm:text-3xl font-orbitron font-bold text-white ml-10">0</span>
         </div>
 
         <!-- Score Display -->
-        <div class="flex items-center gap-2 sm:gap-4">
-            <span id="score-left" class="text-2xl sm:text-3xl font-orbitron font-bold text-white">0</span>
-            <span class="text-lg sm:text-xl text-gray-400 font-orbitron">vs</span>
-            <span id="score-right" class="text-2xl sm:text-3xl font-orbitron font-bold text-white">0</span>
-        </div>
-
+        <!-- <div class="flex items-center gap-2 sm:gap-4"> -->
+            <span class="text-lg sm:text-xl text-[#7a7cb7] px-4 py-1 rounded-2xl font-orbitron bg-[#262649]">vs</span>
+        <!-- </div> -->
+        
         <!-- Opponent Info -->
         <div class="flex items-center gap-3 flex-row-reverse">
             <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-xl font-bold">AI
@@ -29,11 +28,13 @@
                 <p id="opponent-name" class="font-orbitron font-semibold text-white">Opponent</p>
                 <p class="text-gray-300 text-sm">Computer</p>
             </div>
+            <span id="score-right" class="text-2xl sm:text-3xl font-orbitron font-bold text-white mr-10">0</span>
         </div>
     </div>
+    
 
     <!-- Game Container -->
-    <div class="w-full max-w-4xl grow flex flex-col items-center justify-center relative">
+    <div class="w-full grow flex flex-col items-center justify-center relative">
         <!-- Game Canvas -->
         <canvas id="game-canvas" class="w-full h-full rounded-lg border border-gray-700 shadow-lg"></canvas>
 

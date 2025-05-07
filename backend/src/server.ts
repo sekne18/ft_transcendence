@@ -11,6 +11,7 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
 import './types.ts';
+import { getMatchesByUserId } from './db/queries/match.js';
 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
@@ -270,7 +271,6 @@ fastify.get('/api/auth/status', { onRequest: [fastify.authenticate] }, async (re
 	});
 });
 
-
 fastify.post('/api/token/refresh', async (req, reply) => {
 	const refreshTokenCookie = req.cookies.refresh;
 
@@ -320,7 +320,6 @@ fastify.post('/api/token/refresh', async (req, reply) => {
 		return reply.code(401).send({ success: false, message: 'Missing refresh token' });
 	}
 });
-
 
 fastify.post('/api/register', async (req, reply) => {
 	const { username, email, password, repassword } = req.body as { username: string; email: string; password: string; repassword: string };
@@ -372,7 +371,7 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 	};
 
 	if (!id) {
-		return reply.code(400).send({
+		return reply.code(401).send({
 			success: false,
 			message: 'Missing user ID'
 		});
@@ -472,7 +471,7 @@ fastify.get('/api/user/stats',
 
 		// Validate and convert to number
 		if (!id || isNaN(Number(id))) {
-			return reply.code(400).send({
+			return reply.code(401).send({
 				success: false,
 				message: 'Invalid user ID'
 			});
@@ -489,6 +488,22 @@ fastify.get('/api/user/stats',
 		}
 
 		return reply.send({ success: true, stats });
+	});
+
+fastify.get('/api/user/recent-matches',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const id = (req.user as { id: number }).id;
+		
+		if (!id) {
+			return reply.code(401).send({
+				success: false,
+				message: 'Invalid user ID'
+			});
+		}
+		const matches = getMatchesByUserId(id);
+
+		return reply.send({ success: true, matches });
 	});
 
 // Run the server!
