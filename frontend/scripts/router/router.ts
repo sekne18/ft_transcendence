@@ -112,7 +112,10 @@ async function checkAuth(): Promise<boolean> {
             credentials: 'include'
         });
 
-        if (!refreshRes.ok) return false;
+        if (!refreshRes.ok) {
+            console.error('Failed to refresh token:', refreshRes.statusText);
+            return false;
+        }
 
         const res = await fetch('/api/auth/status', { credentials: 'include' });
         return res.ok;

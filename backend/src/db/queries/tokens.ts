@@ -1,8 +1,17 @@
 import db from "../connection.js";
 
 export function getTokenByjti(jti: string) {
-	const stmt = db.prepare(`SELECT * FROM tokens WHERE jti = ?`);
+	const stmt = db.prepare(`SELECT * FROM refresh_tokens WHERE jti = ?`);
 	return stmt.get(jti);
+}
+
+export function setUsedToken(jti: string, iat: number) {
+	const stmt = db.prepare(`UPDATE refresh_tokens SET iat = ? WHERE jti = ?`);
+	const result = stmt.run(iat, jti);
+	if (result.changes === 0) {
+		throw new Error("Token not found");
+	}
+	return result.changes;
 }
 
 export function pushTokenToDB({
@@ -17,9 +26,9 @@ export function pushTokenToDB({
 	iat: number;
 }) {
 	const stmt = db.prepare(`
-	INSERT INTO tokens (user_id, jti, exp, iat)
+	INSERT INTO refresh_tokens (user_id, jti, exp, iat)
 	VALUES (?, ?, ?, ?)
   `);
-	const result = stmt.run(jti, user_id, exp, iat);
+	const result = stmt.run(user_id, jti, exp, iat);
 	return result.lastInsertRowid as number;
 }

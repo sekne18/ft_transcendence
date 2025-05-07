@@ -9,11 +9,11 @@ import { readFile } from 'fs/promises';
 import { getStatsByUserId } from './db/queries/stats.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import { getTokenByjti, pushTokenToDB } from './db/queries/tokens.js';
+import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
 import './types.ts';
 
-const access_exp = 15 * 60; // 15 minutes
-const refresh_exp = 7 * 24 * 60 * 60; // 7 days
+const access_exp = 5;//* 60; // 15 minutes
+const refresh_exp = 10; //7 * 24 * 60 * 60; // 7 days
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -41,21 +41,25 @@ function generateTokenPair(userId: number) {
 	const token = fastify.jwt.sign({ id: userId }, { expiresIn: access_exp });
 	const jti = crypto.randomUUID();
 	const refreshToken = fastify.jwt.sign({ id: userId, jti: jti }, { expiresIn: refresh_exp });
-	pushTokenToDB({
-		user_id: userId,
-		jti: jti as string,
-		exp: Math.floor(Date.now() / 1000) + refresh_exp,
-		iat: Math.floor(Date.now() / 1000)
-	});
+	console.log('Generated refresh token:', refreshToken);
+	try {
+		pushTokenToDB({
+			user_id: userId,
+			jti: jti,
+			exp: Math.floor(Date.now() / 1000) + refresh_exp,
+			iat: Math.floor(Date.now() / 1000)
+		});
+	}
+	catch (err) {
+		fastify.log.error('Error pushing token to DB:', err);
+		throw new Error('Failed to store refresh token');
+	}
+	fastify.log.info('Token pair generated:', { token, refreshToken });
 	return { token, refreshToken };
 }
 
 fastify.decorate('authenticate', async function handler(request: any, reply: any) {
 	const accessToken = request.cookies.access;
-	const refreshToken = request.cookies.refresh;
-
-	console.log('Access Token:', accessToken);
-	console.log('Refresh Token:', refreshToken);
 
 	// First try to verify the access token
 	if (accessToken) {
@@ -69,19 +73,6 @@ fastify.decorate('authenticate', async function handler(request: any, reply: any
 	else {
 		return reply.code(401).send({ error: 'Unauthorized' });
 	}
-
-	// If access token fails, try to verify the refresh token
-	if (refreshToken) {
-		try {
-			request.userRefresh = await fastify.jwt.verify(refreshToken);
-			return;
-		} catch (err) {
-			fastify.log.warn('Refresh token invalid or expired');
-		}
-	}
-
-	// If both fail, reject the request
-	return reply.code(401).send({ error: 'Unauthorized' });
 });
 
 fastify.post('/api/login', async (req, reply) => {
@@ -122,12 +113,14 @@ fastify.post('/api/login', async (req, reply) => {
 			// password match
 			return reply.code(200)
 				.setCookie('access', token, {
+					path: '/',
 					httpOnly: true,
 					secure: false, // Set to true in production (requires HTTPS)
 					maxAge: access_exp, // 15 min
 					sameSite: 'strict'
 				})
 				.setCookie('refresh', refreshToken, {
+					path: '/',
 					httpOnly: true,
 					secure: false, // Set to true in production (requires HTTPS)
 					sameSite: 'strict',
@@ -196,12 +189,14 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 
 		return reply.code(200)
 			.setCookie('access', token, {
+				path: '/',
 				httpOnly: true,
 				secure: false, // Set to true in production (requires HTTPS)
 				maxAge: access_exp,
 				sameSite: 'strict'
 			})
 			.setCookie('refresh', refreshToken, {
+				path: '/',
 				httpOnly: true,
 				secure: false, // Set to true in production (requires HTTPS)
 				sameSite: 'strict',
@@ -273,35 +268,52 @@ fastify.get('/api/auth/status', { onRequest: [fastify.authenticate] }, async (re
 
 
 fastify.post('/api/token/refresh', async (req, reply) => {
-	const oldRefresh = req.userRefresh;
-	if (!oldRefresh) {
-		return reply.code(401).send({ success: false, message: 'No refresh token' });
+	const refreshTokenCookie = req.cookies.refresh;
+
+	// If access token fails, try to verify the refresh token
+	if (refreshTokenCookie) {
+		try {
+			const verifiedRefreshToken = await fastify.jwt.verify(refreshTokenCookie) as { id: number, jti: string };
+
+			if (!verifiedRefreshToken) {
+				return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+			}
+			const dbToken = getTokenByjti(verifiedRefreshToken.jti) as { user_id: number; jti: string; exp: number; iat: number, last_used_at: number | undefined; };
+			if (!dbToken) {
+				return reply.code(401).send({ success: false, message: 'Invalid refresh token db' });
+			}
+			if (dbToken.exp < Math.floor(Date.now() / 1000)) {
+				return reply.code(401).send({ success: false, message: 'Refresh token expired' });
+			}
+			if (dbToken.user_id !== verifiedRefreshToken.id) {
+				return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+			}
+			if (dbToken.last_used_at) {
+				return reply.code(401).send({ success: false, message: 'Refresh token already used' });
+			}
+
+			try {
+				setUsedToken(verifiedRefreshToken.jti, Math.floor(Date.now() / 1000));
+			}
+			catch (err) {
+				fastify.log.error('Error setting used token:', err);
+				return reply.code(500).send({ success: false, message: 'Internal server error' });
+			}
+
+			// Rotate token: issue new one
+			const { token, refreshToken } = generateTokenPair(verifiedRefreshToken.id);
+
+			return reply
+				.setCookie('access', token, { path: '/', httpOnly: true, sameSite: 'strict', maxAge: access_exp })
+				.setCookie('refresh', refreshToken, { path: '/', httpOnly: true, sameSite: 'strict', maxAge: refresh_exp })
+				.send({ success: true });
+		} catch (err) {
+			fastify.log.warn('Refresh token invalid or expired');
+			return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+		}
 	}
-
-	try {
-		const payload = fastify.jwt.verify(oldRefresh) as { id: number, jti: string };
-
-		// Optional: check that oldRefresh is in DB and not reused (to detect token theft)
-		const dbToken = getTokenByjti(payload.jti) as { user_id: number; jti: string; exp: number; iat: number };
-		if (!dbToken) {
-			return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
-		}
-		if (dbToken.exp < Math.floor(Date.now() / 1000)) {
-			return reply.code(401).send({ success: false, message: 'Refresh token expired' });
-		}
-		if (dbToken.user_id !== payload.id || dbToken.jti !== payload.jti) {
-			return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
-		}
-
-		// Rotate token: issue new one
-		const { token, refreshToken } = generateTokenPair(payload.id);
-
-		return reply
-			.setCookie('access', token, { httpOnly: true, sameSite: 'strict', maxAge: access_exp })
-			.setCookie('refresh', refreshToken, { httpOnly: true, sameSite: 'strict', maxAge: refresh_exp })
-			.send({ success: true });
-	} catch (err) {
-		return reply.code(401).send({ success: false, message: 'Invalid refresh token' });
+	else {
+		return reply.code(401).send({ success: false, message: 'Missing refresh token' });
 	}
 });
 
