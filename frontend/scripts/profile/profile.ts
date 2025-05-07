@@ -136,6 +136,7 @@ function onEditProfileSubmit(e: Event) {
   e.preventDefault();
   const form = getDataFromForm("edit-profile-form");
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
+  const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
   // Send update to backend
   fetch('/api/user/update', {
@@ -144,7 +145,7 @@ function onEditProfileSubmit(e: Event) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ ...form, avatarUrl }),
+    body: JSON.stringify({ ...form, twoFA, avatarUrl }),
   })
     .then(res => {
       if (res.status === 401) {
