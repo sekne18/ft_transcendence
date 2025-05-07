@@ -16,11 +16,13 @@ export interface Match {
 export interface Profile {
     id: number;
     username: string;
+    display_name: string;
     email: string;
     avatar_url: string;
     games_played: number;
     wins: number;
     losses: number;
+    two_fa_enabled: boolean;
 }
 
 export interface EditForm {

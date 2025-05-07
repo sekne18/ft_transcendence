@@ -33,6 +33,7 @@ export function getUserProfileById(id: number) {
   const stmt = db.prepare(`
     SELECT 
       users.id,
+      users.username,
       users.display_name,
       users.email,
       users.avatar_url,
@@ -83,6 +84,14 @@ export function updateUser(id: number, data: Partial<{
   if (data.avatarUrl !== undefined) {
     fields.push('avatar_url = ?');
     values.push(data.avatarUrl);
+  }
+  if (data.has2fa !== undefined) {
+    fields.push('has2fa = ?');
+    values.push(data.has2fa);
+  }
+  if (data.totp_secret !== undefined) {
+    fields.push('totp_secret = ?');
+    values.push(data.totp_secret);
   }
 
   if (fields.length === 0) {

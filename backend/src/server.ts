@@ -244,6 +244,7 @@ fastify.post('/api/2fa/confirm', { onRequest: [fastify.authenticate] }, async (r
 	const { code } = req.body as { code: string };
 
 	const user = await getUserById(id) as { id: number; totp_secret: string; };
+	console.log('User for 2FA confirmation:', user);
 	if (!user || !user.totp_secret) {
 		return reply.code(400).send({ success: false, message: 'TOTP secret not found' });
 	}
@@ -308,7 +309,6 @@ fastify.post('/api/token/refresh', async (req, reply) => {
 fastify.post('/api/register', async (req, reply) => {
 	const { username, email, password, repassword } = req.body as { username: string; email: string; password: string; repassword: string };
 
-	console.log('Password: ', password);
 	if (password !== repassword) {
 		return reply.code(400).send({
 			success: false,
@@ -324,7 +324,7 @@ fastify.post('/api/register', async (req, reply) => {
 			display_name: username,
 			email,
 			hash,
-			avatarUrl: '' // TODO: Replace with actual avatar URL
+			avatarUrl: 'https://land.campus19.be/wp-content/uploads/2024/08/Design-sans-titre-26-150x150.png' // TODO: Replace with actual avatar URL
 		});
 
 		if (!userId) {
@@ -345,12 +345,13 @@ fastify.post('/api/register', async (req, reply) => {
 });
 
 fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-	const { id, display_name, password, newpassword, newrepassword, avatarUrl } = req.body as {
-		id: number;
+	const id = (req.user as { id: number }).id;
+	const { display_name, currentPassword, newPassword, confirmPassword, twoFA, avatarUrl } = req.body as {
 		display_name?: string;
-		password?: string;
-		newpassword?: string;
-		newrepassword?: string;
+		currentPassword?: string;
+		newPassword?: string;
+		confirmPassword?: string;
+		twoFA?: boolean;
 		avatarUrl?: string;
 	};
 
@@ -361,23 +362,33 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 		});
 	}
 
+	const updateData: Record<string, string> = {};
+
 	// Validate the password if provided
-	if (password && newpassword && newrepassword) {
-		if (newpassword !== newrepassword) {
+	if (currentPassword && newPassword && confirmPassword) {
+		if (newPassword !== confirmPassword) {
 			return reply.code(400).send({
 				success: false,
 				message: 'New passwords do not match'
 			});
 		}
+		else if (newPassword.trim() !== '') {
+			const user = await getUserById(id) as { id: number; password: string; };
+			if (await argon2.verify(user.password, currentPassword)) {
+				updateData.password = await argon2.hash(newPassword.trim());
+			} else {
+				// password did not match
+				fastify.log.info('Password did not match');
+				return reply.code(400).send({
+					success: false,
+					message: 'Invalid password'
+				});
+			}
+		}
 	}
 
-	// TODO: Validate the password hash
-
 	// Build the update object dynamically since we don't know which fields will be updated
-	const updateData: Record<string, string> = {};
-
 	if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
-	if (password && password.trim() !== '') updateData.password = password.trim();
 	if (avatarUrl && avatarUrl.trim() !== '') updateData.avatarUrl = avatarUrl.trim();
 
 	if (Object.keys(updateData).length === 0) {
@@ -386,7 +397,9 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 			message: 'No valid fields to update'
 		});
 	}
-
+	if (twoFA) {
+		updateUser(id, { ...updateData, has2fa: twoFA });
+	}
 	updateUser(id, updateData);
 
 	return reply.send({ success: true });
@@ -415,7 +428,7 @@ fastify.get('/api/user',
 			});
 		}
 
-		reply.send(user);
+		return reply.send({ success: true, user });
 	});
 
 fastify.get('/api/user/profile',

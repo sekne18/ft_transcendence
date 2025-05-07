@@ -1,3 +1,5 @@
+import { init2FA } from "./2FA";
+
 export class ModalManager {
     private modal: HTMLElement | null;
 
@@ -37,6 +39,8 @@ export class ModalManager {
         if (changeAvatarBtn && onAvatarChange) {
             changeAvatarBtn.addEventListener('click', onAvatarChange);
         }
+
+        init2FA();
     }
 
     show() {

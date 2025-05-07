@@ -52,8 +52,8 @@ export function renderUserProfile() {
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
+    getElement('display_name').textContent = profile.display_name;
     getElement('username').textContent = profile.username;
-    getElement('user-email').textContent = profile.email;
     getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
 
     // Set user stats
@@ -71,6 +71,8 @@ export function renderUserProfile() {
     (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
     (getElement('username-input') as HTMLInputElement).value = profile.username;
     (getElement('email-input') as HTMLInputElement).value = profile.email;
+    (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
+    (getElement('toggle-2fa') as HTMLInputElement).checked = profile.two_fa_enabled;
   })
     .catch(() => {
       window.location.href = '/auth';
@@ -139,7 +141,10 @@ function onEditProfileSubmit(e: Event) {
   fetch('/api/user/update', {
     method: 'POST',
     credentials: 'include',
-    body: JSON.stringify({ form, avatarUrl }),
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ...form, avatarUrl }),
   })
     .then(res => {
       if (res.status === 401) {
@@ -159,6 +164,10 @@ function onEditProfileSubmit(e: Event) {
 
 function resetEditProfileForm() {
   (getElement('avatar-input') as HTMLImageElement).src = (getElement('user-avatar') as HTMLImageElement).src;
-  (getElement('username-input') as HTMLInputElement).value = getElement('username').textContent || '';
-  (getElement('email-input') as HTMLInputElement).value = getElement('user-email').textContent || '';
+  (getElement('current-password-input') as HTMLInputElement).value = '';
+  (getElement('new-password-input') as HTMLInputElement).value = '';
+  (getElement('confirm-password-input') as HTMLInputElement).value = '';
+  (getElement('display-name-input') as HTMLInputElement).value = getElement('display-name-input').textContent || '';
+  const toggle2faText = getElement('toggle-2fa').textContent || 'false';
+  (getElement('toggle-2fa') as HTMLInputElement).checked = Boolean(JSON.parse(toggle2faText));
 }
