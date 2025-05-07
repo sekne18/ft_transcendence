@@ -87,7 +87,7 @@ export function updateUser(id: number, data: Partial<{
   }
   if (data.has2fa !== undefined) {
     fields.push('has2fa = ?');
-    values.push(data.has2fa);
+    values.push(data.has2fa ? 1 : 0);
   }
   if (data.totp_secret !== undefined) {
     fields.push('totp_secret = ?');
@@ -105,5 +105,6 @@ export function updateUser(id: number, data: Partial<{
   `;
 
   const stmt = db.prepare(sql);
+  console.log('values', ...values, id);
   stmt.run(...values, id);
 }

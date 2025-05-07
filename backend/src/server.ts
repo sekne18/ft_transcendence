@@ -12,8 +12,8 @@ import qrcode from 'qrcode';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
 import './types.ts';
 
-const access_exp = 5;//* 60; // 15 minutes
-const refresh_exp = 10; //7 * 24 * 60 * 60; // 7 days
+const access_exp = 15 * 60; // 15 minutes
+const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -212,8 +212,12 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 
 fastify.get('/api/2fa/setup', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
-	const user = await getUserById(id);
+	const user = await getUserById(id) as { id: number; has2fa: boolean; };
 	if (!user) return reply.code(404).send({ success: false, message: 'User not found' });
+
+	if (user.has2fa) {
+		return reply.code(400).send({ success: false, message: '2FA already enabled' });
+	}
 
 	// Generate a new TOTP secret
 	const secret = speakeasy.generateSecret({
