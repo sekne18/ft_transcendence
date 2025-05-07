@@ -52,8 +52,8 @@ export function renderUserProfile() {
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
-    getElement('username').textContent = profile.username;
-    getElement('user-email').textContent = profile.email;
+    getElement('username').textContent = profile.display_name;
+    getElement('user-email').textContent = profile.username;
     getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
 
     // Set user stats
@@ -139,7 +139,10 @@ function onEditProfileSubmit(e: Event) {
   fetch('/api/user/update', {
     method: 'POST',
     credentials: 'include',
-    body: JSON.stringify({ form, avatarUrl }),
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ...form, avatarUrl }),
   })
     .then(res => {
       if (res.status === 401) {

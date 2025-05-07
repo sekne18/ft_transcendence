@@ -87,7 +87,7 @@ fastify.post('/api/login', async (req, reply) => {
 			return reply.code(200).setCookie('access', token, {
 				httpOnly: true,
 				secure: false, // Set to true in production (requires HTTPS)
-				maxAge: 15 * 60, // * 60, // 15 min
+				maxAge: 15, // * 60, // 15 min
 				sameSite: 'strict'
 			}).send({
 				success: true,
@@ -269,7 +269,6 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 	
 	// Validate the password if provided
 	if (currentPassword && newPassword && confirmPassword) {
-		console.log(currentPassword, newPassword, confirmPassword);
 		if (newPassword !== confirmPassword) {
 			return reply.code(400).send({
 				success: false,
@@ -277,7 +276,17 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 			});
 		}
 		else if (newPassword.trim() !== '') {
-			updateData.password = await argon2.hash(newPassword.trim());
+			const user = await getUserById(id) as { id: number; password: string; };
+			if (await argon2.verify(user.password, currentPassword)) {
+				updateData.password = await argon2.hash(newPassword.trim());
+			} else {
+				// password did not match
+				fastify.log.info('Password did not match');
+				return reply.code(400).send({
+					success: false,
+					message: 'Invalid password'
+				});
+			}
 		}
 	}
 
