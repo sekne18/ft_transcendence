@@ -13,7 +13,7 @@ export function createUser({ username, email, password, avatarUrl }: {
     return 0;
   }
   const insertUser = db.prepare(`
-    INSERT INTO users (username, email, password, avatar_url)
+    INSERT INTO users (display_name, email, password, avatar_url)
     VALUES (?, ?, ?, ?)
   `);
   const result = insertUser.run(username, email, password, avatarUrl);
@@ -32,7 +32,7 @@ export function getUserProfileById(id: number) {
   const stmt = db.prepare(`
     SELECT 
       users.id,
-      users.username,
+      users.display_name,
       users.email,
       users.avatar_url,
       stats.games_played,
@@ -61,14 +61,37 @@ export function getUserById(id: number) {
   return stmt.get(id);
 }
 
-export function updateUser(id: number, data: {
-  username: string;
+export function updateUser(id: number, data: Partial<{
+  display_name: string;
   password: string;
   avatarUrl: string;
-}) {
-  const stmt = db.prepare(`
-    UPDATE users SET username = ?, password = ?, avatar_url = ?
+}>) {
+  const fields = [];
+  const values = [];
+
+  if (data.display_name !== undefined) {
+    fields.push('display_name = ?');
+    values.push(data.display_name);
+  }
+  if (data.password !== undefined) {
+    fields.push('password = ?');
+    values.push(data.password);
+  }
+  if (data.avatarUrl !== undefined) {
+    fields.push('avatar_url = ?');
+    values.push(data.avatarUrl);
+  }
+
+  if (fields.length === 0) {
+    // Nothing to update
+    return;
+  }
+
+  const sql = `
+    UPDATE users SET ${fields.join(', ')}
     WHERE id = ?
-  `);
-  stmt.run(data.username, data.password, data.avatarUrl, id);
+  `;
+
+  const stmt = db.prepare(sql);
+  stmt.run(...values, id);
 }

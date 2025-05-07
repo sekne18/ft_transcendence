@@ -12,9 +12,12 @@ export function initializeDatabase() {
       db.prepare(`
         CREATE TABLE users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT NOT NULL,
+          username TEXT NOT NULL UNIQUE,
+          display_name TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
           password TEXT NOT NULL,
+          has2fa BOOLEAN DEFAULT false,
+          totp_secret TEXT,
           avatar_url TEXT DEFAULT '',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
