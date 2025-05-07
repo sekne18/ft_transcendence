@@ -251,11 +251,12 @@ fastify.post('/api/register', async (req, reply) => {
 
 fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
-	const { display_name, currentPassword, newPassword, confirmPassword, avatarUrl } = req.body as {
+	const { display_name, currentPassword, newPassword, confirmPassword, twoFA, avatarUrl } = req.body as {
 		display_name?: string;
 		currentPassword?: string;
 		newPassword?: string;
 		confirmPassword?: string;
+		twoFA?: boolean;
 		avatarUrl?: string;
 	};
 
@@ -301,8 +302,9 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 			message: 'No valid fields to update'
 		});
 	}
-
-	console.log('Updating user with data:', updateData);
+	if (twoFA) {
+		updateUser(id, {...updateData, has2fa: twoFA});
+	}
 	updateUser(id, updateData);
 
 	return reply.send({ success: true });
