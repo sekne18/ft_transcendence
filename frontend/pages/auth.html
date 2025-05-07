@@ -14,7 +14,7 @@
         <div class="border-t border-gray-500 my-4"></div>
 
         <!-- Tabs -->
-        <div class="flex space-x-2 justify-center mb-4">
+        <div id="tabs-auth" class="flex space-x-2 justify-center mb-4">
             <button id="tab-login"
                 class="px-4 py-2 font-medium border-b-2 border-blue-500 hover:font-bold">Login</button>
             <button id="tab-register" class="px-4 py-2 font-medium text-gray-500 hover:font-bold">Register</button>
@@ -45,9 +45,40 @@
             <button type="submit" id="login-btn"
                 class="bg-[#6366F1] w-full mt-5 text-white py-2 rounded-xl hover:bg-[#5254c6]">Sign In</button>
             <div id="error-login-message" class=" text-red-500 text-sm mt-4">
-                    <!-- Error messages will be displayed here -->
+                <!-- Error messages will be displayed here -->
             </div>
         </form>
+
+        <!-- 2FA -->
+        <div id="twofa-form" class="space-y-4 max-w-sm mx-auto hidden">
+            <div class="text-center">
+                <i data-lucide="shield-check" class="w-10 h-10 text-blue-500 mx-auto mb-2"></i>
+                <h3 class="text-lg font-semibold">Two-Factor Authentication</h3>
+                <p class="text-gray-500 text-sm">
+                    Enter the verification code from your authenticator app
+                </p>
+            </div>
+
+            <div class="relative">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="key" class="w-5 h-5 text-gray-400"></i>
+                    </div>
+                    <input id="twoFactorInput" type="text" placeholder="Enter 6-digit code" maxlength="6"
+                        pattern="[0-9]*" inputmode="numeric"
+                        class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+            </div>
+            <button id="backToLogin"
+                class="w-full text-sm text-[#6366F1] py-2 px-4 border border-transparent transition rounded-xl hover:bg-[#5254c625]">
+                Back to Login
+            </button>
+            <button id="vertify-btn" type="submit"
+                class="w-full text-sm text-white py-2 px-4 border border-transparent bg-[#6366F1] transition rounded-xl hover:bg-[#5254c6]">
+                Vertify
+            </button>
+        </div>
 
         <!-- Register Form -->
         <form id="register-form" class="hidden flex-col gap-4 ">

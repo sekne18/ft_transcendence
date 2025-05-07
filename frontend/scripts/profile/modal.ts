@@ -16,7 +16,7 @@ export class ModalManager {
         const closeModalBtn = document.getElementById('close-modal');
         const cancelBtn = document.getElementById('cancel-edit');
         const editProfileForm = document.getElementById('edit-profile-form');
-
+        
         const closeModal = () => {
             this.hide();
             onReset();

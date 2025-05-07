@@ -1,5 +1,5 @@
 import { loadContent } from "../router/router";
-import { getDataFromForm } from "../utils";
+import { getDataFromForm, getElement } from "../utils";
 
 /* 
     Run any logic from this function. 
@@ -10,15 +10,19 @@ export function initAuth(): void {
 }
 
 function setEvents(): void {
+    setLoginValidationEvents();
+    setRegisterValidationEvents();
+    handleTabSwitching();
+    set2FaValidationEvents();
+    handleAuth();
+}
+
+function handleTabSwitching() {
     const loginBtn = document.getElementById("tab-login");
     const registerBtn = document.getElementById("tab-register");
     const loginForm = document.getElementById("login-form") as HTMLFormElement;
     const registerForm = document.getElementById("register-form") as HTMLFormElement;
-
-    setLoginValidationEvents();
-    setRegisterValidationEvents();
-
-
+    
     if (loginBtn && registerBtn) {
         loginBtn.addEventListener("click", () => {
             if (loginForm && registerForm) {
@@ -46,9 +50,7 @@ function setEvents(): void {
             }
         });
     }
-    handleAuth();
 }
-
 
 function handleAuth() {
     const loginForm = document.getElementById('login-form');
@@ -87,9 +89,23 @@ function handleLogin(event: Event) {
         })
         .then(data => {
             if (data.success) {
-                const newPath = '/';
-                history.pushState(null, '', newPath);
-                loadContent(newPath);
+                if (!data.twoFA)
+                {
+                    const newPath = '/';
+                    history.pushState(null, '', newPath);
+                    loadContent(newPath);
+                }
+                else {
+                    const loginForm = getElement('login-form') as HTMLFormElement;
+                    const tabsAuth = getElement('tabs-auth') as HTMLDivElement;
+                    const twoFAForm = getElement('twofa-form') as HTMLFormElement;
+
+                    if (loginForm && tabsAuth && twoFAForm) {
+                        loginForm.classList.add('hidden');
+                        tabsAuth.classList.add('hidden');
+                        twoFAForm.classList.remove('hidden');
+                    }
+                }
             } else {
                 const loginBtn = document.getElementById("login-email");
                 const registerBtn = document.getElementById("login-password");
@@ -107,6 +123,59 @@ function handleLogin(event: Event) {
         .catch(error => {
             console.error('Error during login:', error);
         });
+}
+
+function set2FaValidationEvents() {
+    const backBtn = document.getElementById("backToLogin");
+    const vertifyBtn = document.getElementById("vertify-btn");
+    const loginForm = getElement('login-form') as HTMLFormElement;
+    const tabsAuth = getElement('tabs-auth') as HTMLDivElement;
+    const twoFAForm = getElement('twofa-form') as HTMLFormElement;
+
+
+    if (backBtn && vertifyBtn) {
+        backBtn.addEventListener("click", () => {
+            loginForm.classList.remove('hidden');
+            tabsAuth.classList.remove('hidden');
+            twoFAForm.classList.add('hidden');
+        });
+        vertifyBtn.addEventListener("click", () => {
+            const twoFAData = getElement('twoFactorInput') as HTMLInputElement;
+            if (!twoFAData.value)
+                return;
+            // Call to the backend to verify the 2FA code
+            fetch('/api/2fa/verify', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({code: twoFAData.value}),
+            })
+                .then(res => {
+                    // if (res.status === 401) {
+                    //     window.location.href = '/auth';
+                    //     return null;
+                    // }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const newPath = '/';
+                        history.pushState(null, '', newPath);
+                        loadContent(newPath);
+                    } else {
+                        const errMsg = document.getElementById("error-login-message");
+                        if (errMsg) {
+                            errMsg.innerText = data.message;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during 2FA verification:', error);
+                });
+        });
+    }
 }
 
 function handleRegister(event: Event) {

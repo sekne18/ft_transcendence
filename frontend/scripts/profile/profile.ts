@@ -62,7 +62,8 @@ export function renderUserProfile() {
     (getElement('username-input') as HTMLInputElement).value = profile.username;
     (getElement('email-input') as HTMLInputElement).value = profile.email;
     (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
-    (getElement('toggle-2fa') as HTMLInputElement).checked = profile.two_fa_enabled;
+    (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
+    (getElement('toggle-2fa') as HTMLInputElement).dataset.enabled = profile.has2fa ? 'true' : 'false'; 
   })
     .catch(() => {
       window.location.href = '/auth';
