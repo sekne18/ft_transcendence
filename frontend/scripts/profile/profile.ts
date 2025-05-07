@@ -164,6 +164,7 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
+  // console.log(twoFA);
   // Send update to backend
   fetch('/api/user/update', {
     method: 'POST',

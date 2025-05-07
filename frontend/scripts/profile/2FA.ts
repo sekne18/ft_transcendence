@@ -45,6 +45,7 @@ export function init2FA() {
 
     const closeModal = () => {
         modal2FA.classList.add('hidden');
+        toggle2FA.checked = false;
     };
 
     close2FAModal.addEventListener('click', closeModal);
@@ -74,11 +75,11 @@ export function init2FA() {
                     alert('2FA enabled successfully!');
                     toggle2FA.checked = true;
                     toggle2FA.dataset.enabled = "true";
+                    modal2FA.classList.add('hidden');
                 } else {
                     alert('Failed to enable 2FA. Please try again.');
-                    toggle2FA.checked = false;
+                    closeModal();
                 }
-                closeModal();
             });
         } else {
             alert('Please enter a valid 6-digit code.');
