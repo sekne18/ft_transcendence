@@ -22,6 +22,7 @@ export interface Profile {
     games_played: number;
     wins: number;
     losses: number;
+    two_fa_enabled: boolean;
 }
 
 export interface EditForm {
