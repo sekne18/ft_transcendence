@@ -1,15 +1,12 @@
 import fastifyWebsocket from "@fastify/websocket";
-
-export type vec2d = {
-	x: number,
-	y: number,
-};
+import { AIPlayer } from "./AIPlayer.js";
 
 export type MatchMakerParams = {
 	ratingWindowMin: number,
 	ratingWindowMax: number,
 	WindowGrowthRate: number,
 	updateInterval: number,
+	timeUntilAI: number,
 };
 
 export type GameParams = {
@@ -22,6 +19,11 @@ export type GameParams = {
 	FPS: number, countdown: number,
 };
 
+export type vec2d = {
+	x: number,
+	y: number,
+};
+
 export type GameState = {
 	left: vec2d, left_v: vec2d, left_a: vec2d,
 	right: vec2d, right_v: vec2d, right_a: vec2d,
@@ -31,9 +33,15 @@ export type GameState = {
 
 export type UserInput = number; // range: -1 to 1
 
+export type AIPlayerParams = {
+	checkUpdateSpeed: number,
+	moveUpdateSpeed: number,
+	smarts: 'dumb' | 'smart' | 'godlike',
+}
+
 export type PlayerConnection = {
 	id: number,
-	socket: fastifyWebsocket.WebSocket,
+	socket: fastifyWebsocket.WebSocket | AIPlayer,
 };
 
 export type QueuedPlayer = {

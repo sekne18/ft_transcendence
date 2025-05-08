@@ -20,7 +20,7 @@ export class GameInstance {
 			ball: { x: this.params.arena_w / 2, y: this.params.arena_h / 2 },
 			left_score: 0, right_score: 0,
 			ball_v: { x: 0, y: 0 },
-			ball_a: { x: 0, y: 0 },
+			ball_a: { x: 1, y: 1 },
 			left_v: { x: 0, y: 0 },
 			right_v: { x: 0, y: 0 },
 			left_a: { x: 0, y: 0 },
