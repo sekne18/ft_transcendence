@@ -16,8 +16,23 @@ export function initProfile(): void {
   modalManager.init(
     onEditProfileSubmit,
     resetEditProfileForm,
-    () => console.log("Change avatar clicked") // Optional: Replace with real logic
+    onAvatarChange // Optional: Replace with real logic
   );
+}
+
+function onAvatarChange() {
+  const avatarInputBtn = document.getElementById('change-avatar-btn') as HTMLInputElement;
+  const avatarImg = document.getElementById('avatar-input') as HTMLImageElement;
+
+  const file = avatarInputBtn.files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatarInputBtn.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    avatarImg.src = URL.createObjectURL(file);
+  }
 }
 
 // Render user profile
@@ -63,7 +78,7 @@ export function renderUserProfile() {
     (getElement('email-input') as HTMLInputElement).value = profile.email;
     (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
     (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
-    (getElement('toggle-2fa') as HTMLInputElement).dataset.enabled = profile.has2fa ? 'true' : 'false'; 
+    (getElement('toggle-2fa') as HTMLInputElement).dataset.enabled = profile.has2fa ? 'true' : 'false';
   })
     .catch(() => {
       window.location.href = '/auth';

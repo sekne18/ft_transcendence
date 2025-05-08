@@ -10,12 +10,13 @@ export class ModalManager {
     init(
         onSubmit: (e: Event) => void,
         onReset: () => void,
-        onAvatarChange?: () => void
+        onAvatarChange: () => void
     ) {
         const openModalBtn = document.getElementById('edit-profile-btn');
         const closeModalBtn = document.getElementById('close-modal');
         const cancelBtn = document.getElementById('cancel-edit');
         const editProfileForm = document.getElementById('edit-profile-form');
+        const changeAvatarBtn = document.getElementById('change-avatar-btn');
         
         const closeModal = () => {
             this.hide();
@@ -35,9 +36,8 @@ export class ModalManager {
             editProfileForm.addEventListener('submit', onSubmit);
         }
 
-        const changeAvatarBtn = document.getElementById('change-avatar-btn');
-        if (changeAvatarBtn && onAvatarChange) {
-            changeAvatarBtn.addEventListener('click', onAvatarChange);
+        if (changeAvatarBtn) {
+            changeAvatarBtn.addEventListener('change', onAvatarChange);
         }
 
         init2FA();
