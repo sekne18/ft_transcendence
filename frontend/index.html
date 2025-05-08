@@ -40,14 +40,39 @@
           <line fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="2" x1="25" x2="25" y1="1" y2="49" />
         </svg>
         <ul id="langDropdownMenu"
-          class="absolute right-0 mt-2 hidden w-32 bg-white rounded shadow-md z-10 text-sm text-gray-800">
-          <li><button data-lang="en" class="w-full px-4 py-2 hover:bg-blue-100 text-left">English</button></li>
-          <li><button data-lang="nl" class="w-full px-4 py-2 hover:bg-blue-100 text-left">Nederlands</button></li>
-          <li><button data-lang="sl" class="w-full px-4 py-2 hover:bg-blue-100 text-left">Slovenščina</button></li>
+          class="absolute right-0 mt-2 hidden w-32s bg-white rounded shadow-lg z-10 text-sm text-gray-800">
+          <li><button data-lang="en"
+              class=" px-4 py-2 hover:border-blue-600 border-transparent mt-1 mx-1 pr-11 border-2 text-gray-700 rounded-lg hover:bg-gray-300 text-left">English</button>
+          </li>
+          <li><button data-lang="nl"
+              class=" px-4 py-2 hover:border-blue-600 border-transparent border-2 mx-1 text-gray-700 rounded-lg hover:bg-gray-300 text-left">Nederlands</button>
+          </li>
+          <li><button data-lang="sl"
+              class=" px-4 py-2 hover:border-blue-600 border-transparent mb-1 border-2 mx-1 text-gray-700 rounded-lg hover:bg-gray-300 text-left">Slovenščina</button>
+          </li>
         </ul>
       </div>
-      <div class="flex">
-        <a href="/profile" class="inline-block w-12 h-12 rounded-full border-2 border-[#33335f] hover:border-3 hover:border-blue-500"><img src="https://i.pravatar.cc/300" class="rounded-full" /></a>
+      <!-- <a href="/profile" id="profile-btn" class="inline-block w-12 h-12 rounded-full border-2 border-[#33335f] hover:border-3 hover:border-blue-500"><img src="https://i.pravatar.cc/300" class="rounded-full" /></a>
+        <button id="logout-btn" class="absolute hidden right-0 mt-15 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Logout</button> -->
+      <div class="relative inline-block text-left" id="user-dropdown">
+        <img src="https://i.pravatar.cc/300" alt="User Avatar" id="user-avatar"
+          class="w-12 h-12 rounded-full hover:border-3 hover:border-blue-500 border-2 border-[#33335f] cursor-pointer" />
+
+        <!-- Dropdown Menu -->
+        <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-50">
+          <a href="/profile"
+            class="hover:border-blue-600 border-transparent border-2 mt-1 mx-1 rounded-lg flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 gap-2">
+            <i class="lucide lucide-user"></i> Profile
+          </a>
+          <a href="/profile"
+            class="hover:border-blue-600 flex items-center px-4 py-2 rounded-lg border-transparent border-2 text-sm mx-1 text-gray-700 hover:bg-gray-300 gap-2">
+            <i class="lucide lucide-bar-chart-2"></i> My Stats
+          </a>
+          <a id="logout-btn"
+            class="hover:border-blue-600 cursor-pointer hover:text-black flex items-center px-4 py-2 rounded-lg mb-1 border-transparent border-2 text-sm mx-1 text-red-600 hover:bg-[#f31260] gap-2">
+            <i class="lucide lucide-settings"></i> Logout
+          </a>
+        </div>
       </div>
     </div>
   </nav>

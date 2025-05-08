@@ -126,7 +126,6 @@ async function checkAuth(): Promise<boolean> {
     }
 }
 
-
 function updateActiveLink(url: string) {
     document.querySelectorAll('.nav-link').forEach(link => {
         const href = link.getAttribute('href');
@@ -139,4 +138,3 @@ function updateActiveLink(url: string) {
         (link as HTMLElement).style.fontWeight = isActive ? 'bold' : 'normal';
     });
 }
-
