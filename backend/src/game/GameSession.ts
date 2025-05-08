@@ -62,6 +62,9 @@ export class GameSession {
 	}
 
 	public stopGame(): void {
+		this.players.forEach((player) => {
+			player.socket.close(1000, "Game Over");
+		});
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
@@ -69,10 +72,14 @@ export class GameSession {
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {
-		this.game.resetGame();
+		console.log("Goal scored by:", paddle);
 		this.players.forEach((player) => {
+			player.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));
 			player.socket.send(JSON.stringify({ type: "goal", data: paddle, timestamp: Date.now() }));
 		});
+		if (this.game.getState().left_score >= this.params.max_score || this.game.getState().right_score >= this.params.max_score) {
+			return;
+		}
 		setTimeout(() => {
 			this.players.forEach((player) => {
 				player.socket.send(JSON.stringify({ type: "game_event", data: { event: "start_countdown", time: this.params.countdown }, timestamp: Date.now() }));
@@ -84,10 +91,10 @@ export class GameSession {
 	};
 
 	private onGameOver(): void {
-		this.stopGame();
 		this.players.forEach((player) => {
 			player.socket.send(JSON.stringify({ type: "game_event", data: { event: "game_over" }, timestamp: Date.now() }));
 		});
+		this.stopGame();
 	};
 
 	private onDisconnect(player: PlayerConnection): void {

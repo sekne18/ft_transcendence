@@ -29,6 +29,7 @@ export class GameEngine {
 		this.gameRenderer = new GameRenderer(canvas, gameParams, renderDetails, this.game.getState.bind(this.game));
 		this.inputController = new PointerInputController(canvas, gameParams, this.game.getState.bind(this.game), this.game.receiveInput.bind(this.game));
 		this.UIManager = new UIManager(this.matchmake.bind(this));
+		this.UIManager.updateScore(0, 0);
 	}
 
 	public start(): void {
@@ -43,6 +44,7 @@ export class GameEngine {
 	public async onMatchFound(side: 'left' | 'right', enemy_id: number): Promise<void> {
 		//TODO: setup enemy info on the left/right side
 		this.UIManager.setMatchmakingOverlay('found');
+		this.UIManager.updateScore(0, 0);
 		this.player = side;
 		this.inputController.setSide(side);
 	}
@@ -112,6 +114,7 @@ export class GameEngine {
 				break;
 			case 'gameover':
 				this.UIManager.toggleOverlayVisibility('hidden');
+				this.UIManager.updateScore(0, 0);
 				break;
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('hidden');
@@ -125,7 +128,6 @@ export class GameEngine {
 		switch (status) {
 			case 'idle':
 				this.UIManager.setMatchmakingOverlay('button');
-				this.UIManager.updateScore(0, 0);
 				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			case 'matchmaking':

@@ -60,9 +60,11 @@ export class GameConnection {
 			this.processMsg(msg);
 		});
 
-		this.socket.addEventListener('close', () => {
+		this.socket.addEventListener('close', event => {
 			console.log('Disconnected from server');
-			this.onError(new Error('Disconnected from server'));
+			if (event.code !== 1000) {
+				this.onError(new Error('server disconnected'));
+			}
 		});
 
 		this.socket.addEventListener('error', err => {
