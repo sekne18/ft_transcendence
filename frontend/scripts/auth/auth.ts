@@ -22,7 +22,7 @@ function handleTabSwitching() {
     const registerBtn = document.getElementById("tab-register");
     const loginForm = document.getElementById("login-form") as HTMLFormElement;
     const registerForm = document.getElementById("register-form") as HTMLFormElement;
-    
+
     if (loginBtn && registerBtn) {
         loginBtn.addEventListener("click", () => {
             if (loginForm && registerForm) {
@@ -63,6 +63,20 @@ function handleAuth() {
     }
 }
 
+const authState = (function () {
+    let tempToken: string | null = null;
+
+    return {
+        setTempToken: (token: string) => {
+            tempToken = token;
+        },
+        getTempToken: () => tempToken,
+        clearTempToken: () => {
+            tempToken = null;
+        }
+    };
+})();
+
 function handleLogin(event: Event) {
     event.preventDefault();
 
@@ -89,8 +103,7 @@ function handleLogin(event: Event) {
         })
         .then(data => {
             if (data.success) {
-                if (!data.twoFA)
-                {
+                if (!data.twoFA) {
                     const newPath = '/';
                     history.pushState(null, '', newPath);
                     loadContent(newPath);
@@ -101,6 +114,11 @@ function handleLogin(event: Event) {
                     const twoFAForm = getElement('twofa-form') as HTMLFormElement;
 
                     if (loginForm && tabsAuth && twoFAForm) {
+
+                        if (data.tempToken) {
+                            authState.setTempToken(data.tempToken);
+                        }
+
                         loginForm.classList.add('hidden');
                         tabsAuth.classList.add('hidden');
                         twoFAForm.classList.remove('hidden');
@@ -135,6 +153,9 @@ function set2FaValidationEvents() {
 
     if (backBtn && vertifyBtn) {
         backBtn.addEventListener("click", () => {
+            // Clear the token when going back to the login form
+            authState.clearTempToken();
+
             loginForm.classList.remove('hidden');
             tabsAuth.classList.remove('hidden');
             twoFAForm.classList.add('hidden');
@@ -143,14 +164,19 @@ function set2FaValidationEvents() {
             const twoFAData = getElement('twoFactorInput') as HTMLInputElement;
             if (!twoFAData.value)
                 return;
+
+            // Retrieve the temporary token from the closure
+            const tempToken = authState.getTempToken();
+
             // Call to the backend to verify the 2FA code
             fetch('/api/2fa/verify', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tempToken}`,
                 },
-                body: JSON.stringify({code: twoFAData.value}),
+                body: JSON.stringify({ code: twoFAData.value }),
             })
                 .then(res => {
                     // if (res.status === 401) {
@@ -161,6 +187,9 @@ function set2FaValidationEvents() {
                 })
                 .then(data => {
                     if (data.success) {
+                        // Clear the token after successful verification
+                        authState.clearTempToken();
+
                         const newPath = '/';
                         history.pushState(null, '', newPath);
                         loadContent(newPath);
@@ -173,6 +202,8 @@ function set2FaValidationEvents() {
                 })
                 .catch(error => {
                     console.error('Error during 2FA verification:', error);
+                    // Clear the token in case of errors
+                    authState.clearTempToken();
                 });
         });
     }
