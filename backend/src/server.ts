@@ -20,9 +20,11 @@ import path, { dirname } from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
+
 
 const matchMakerParams: MatchMakerParams = {
 	ratingWindowMin: 0,
@@ -37,18 +39,22 @@ const fastify: FastifyInstance = Fastify({
 	logger: true
 });
 
+dotenv.config();
+
 const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/avatars');
 
 if (!existsSync(UPLOAD_DIR)) {
 	mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+{
+	const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-await fastify.register(fastifyStatic, {
-	root: path.join(__dirname, '../public/uploads'),
-	prefix: '/uploads/', // this allows access like /avatars/1.png
-});
+	await fastify.register(fastifyStatic, {
+		root: path.join(__dirname, '../public/uploads'),
+		prefix: '/uploads/', // this allows access like /avatars/default.png
+	});
+}
 
 await fastify.register(fastifyCookie);
 await fastify.register(fastifyWebsocket);
@@ -69,8 +75,6 @@ await fastify.register(fastifyWebsocket);
 	});
 }
 
-
-
 function generateTokenPair(userId: number) {
 	const token = fastify.jwt.sign({ id: userId }, { expiresIn: access_exp });
 	const jti = crypto.randomUUID();
@@ -90,6 +94,77 @@ function generateTokenPair(userId: number) {
 	fastify.log.info('Token pair generated:', { token, refreshToken });
 	return { token, refreshToken };
 }
+
+fastify.get('/api/login/google/callback', async (req, reply) => {
+	const code = (req.query as any).code;
+	if (!code) return reply.status(400).send({ success: false, message: 'Missing code' });
+
+	try {
+		// Step 1: Exchange code for access token
+		const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams({
+				code,
+				client_id: process.env.GOOGLE_CLIENT_ID!,
+				client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+				redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+				grant_type: 'authorization_code',
+			})
+		});
+
+		const tokenData = await tokenRes.json() as { access_token?: string };
+
+		if (!tokenData.access_token) {
+			return reply.code(401).send({ success: false, message: 'Failed to get access token' });
+		}
+
+		// Step 2: Get user info from Google
+		const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+			headers: { Authorization: `Bearer ${tokenData.access_token}` }
+		});
+		const googleUser = await userRes.json() as { email: string; id: string; name: string; picture: string };
+
+		// Step 3: Get or create user in your DB
+		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; // Same as your login
+
+		if (!user) {
+			// If user doesn't exist, create them
+			const userId = await createUser({
+				email: googleUser.email,
+				hash: "",
+				username: googleUser.name,
+				display_name: googleUser.name,
+				avatarUrl: googleUser.picture,
+			});
+			user = await getUserById(userId) as { id: number; email: string; hash: string; name: string; picture: string; };
+		}
+
+		// Step 4: Issue token pair
+		const { token, refreshToken } = generateTokenPair(user.id);
+
+		// Step 5: Set same cookies as in password login
+		reply
+			.setCookie('access', token, {
+				path: '/',
+				httpOnly: true,
+				secure: false,
+				maxAge: access_exp,
+				sameSite: 'strict'
+			})
+			.setCookie('refresh', refreshToken, {
+				path: '/',
+				httpOnly: true,
+				secure: false,
+				sameSite: 'strict',
+				maxAge: refresh_exp
+			})
+			.redirect('http://localhost:5173'); // After handling cookies, redirect the user to frontend
+	} catch (err) {
+		fastify.log.error('Google login error:', err);
+		return reply.status(500).send({ success: false, message: 'Google login failed' });
+	}
+});
 
 fastify.decorate('authenticate', async function handler(request: any, reply: any) {
 	const accessToken = request.cookies.access;
