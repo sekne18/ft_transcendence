@@ -12,6 +12,7 @@ export class GameRenderer {
 		this.GameParams = GameParams;
 		this.renderDetails = renderDetails;
 		this.canvas = canvas;
+		this.ctx = canvas.getContext("2d")!;
 		this.resizeCanvas();
 		this.size_ratio = this.canvas.width / this.GameParams.arena_w;
 		window.addEventListener('resize', () => {
@@ -20,7 +21,7 @@ export class GameRenderer {
 			this.size_ratio = this.canvas.width / this.GameParams.arena_w;
 			this.render();
 		});
-		this.ctx = canvas.getContext("2d")!;
+		this.render();
 	}
 
 	public render(): void {
@@ -88,6 +89,8 @@ export class GameRenderer {
 		const maxWidth = Math.min(this.renderDetails.max_canvas_width, gameContainer.clientWidth - this.renderDetails.canvas_margin * 2);
 		const maxHeight = gameContainer.clientHeight - this.renderDetails.canvas_margin * 2;
 		const aspect = this.GameParams.arena_w / this.GameParams.arena_h;
+
+		console.log(`maxWidth: ${maxWidth}, maxHeight: ${maxHeight}, aspect: ${aspect}`);
 
 		let cssWidth = maxWidth;
 		let cssHeight = cssWidth / aspect;

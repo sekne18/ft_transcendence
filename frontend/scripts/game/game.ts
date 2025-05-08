@@ -1,37 +1,46 @@
 import { GameEngine } from "./GameEngine";
+import { GameParams } from "./GameTypes";
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-export function initGame() : void { 
+export function initGame(): void {
     const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
     document.body.classList.add('disable-scroll');
 
-    const gameParams = {
-        paddle_offset: 15,
-        paddle_gap: 2,
-        paddle_w: 10,
-        paddle_h: 50,
-        paddle_maxa: 0.3,
-        paddle_maxv: 1.0,
-        ball_r: 5,
-        ball_maxa: 1.0,
-        ball_maxv: 0.5,
-        ball_minv: 0.1,
-        arena_w: 300,
-        arena_h: 150,
-        deadzone: 5,
-        max_score: 5,
-    };
+    fetch('/api/game/params', {
+        method: 'GET',
+        credentials: 'include',
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const gameParams = data.params as GameParams;
 
-    const renderDetails = {
-        arena_color: "black",
-        ball_color: "white",
-        paddle_color: "yellow",
-        max_canvas_width: 2500,
-        canvas_margin: 32
-    };
-    const gameEngine = new GameEngine(canvas, gameParams, renderDetails);
-    gameEngine.start();
+            console.log('Game parameters:', gameParams);
+
+            const renderDetails = {
+                arena_color: "black",
+                ball_color: "white",
+                paddle_color: "yellow",
+                max_canvas_width: 2000,
+                canvas_margin: 32
+            };
+
+            const wsParams = {
+                url: `ws://localhost:3000/api/game/ws`,
+            };
+
+            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams);
+            gameEngine.start();
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+            // Handle error (e.g., show an error message to the user)
+        });
 }
 

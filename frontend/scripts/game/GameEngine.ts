@@ -1,5 +1,5 @@
-import { GameInstance } from './GameInstance';
-import { GameParams, GameState, RenderDetails, GameStatus } from './GameTypes';
+import { GameConnection } from './GameConnection';
+import { GameParams, RenderDetails, GameStatus, WsParams } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
@@ -7,17 +7,25 @@ import { UIManager } from './UIManager';
 
 export class GameEngine {
 	private status: GameStatus;
-	private game: GameInstance;
+	private game: GameConnection;
 	private gameRenderer: GameRenderer;
 	private inputController: PointerInputController;
 	private UIManager: UIManager;
 	private player: 'left' | 'right' | null;
-	private renderLoopInterval: number | null = null;
+	private enemyDisconnected: boolean = false;
 
-	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails) {
+	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams) {
 		this.status = 'idle';
 		this.player = null;
-		this.game = new GameInstance(gameParams, this.onGoal.bind(this), this.onGameOver.bind(this));
+		this.game = new GameConnection(
+			gameParams,
+			wsParams,
+			this.onMatchFound.bind(this),
+			this.onSetCountdown.bind(this),
+			this.onGoal.bind(this),
+			this.onGameOver.bind(this),
+			this.onError.bind(this),
+		);
 		this.gameRenderer = new GameRenderer(canvas, gameParams, renderDetails, this.game.getState.bind(this.game));
 		this.inputController = new PointerInputController(canvas, gameParams, this.game.getState.bind(this.game), this.game.receiveInput.bind(this.game));
 		this.UIManager = new UIManager(this.matchmake.bind(this));
@@ -28,15 +36,44 @@ export class GameEngine {
 	}
 
 	public matchmake(): void {
+		this.enemyDisconnected = false;
 		this.changeState('matchmaking');
 	}
 
-	public async onMatchFound(): Promise<void> {
+	public async onMatchFound(side: 'left' | 'right', enemy_id: number): Promise<void> {
+		//TODO: setup enemy info on the left/right side
 		this.UIManager.setMatchmakingOverlay('found');
-		this.game.resetScore();
-		await new Promise(r => setTimeout(r, 1000));
-		this.gameRenderer.render();
+		this.player = side;
+		this.inputController.setSide(side);
+	}
+
+	public onSetCountdown(time: number): void {
 		this.changeState('countdown');
+		let startTime = time;
+		let interval = setInterval(() => {
+			if (time / startTime > 0.65) {
+				this.UIManager.setCountdownOverlay('Ready?');
+			}
+			else if (time / startTime > 0.32) {
+				this.UIManager.setCountdownOverlay('Set...');
+			}
+			else {
+				this.UIManager.setCountdownOverlay('Go!');
+			}
+			time -= 0.5;
+			if (time <= 0.2) { // to protect against floating point errors
+				clearInterval(interval);
+				this.changeState('playing');
+			}
+		}, 500); //refresh rate of 2 FPS
+	}
+
+	public onError(error: Error): void {
+		if (error.message === 'disconnect') {
+			this.enemyDisconnected = true;
+		}
+		console.error('Game error:', error);
+		this.changeState('idle');
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {
@@ -49,22 +86,7 @@ export class GameEngine {
 
 	private onGameOver(): void {
 		this.changeState('gameover');
-		this.saveMatchStats();
-	}
-
-	private saveMatchStats(): void {
-		//const { left_score, right_score } = this.UIManager.getScore();
-		
-		// TODO: Once both players are connected, use their ids and winner id to save the match stats 
-		// fetch('/api/match', {
-		// 	method: 'POST',
-		// 	headers: { 'Content-Type': 'application/json' },
-		// 	body: JSON.stringify({ player1_id, player2_id, winner_id, left_score, right_score, 'completed' })
-		// }).then((res) => res.json()).then((data) => {
-		// 	if (data.success) {
-		// 		console.log('Match stats saved successfully');
-		// 	}
-		// });
+		this.game.disconnect();
 	}
 
 	private changeState(newStatus: GameStatus): void {
@@ -84,7 +106,6 @@ export class GameEngine {
 				break;
 			case 'playing':
 				this.inputController.stop();
-				this.game.stopGame();
 				break;
 			case 'goal':
 				this.UIManager.toggleOverlayVisibility('hidden');
@@ -109,39 +130,28 @@ export class GameEngine {
 				break;
 			case 'matchmaking':
 				this.UIManager.toggleOverlayVisibility('visible');
-				await new Promise(r => setTimeout(r, 3000));
-				this.onMatchFound();
+				this.game.connect();
 				break;
 			case 'playing':
 				this.inputController.start();
-				this.startGame();
 				this.gameLoop();
 				break;
 			case 'goal':
-				this.resetGame();
 				this.UIManager.toggleOverlayVisibility('visible');
-				await new Promise(r => setTimeout(r, 1000));
-				const gameState1 = this.game.getState();
-				if (gameState1.left_score < this.game.getParams().max_score && gameState1.right_score < this.game.getParams().max_score) {
-					this.changeState('countdown');
-				}
 				break;
 			case 'gameover':
 				const gameState = this.game.getState();
-				this.UIManager.setGameOverOverlay(this.player === 'left' ? gameState.left_score > gameState.right_score : gameState.right_score > gameState.left_score);
+				this.UIManager.setGameOverOverlay(
+					this.enemyDisconnected ||
+					(this.player === 'left' ?
+						gameState.left_score > gameState.right_score :
+						gameState.right_score > gameState.left_score
+					));
 				this.UIManager.setMatchmakingOverlay('button');
 				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('visible');
-				this.UIManager.setCountdownOverlay('Ready?');
-				await new Promise(r => setTimeout(r, 1000));
-				this.UIManager.setCountdownOverlay('Set...');
-				await new Promise(r => setTimeout(r, 1000));
-				this.UIManager.setCountdownOverlay('Go!');
-				await new Promise(r => setTimeout(r, 500));
-				this.UIManager.toggleOverlayVisibility('hidden');
-				this.changeState('playing');
 				break;
 			default:
 				break;
@@ -154,15 +164,6 @@ export class GameEngine {
 		if (this.status === 'playing') {
 			requestAnimationFrame(this.gameLoop.bind(this));
 		}
-	}
-
-	private resetGame(): void {
-		this.game.stopGame();
-	}
-
-	private startGame(): void {
-		this.player = 'left';
-		this.game.startGame();
 	}
 
 };
