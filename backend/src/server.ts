@@ -1,12 +1,8 @@
 import Fastify from 'fastify';
-import { createUser, getUserByEmail, getUserById, getUserProfileById, updateUser } from './db/queries/user.js';
 import { FastifyInstance } from 'fastify';
-import { initializeDatabase } from './db/schema.js';
-import * as argon2 from "argon2";
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
-import { FastifyInstance } from 'fastify';
 import { readFile } from 'fs/promises';
 import { createUser, getUserByEmail, getUserById, getUserProfileById, updateUser } from './db/queries/user.js';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
@@ -16,7 +12,7 @@ import { initializeDatabase } from './db/schema.js';
 import * as argon2 from "argon2";
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import './types.ts';
+import './types.js';
 import { MatchmakingManager } from './game/MatchmakingManager.js';
 import { MatchMakerParams } from './game/GameTypes.js';
 import { gameParams } from './game/GameParams.js';
@@ -98,6 +94,7 @@ function generateTokenPair(userId: number) {
 fastify.decorate('authenticate', async function handler(request: any, reply: any) {
 	const accessToken = request.cookies.access;
 	// First try to verify the access token
+	console.log('authenticating');
 	if (accessToken) {
 		try {
 			request.user = await fastify.jwt.verify(accessToken);
@@ -107,6 +104,7 @@ fastify.decorate('authenticate', async function handler(request: any, reply: any
 		}
 	}
 	else {
+		console.log('No access token found');
 		return reply.code(401).send({ error: 'Unauthorized' });
 	}
 });
@@ -572,7 +570,9 @@ fastify.get('/api/game/params', { onRequest: [fastify.authenticate] }, async (re
 
 fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
+	console.log('WebSocket connection established:', user.id);
 	if (!user) {
+		console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
@@ -587,7 +587,7 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 try {
 	initializeDatabase();
 	matchmaker.start();
-	await fastify.listen({ port: 3000 })
+	await fastify.listen({ port: 8080, host: '0.0.0.0' })
 } catch (err) {
 	fastify.log.error(err)
 	process.exit(1)
