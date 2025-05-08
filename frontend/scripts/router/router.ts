@@ -65,6 +65,10 @@ export function loadContent(url: string) {
         appElement.innerHTML = '<div class="loading">Loading...</div>';
     }
 
+    if (url.startsWith('/uploads') || url.startsWith('/api')) {
+        return;
+    }
+
     if (routes[url]) {
         fetch(routes[url].file)
             .then(response => {
