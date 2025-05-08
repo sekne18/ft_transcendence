@@ -587,7 +587,7 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 try {
 	initializeDatabase();
 	matchmaker.start();
-	await fastify.listen({ port: 8080, host: '0.0.0.0' })
+	await fastify.listen({ port: 8080}); //, host: '0.0.0.0' });
 } catch (err) {
 	fastify.log.error(err)
 	process.exit(1)
