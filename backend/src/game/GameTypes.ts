@@ -1,6 +1,15 @@
+import fastifyWebsocket from "@fastify/websocket";
+
 export type vec2d = {
 	x: number,
 	y: number,
+};
+
+export type MatchMakerParams = {
+	ratingWindowMin: number,
+	ratingWindowMax: number,
+	WindowGrowthRate: number,
+	updateInterval: number,
 };
 
 export type GameParams = {
@@ -22,19 +31,16 @@ export type GameState = {
 
 export type UserInput = number; // range: -1 to 1
 
-export type RenderDetails = {
-	ball_color: string,
-	paddle_color: string,
-	arena_color: string,
-	max_canvas_width: number,
-	canvas_margin: number,
+export type PlayerConnection = {
+	id: number,
+	socket: fastifyWebsocket.WebSocket,
 };
 
-export type WsParams = {
-	url: string,
-}
-
-export type GameStatus = 'idle' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
+export type QueuedPlayer = {
+	conn: PlayerConnection,
+	joinedAt: number,
+	rating: number,
+};
 
 export type wsMsg = {
 	type: 'game_state',
@@ -54,7 +60,7 @@ export type wsMsg = {
 } | {
 	type: 'game_event',
 	data: {
-		event: 'game_over'
+		event: 'game_over',
 	} | {
 		event: 'game_found',
 		side: 'left' | 'right',
