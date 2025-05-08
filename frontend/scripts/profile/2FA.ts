@@ -6,16 +6,9 @@ export function init2FA() {
     const qrCode = document.getElementById('2fa-qr') as HTMLImageElement;
     const secretCode = document.getElementById('2fa-secret') as HTMLInputElement;
 
-    const is2FAEnabled = toggle2FA.dataset.enabled === "true";
-    console.log("2FA enabled:", is2FAEnabled);
-    console.log(toggle2FA.dataset.enabled);
-
     toggle2FA.addEventListener('change', () => {
+        console.log("2FA toggle changed:", toggle2FA.checked);
         if (toggle2FA.checked) {
-            if (is2FAEnabled) {
-                console.log("2FA is already active; skipping setup.");
-                return;
-            }
 
             modal2FA.classList.remove('hidden');
             fetch('/api/2fa/setup', {
@@ -40,12 +33,33 @@ export function init2FA() {
                 }
             });
         } else {
+            fetch('/api/user/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ twoFA: false }),
+                credentials: 'include',
+            }).then((res) => {
+                if (res.status === 401) {
+                    window.location.href = '/auth';
+                    return null;
+                }
+                return res.json();
+            }).then((res) => {
+                if (res.success) {
+                    alert('2FA disabled successfully!');
+                    toggle2FA.checked = false;
+                } else {
+                    alert('Failed to disable 2FA. Please, if you just enabled it logout and login again.');
+                    toggle2FA.checked = true;
+                }
+            });
         }
     });
 
     const closeModal = () => {
         modal2FA.classList.add('hidden');
-        toggle2FA.checked = false;
     };
 
     close2FAModal.addEventListener('click', closeModal);
