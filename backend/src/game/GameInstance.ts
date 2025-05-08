@@ -227,11 +227,6 @@ export class GameInstance {
 		);
 
 		if (rightCollision) {
-			// this.state.ball_v.x = -Math.abs(this.state.ball_v.x);
-			// this.state.ball_a.x = 0;
-			// this.state.ball_a.y = 0;
-			// this.state.ball_v.y += this.state.right_v.y;
-			// this.state.ball.x = rightCollision.x - this.params.paddle_w - this.params.ball_r;
 			this.ballPaddleCollision(rightCollision, 'right');
 		}
 
@@ -247,12 +242,12 @@ export class GameInstance {
 
 		//check for goal
 		if (this.state.ball.x - this.params.ball_r < 0) {
-			this.state.right_score++;
+			this.state.right_score += 1;
 			this.onGoal('right');
 			this.resetGame();
 		}
 		else if (this.state.ball.x + this.params.ball_r > this.params.arena_w) {
-			this.state.left_score++;
+			this.state.left_score += 1;
 			this.onGoal('left');
 			this.resetGame();
 		}

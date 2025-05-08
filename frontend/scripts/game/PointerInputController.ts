@@ -24,6 +24,11 @@ export class PointerInputController {
 
 	public setSide(side: 'left' | 'right'): void {
 		this.side = side;
+		const gameState = this.getGameState();
+		this.latestCursorPos = {
+			x: (this.side === 'left' ? gameState.left.x : gameState.right.x),
+			y: (this.side === 'left' ? gameState.left.y : gameState.right.y)
+		};
 	}
 
 	public start(): void {
@@ -53,7 +58,7 @@ export class PointerInputController {
 		gameState: GameState,
 		latestCursorPos: { x: number; y: number })
 		: UserInput {
-		const distance = latestCursorPos.y / this.sizeRatio - gameState.left.y;
+		const distance = latestCursorPos.y / this.sizeRatio - (this.side === 'left' ? gameState.left.y : gameState.right.y);
 		if (Math.abs(distance) < gameParams.deadzone)
 			return 0;
 		const input = Math.max(-1, Math.min(1, distance * 2 / gameParams.paddle_h));
