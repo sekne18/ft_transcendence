@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { createUser, getUserByEmail, getUserById, getUserByUsername, getUserProfileById, updateUser } from './db/queries/user.js';
+import { createUser, getUserByEmail, getUserById, getUserProfileById, updateUser } from './db/queries/user.js';
 import { FastifyInstance } from 'fastify';
 import { initializeDatabase } from './db/schema.js';
 import * as argon2 from "argon2";
@@ -12,12 +12,29 @@ import qrcode from 'qrcode';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
 import './types.ts';
 import { getMatchesByUserId } from './db/queries/match.js';
+import path, { dirname } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import fastifyStatic from '@fastify/static';
+import { fileURLToPath } from 'url';
 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
 const fastify: FastifyInstance = Fastify({
   logger: true
+});
+
+const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/avatars');
+
+if (!existsSync(UPLOAD_DIR)) {
+  mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+await fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '../public/uploads'),
+  prefix: '/uploads/', // this allows access like /avatars/1.png
 });
 
 await fastify.register(fastifyCookie);
@@ -37,6 +54,8 @@ await fastify.register(fastifyCookie);
     }
   });
 }
+
+
 
 function generateTokenPair(userId: number) {
   const token = fastify.jwt.sign({ id: userId }, { expiresIn: access_exp });
@@ -159,8 +178,6 @@ fastify.post('/api/logout', async (req, reply) => {
 fastify.post('/api/2fa/verify', async (req, reply) => {
   const { code } = req.body as { code: string };
   const tmp_token = req.headers.authorization?.split(' ')[1];
-
-  console.log(tmp_token);
 
   if (!tmp_token) {
     return reply.code(401).send({ success: false, message: 'Missing temp token' });
@@ -341,7 +358,7 @@ fastify.post('/api/register', async (req, reply) => {
       display_name: username,
       email,
       hash,
-      avatarUrl: 'https://land.campus19.be/wp-content/uploads/2024/08/Design-sans-titre-26-150x150.png' // TODO: Replace with actual avatar URL
+      avatarUrl: '/uploads/avatars/default.png' 
     });
 
     if (!userId) {
@@ -379,6 +396,34 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
     });
   }
 
+  let newAvatarUrl;
+
+  if (avatarUrl) {
+    const match = avatarUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+    if (!match) {
+      return reply.code(400).send({ success: false, message: 'Invalid base64 format' });
+    }
+
+    const mimeType: string = match[1];
+    const base64Data = match[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const allowedTypes: Record<string, string> = {
+      'image/png': '.png',
+      'image/jpeg': '.jpg',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+    };
+
+    const ext: string = allowedTypes[mimeType];
+
+    const fileName = `${id}${ext}`;
+    const filePath = path.join(UPLOAD_DIR, fileName);
+
+    writeFileSync(filePath, buffer);
+    newAvatarUrl = `/uploads/avatars/${fileName}?t=${Date.now()}`;
+  }
+
   const updateData: Record<string, string> = {};
 
   // Validate the password if provided
@@ -406,7 +451,7 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 
   // Build the update object dynamically since we don't know which fields will be updated
   if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
-  if (avatarUrl && avatarUrl.trim() !== '') updateData.avatarUrl = avatarUrl.trim();
+  if (newAvatarUrl && newAvatarUrl.trim() !== '') updateData.avatarUrl = newAvatarUrl.trim();
 
   if (Object.keys(updateData).length === 0) {
     return reply.code(400).send({
