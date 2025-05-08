@@ -54,6 +54,7 @@ export function renderUserProfile() {
     }
 
     const profile = response.user as Profile;
+    console.log(profile);
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
@@ -179,30 +180,39 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
-  // console.log(twoFA);
-  // Send update to backend
-  fetch('/api/user/update', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ ...form, twoFA, avatarUrl }),
-  })
-    .then(res => {
-      if (res.status === 401) {
-        window.location.href = '/auth';
-        return null;
+  fetch(avatarUrl) // fetch the blob from the blob URL
+    .then(res => res.blob())
+    .then(blob => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        // Send update to backend
+        fetch('/api/user/update', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ...form, twoFA, avatarUrl: base64data }),
+        })
+          .then(res => {
+            if (res.status === 401) {
+              window.location.href = '/auth';
+              return null;
+            }
+            return res.json();
+          })
+          .then((response) => {
+            if (response.success) {
+              renderUserProfile();
+            }
+            const modal = new ModalManager("edit-profile-modal");
+            modal.hide();
+          });
       }
-      return res.json();
-    })
-    .then((response) => {
-      if (response.success) {
-        renderUserProfile();
-      }
-      const modal = new ModalManager("edit-profile-modal");
-      modal.hide();
+      reader.readAsDataURL(blob);
     });
+
 }
 
 function resetEditProfileForm() {
