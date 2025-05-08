@@ -17,6 +17,7 @@ export class ModalManager {
         const cancelBtn = document.getElementById('cancel-edit');
         const editProfileForm = document.getElementById('edit-profile-form');
         const changeAvatarBtn = document.getElementById('change-avatar-btn');
+        const twoFABtn = document.getElementById('toggle-2fa');
         
         const closeModal = () => {
             this.hide();
@@ -39,8 +40,14 @@ export class ModalManager {
         if (changeAvatarBtn) {
             changeAvatarBtn.addEventListener('change', onAvatarChange);
         }
+        if (twoFABtn) {
+            twoFABtn.addEventListener('click', () => {
+                init2FA();
+                // this.hide();
+            });
+        }
 
-        init2FA();
+        // init2FA();
     }
 
     show() {

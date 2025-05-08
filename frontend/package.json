@@ -2,8 +2,9 @@
   "name": "frontend",
   "version": "1.0.0",
   "type": "module",
+
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build"
   },
   "devDependencies": {
