@@ -30,7 +30,8 @@ const matchMakerParams: MatchMakerParams = {
 	ratingWindowMin: 0,
 	ratingWindowMax: 10,
 	WindowGrowthRate: 0.2,
-	updateInterval: 2000
+	updateInterval: 2000,
+	timeUntilAI: 10000,
 };
 
 const matchmaker = new MatchmakingManager(matchMakerParams);

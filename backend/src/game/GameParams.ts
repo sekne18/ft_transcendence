@@ -14,5 +14,5 @@ export const gameParams = {
 	deadzone: 5,
 	max_score: 5,
 	FPS: 60,
-	countdown: 3,
+	countdown: 6,
 };
