@@ -1,15 +1,75 @@
 <div id="page-tournament" class="h-full w-full">
     <div class="bg-[#16161F] p-6 rounded-xl w-full max-w-7xl mt-10 justify-self-center">
-        <div class="flex justify-between items-center mb-4">
-            <div>
-                <h1 class="text-2xl font-bold">Tournament</h1>
-                <p class="text-gray-500">Compete in 6-player tournaments</p>
-            </div>
-            <button id="join-button" class="bg-[#6366F1] text-white px-4 py-2 rounded-xl">Join Tournament</button>
+        <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col items-end space-y-2">
         </div>
-
-        <div id="players-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <!-- Player cards will be inserted here -->
+        <div id="tournament-header">
+        </div>
+        <div id="tournament-content">
+        </div>
+        <div id="join-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title"
+            role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 -z-10 bg-[#0f101d6e] bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div
+                    class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div
+                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-600 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="lucide lucide-plus">
+                                    <path d="M5 12h14"></path>
+                                    <path d="M12 5v14"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">
+                                    Join Tournament
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-400">
+                                        Join the current tournament queue. The tournament will start automatically once
+                                        6 players have joined.
+                                    </p>
+                                    <div class="bg-gray-700 p-4 rounded-lg mt-4">
+                                        <div class="flex items-center gap-3 mb-4">
+                                            <img id="modal-avatar" src="https://via.placeholder.com/50"
+                                                alt="Your Avatar" class="w-10 h-10 rounded-full">
+                                            <div>
+                                                <h4 id="modal-username" class="font-semibold text-white">CurrentPlayer
+                                                </h4>
+                                                <p id="modal-level" class="text-gray-400 text-sm">Level 1</p>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4 text-center">
+                                            <div>
+                                                <p id="modal-wins" class="text-green-500 text-xl font-bold">0</p>
+                                                <p class="text-gray-400 text-sm">Wins</p>
+                                            </div>
+                                            <div>
+                                                <p id="modal-losses" class="text-red-500 text-xl font-bold">0</p>
+                                                <p class="text-gray-400 text-sm">Losses</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button id="join-tournament-btn" type="button"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto">
+                            Join
+                        </button>
+                        <button id="modal-cancel-btn" type="button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md px-4 py-2 text-base font-medium text-red-500 hover:font-bold sm:mt-0 sm:ml-3 sm:w-auto">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
