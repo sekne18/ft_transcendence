@@ -16,7 +16,6 @@ export function init2FA() {
         }
 
         if (toggle2FA.checked) {
-
             modal2FA.classList.remove('hidden');
             fetch('/api/2fa/setup', {
                 headers: {

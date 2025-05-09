@@ -54,7 +54,6 @@ export function renderUserProfile() {
     }
 
     const profile = response.user as Profile;
-    console.log(profile);
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
@@ -79,8 +78,6 @@ export function renderUserProfile() {
     (getElement('email-input') as HTMLInputElement).value = profile.email;
     (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
     (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
-    // TODO: change state
-    // (getElement('toggle-2fa') as HTMLInputElement).dataset.enabled = profile.has2fa ? 'true' : 'false';
   })
     .catch(() => {
       window.location.href = '/auth';
