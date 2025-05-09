@@ -21,11 +21,13 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+//import { TournamentManager } from './tournament/TournamentManager.js';
 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
 const matchmaker = new MatchmakingManager();
+// const tournament = new TournamentManager();
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -650,6 +652,21 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 		id: user.id,
 		socket: conn
 	}, rating);
+});
+
+fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
+	const user = getUserById((req.user as { id: number }).id) as { id: number; };
+	console.log('WebSocket connection to the tournament established:', user.id);
+	if (!user) {
+		console.error('User not found');
+		conn.close(1008, 'User not found');
+		return;
+	}
+
+	// tournament.enqueue({
+	// 	id: user.id,
+	// 	socket: conn
+	// });
 });
 
 try {
