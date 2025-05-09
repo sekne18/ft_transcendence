@@ -13,6 +13,10 @@ body {
     color: var(--foreground);
 }
 
+html, body {
+    height: 100%;
+  }
+
 .disable-scroll {
     height: 100vh;
     overflow: hidden;

@@ -1,5 +1,5 @@
 <div id="page-game"
-    class="page-content h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#16161F]">
+    class="h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#16161F]">
     <!-- Game Header with Player Info -->
     <div
         class="w-full max-w-4xl flex flex-row items-center justify-between mb-4 px-2 py-3 rounded-lg">
@@ -16,10 +16,7 @@
         </div>
 
         <!-- Score Display -->
-        <!-- <div class="flex items-center gap-2 sm:gap-4"> -->
             <span class="text-lg sm:text-xl text-[#7a7cb7] px-4 py-1 rounded-2xl font-orbitron bg-[#262649]">vs</span>
-        <!-- </div> -->
-        
         <!-- Opponent Info -->
         <div class="flex items-center gap-3 flex-row-reverse">
             <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-xl font-bold">AI
@@ -34,9 +31,9 @@
     
 
     <!-- Game Container -->
-    <div class="w-full grow flex flex-col items-center justify-center relative">
+    <div class="grow flex flex-col items-center justify-center relative">
         <!-- Game Canvas -->
-        <canvas id="game-canvas" class="w-full h-full rounded-lg border border-gray-700 shadow-lg"></canvas>
+        <canvas id="game-canvas" class="min-h-0 rounded-lg border border-gray-700 shadow-lg"></canvas>
 
         <!-- Game Overlay -->
         <div id="game-overlay"

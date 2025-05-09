@@ -1,16 +1,16 @@
 import { initAuth } from "../auth/auth";
-import { initChat } from "../chat/chat";
 import { initGame } from "../game/game";
 import { languageService } from "../i18n";
 import { initLeaderboard } from "../leaderboard/leaderboard";
 import { initProfile } from "../profile/profile";
+import { initTournament } from "../tournament/tournament";
 
 // router.ts
 const routes: Record<string, { file: string; init?: () => void }> = {
     '/': { file: 'pages/game.html', init: initGame },
     '/game': { file: 'pages/game.html', init: initGame },
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
-    '/chat': { file: 'pages/chat.html', init: initChat },
+    '/tournament': { file: 'pages/tournament.html', init: initTournament },
     '/auth': { file: 'pages/auth.html', init: initAuth },
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
