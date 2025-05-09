@@ -16,16 +16,16 @@ export class GameInstance {
 		this.input = { left: 0, right: 0 };
 		this.params = params;
 		this.state = {
-			left: {x: this.params.paddle_offset, y: this.params.arena_h / 2},
-			right: {x: this.params.arena_w - this.params.paddle_offset, y: this.params.arena_h / 2},
-			ball: {x: this.params.arena_w / 2, y: this.params.arena_h / 2},
+			left: { x: this.params.paddle_offset, y: this.params.arena_h / 2 },
+			right: { x: this.params.arena_w - this.params.paddle_offset, y: this.params.arena_h / 2 },
+			ball: { x: this.params.arena_w / 2, y: this.params.arena_h / 2 },
 			left_score: 0, right_score: 0,
-			ball_v : {x: 0, y: 0},
-			ball_a: {x: 0, y: 0},
-			left_v: {x: 0, y: 0},
-			right_v: {x: 0, y: 0},
-			left_a: {x: 0, y: 0},
-			right_a: {x: 0, y: 0},
+			ball_v: { x: 0, y: 0 },
+			ball_a: { x: 0, y: 0 },
+			left_v: { x: 0, y: 0 },
+			right_v: { x: 0, y: 0 },
+			left_a: { x: 0, y: 0 },
+			right_a: { x: 0, y: 0 },
 		};
 	}
 
@@ -149,7 +149,7 @@ export class GameInstance {
 	public checkRectangleCircleCollision(
 		rect: vec2d, rect_w: number, rect_h: number,
 		circle: vec2d, circle_r: number
-	): {x: number, y: number} | null {
+	): { x: number, y: number } | null {
 		// Find the closest point on the rectangle to the circle's center
 		let closestX = clamp(circle.x, rect.x - rect_w / 2, rect.x + rect_w / 2);
 		let closestY = clamp(circle.y, rect.y - rect_h / 2, rect.y + rect_h / 2);
@@ -165,56 +165,56 @@ export class GameInstance {
 			return null;
 	}
 
-	public ballPaddleCollision(hit: {x: number, y: number}, paddle: 'left' | 'right'): void {
-			let nx = 0;
-			let ny = 0;
-			let dx = this.state.ball.x - hit.x;
-			let dy = this.state.ball.y - hit.y;
-			// if (Math.abs(dx) - Math.abs(dy) < 0.01) {
-			// 	// Ball is colliding with a corner of the paddle
-			// } else 
-			if (Math.abs(dx) < Math.abs(dy)) {
-				// Ball is colliding with the top or bottom of the paddle
-				ny = (dy < 0) ? -1 : 1;
-			}
-			else {
-				// Ball is colliding with the left or right side of the paddle
-				nx = (dx < 0) ? -1 : 1;
-			}
-			let dot = this.state.ball_v.x * nx + this.state.ball_v.y * ny;
-			this.state.ball_v.x = this.state.ball_v.x - 2 * dot * nx;
-			this.state.ball_v.y = this.state.ball_v.y - 2 * dot * ny;
+	public ballPaddleCollision(hit: { x: number, y: number }, paddle: 'left' | 'right'): void {
+		let nx = 0;
+		let ny = 0;
+		let dx = this.state.ball.x - hit.x;
+		let dy = this.state.ball.y - hit.y;
+		// if (Math.abs(dx) - Math.abs(dy) < 0.01) {
+		// 	// Ball is colliding with a corner of the paddle
+		// } else 
+		if (Math.abs(dx) < Math.abs(dy)) {
+			// Ball is colliding with the top or bottom of the paddle
+			ny = (dy < 0) ? -1 : 1;
+		}
+		else {
+			// Ball is colliding with the left or right side of the paddle
+			nx = (dx < 0) ? -1 : 1;
+		}
+		let dot = this.state.ball_v.x * nx + this.state.ball_v.y * ny;
+		this.state.ball_v.x = this.state.ball_v.x - 2 * dot * nx;
+		this.state.ball_v.y = this.state.ball_v.y - 2 * dot * ny;
 
-			let influence_factor = 1.0;
-			if (paddle === 'left') {
-				this.state.ball_v.x += this.state.left_v.x * influence_factor;
-				this.state.ball_v.y += this.state.left_v.y * influence_factor;
-			}
-			else {
-				this.state.ball_v.x += this.state.right_v.x * influence_factor;
-				this.state.ball_v.y += this.state.right_v.y * influence_factor;
-			}
+		let influence_factor = 1.0;
+		if (paddle === 'left') {
+			this.state.ball_v.x += this.state.left_v.x * influence_factor;
+			this.state.ball_v.y += this.state.left_v.y * influence_factor;
+		}
+		else {
+			this.state.ball_v.x += this.state.right_v.x * influence_factor;
+			this.state.ball_v.y += this.state.right_v.y * influence_factor;
+		}
 
-			// Push ball out to prevent sticking
-			const separation = this.params.ball_r + 0.05; // Small buffer to ensure no overlap
-			this.state.ball.x = hit.x + nx * separation;
-			this.state.ball.y = hit.y + ny * separation;
+		// Push ball out to prevent sticking
+		const separation = this.params.ball_r + 0.05; // Small buffer to ensure no overlap
+		this.state.ball.x = hit.x + nx * separation;
+		this.state.ball.y = hit.y + ny * separation;
 
 
-			// Clamp velocity
-			let speed = Math.sqrt(this.state.ball_v.x**2 + this.state.ball_v.y**2);
-			if (speed < this.params.ball_minv) {
-				let scale = this.params.ball_minv / speed;
-				this.state.ball_v.x *= scale;
-				this.state.ball_v.y *= scale;
-			} else if(speed > this.params.ball_maxv) {
-				let scale = this.params.ball_maxv / speed;
-				this.state.ball_v.x *= scale;
-				this.state.ball_v.y *= scale;
-			}
-			// Optional: zero acceleration if you want instant response
-			this.state.ball_a.x = 0
-			this.state.ball_a.y = 0
+		// Clamp velocity
+		let speed = Math.sqrt(this.state.ball_v.x ** 2 + this.state.ball_v.y ** 2);
+		if (speed < this.params.ball_minv) {
+			let scale = this.params.ball_minv / speed;
+			this.state.ball_v.x *= scale;
+			this.state.ball_v.y *= scale;
+		} else if (speed > this.params.ball_maxv) {
+			let scale = this.params.ball_maxv / speed;
+			this.state.ball_v.x *= scale;
+			this.state.ball_v.y *= scale;
+		}
+		// Optional: zero acceleration if you want instant response
+		this.state.ball_a.x = 0
+		this.state.ball_a.y = 0
 	}
 
 	public checkCollisions(): void {

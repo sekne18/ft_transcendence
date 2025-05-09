@@ -2,6 +2,7 @@ import { time } from "console";
 import { GameInstance } from "./GameInstance.js";
 import { GameParams, GameState, UserInput, wsMsg } from "./GameTypes.js";
 import { PlayerConnection } from "./GameTypes.js";
+import { AIPlayer } from "./AIPlayer.js";
 
 export class GameSession {
 	private game: GameInstance;
@@ -87,7 +88,7 @@ export class GameSession {
 			setTimeout(() => {
 				this.game.startGame();
 			}, this.params.countdown * 1000);
-		}, 3000);
+		}, 3000); //TODO: move hardcoded value
 	};
 
 	private onGameOver(): void {

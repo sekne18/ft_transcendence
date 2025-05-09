@@ -1,4 +1,6 @@
-export const gameParams = {
+import { AIPlayerParams, GameParams, MatchMakerParams } from "./GameTypes.js";
+
+export const gameParams: GameParams = {
 	paddle_offset: 15,
 	paddle_gap: 2,
 	paddle_w: 10,
@@ -14,5 +16,19 @@ export const gameParams = {
 	deadzone: 5,
 	max_score: 5,
 	FPS: 60,
-	countdown: 6,
+	countdown: 3,
 };
+
+export const aiParams: AIPlayerParams = {
+	smarts: 'smart',
+	checkUpdateSpeed: 1,
+	moveUpdateSpeed: gameParams.FPS
+};
+
+export const matchmakerParams: MatchMakerParams = {
+	ratingWindowMin: 0,
+	ratingWindowMax: 10,
+	WindowGrowthRate: 0.2,
+	updateInterval: 2,
+	timeUntilAI: 5,
+}

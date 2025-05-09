@@ -25,16 +25,7 @@ import dotenv from 'dotenv';
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
-
-const matchMakerParams: MatchMakerParams = {
-	ratingWindowMin: 0,
-	ratingWindowMax: 10,
-	WindowGrowthRate: 0.2,
-	updateInterval: 2000,
-	timeUntilAI: 10000,
-};
-
-const matchmaker = new MatchmakingManager(matchMakerParams);
+const matchmaker = new MatchmakingManager();
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -659,11 +650,10 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 	}, rating);
 });
 
-// Run the server!
 try {
 	initializeDatabase();
 	matchmaker.start();
-	await fastify.listen({ port: 8080}); //, host: '0.0.0.0' });
+	await fastify.listen({ port: 8080 }); //, host: '0.0.0.0' });
 } catch (err) {
 	fastify.log.error(err)
 	process.exit(1)

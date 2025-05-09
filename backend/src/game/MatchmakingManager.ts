@@ -1,20 +1,13 @@
-import { MatchMakerParams, PlayerConnection, QueuedPlayer } from "./GameTypes.js";
+import { MatchMakerParams, PlayerConnection, QueuedPlayer, GameParams, AIPlayerParams } from "./GameTypes.js";
 import { GameSession } from "./GameSession.js";
-import { gameParams } from "./GameParams.js";
+import { gameParams, matchmakerParams, aiParams } from "./GameParams.js";
+import { AIPlayer } from "./AIPlayer.js";
 
 export class MatchmakingManager {
 	private queue: QueuedPlayer[] = [];
-	private ratingWindowMin: number;
-	private ratingWindowMax: number;
-	private WindowGrowthRate: number;
-	private interval: number;
 	private updateInterval: NodeJS.Timeout | null = null;
 
-	constructor(params: MatchMakerParams) {
-		this.ratingWindowMin = params.ratingWindowMin;
-		this.ratingWindowMax = params.ratingWindowMax;
-		this.WindowGrowthRate = params.WindowGrowthRate;
-		this.interval = params.updateInterval;
+	constructor() {
 	}
 
 	public start(): void {
@@ -23,7 +16,7 @@ export class MatchmakingManager {
 		}
 		this.updateInterval = setInterval(() => {
 			this.tryMatchPlayers();
-		}, this.interval);
+		}, matchmakerParams.updateInterval * 1000);
 	}
 
 	public stop(): void {
@@ -52,8 +45,8 @@ export class MatchmakingManager {
 
 	private ratingWindow(player: QueuedPlayer, now: number): number {
 		const timeInQueue = now - this.queue.find(p => p.conn.id === player.conn.id)?.joinedAt!;
-		const growth = Math.min(this.WindowGrowthRate * timeInQueue, this.ratingWindowMax);
-		return Math.max(this.ratingWindowMin, growth);
+		const growth = Math.min(matchmakerParams.WindowGrowthRate * timeInQueue, matchmakerParams.ratingWindowMax);
+		return Math.max(matchmakerParams.ratingWindowMin, growth);
 	}
 
 	public tryMatchPlayers(): void {
@@ -82,6 +75,14 @@ export class MatchmakingManager {
 					session.start();
 					return;
 				}
+			}
+			if (Date.now() - p1.joinedAt > matchmakerParams.timeUntilAI * 1000) {
+				// If player has been waiting too long, assign AI
+				const aiPlayer = new AIPlayer(gameParams, aiParams);
+				const session = new GameSession(p1.conn, { id: -1, socket: aiPlayer }, gameParams);
+				this.queue.splice(i, 1);
+				session.start();
+				return;
 			}
 		}
 	}

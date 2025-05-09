@@ -1,5 +1,5 @@
 
-import { GameState, GameParams, UserInput, AIPlayerParams } from "./GameTypes.js";
+import { GameState, GameParams, UserInput, AIPlayerParams, vec2d } from "./GameTypes.js";
 
 export class AIPlayer {
 	private callbacks: { [key: string]: (data: any) => void } = {};
@@ -10,8 +10,14 @@ export class AIPlayer {
 	private moveInterval: NodeJS.Timeout | null = null;
 	private checkInterval: NodeJS.Timeout | null = null;
 	private side: 'left' | 'right' = 'left';
+	private smartAiCalcs: {
+		hit_pos: number,
+		old_pos: number,
+		curr_frame: number,
+		stop_frame: number,
+	};
 
-	constructor(gameParams: GameParams, params: AIPlayerParams){
+	constructor(gameParams: GameParams, params: AIPlayerParams) {
 		this.gameParams = gameParams;
 		this.aiParams = params;
 		this.currState = {
@@ -27,6 +33,12 @@ export class AIPlayer {
 			right_a: { x: 0, y: 0 },
 		};
 		this.newestState = this.currState;
+		this.smartAiCalcs = {
+			hit_pos: 0,
+			old_pos: 0,
+			curr_frame: 0,
+			stop_frame: 0,
+		};
 	}
 
 	private sendInput(input: { paddle: 'left' | 'right', input: UserInput }): void {
@@ -36,21 +48,27 @@ export class AIPlayer {
 	}
 
 	private getMoveDumb(): { paddle: 'left' | 'right', input: UserInput } {
-		if (!this.currState) {
-			throw new Error("Game state not set");
-		}
 		const ball = this.currState.ball;
 		const paddle = this.side === 'left' ? this.currState.left : this.currState.right;
 
-		let input: UserInput = 0;
-
-		if (ball.y < paddle.y) {
-			input = -1; // Move up
-		} else if (ball.y > paddle.y) {
-			input = 1; // Move down
-		}
+		let input: UserInput = clamp(((ball.y - paddle.y) / this.gameParams.arena_h), -1, 1);
 
 		return { paddle: this.side, input };
+	}
+
+	private getMoveSmart(): { paddle: 'left' | 'right', input: UserInput } {
+		let out: { paddle: 'left' | 'right', input: UserInput } = { paddle: this.side, input: 0 };
+		if (this.smartAiCalcs.curr_frame < this.smartAiCalcs.stop_frame) {
+			const deltaTime = 1000 / this.gameParams.FPS;
+			const max_paddle_d = this.gameParams.paddle_maxv * (1000 / this.gameParams.FPS);
+			const d = Math.abs(this.smartAiCalcs.hit_pos - this.smartAiCalcs.old_pos);
+			const frames = Math.ceil(d / max_paddle_d);
+			out.input = clamp((this.smartAiCalcs.hit_pos - this.smartAiCalcs.old_pos) / (frames * max_paddle_d), -1, 1);
+		} else {
+			out.input = 0;
+		}
+		this.smartAiCalcs.curr_frame += 1;
+		return out;
 	}
 
 	private getMove(): { paddle: 'left' | 'right', input: UserInput } {
@@ -58,18 +76,110 @@ export class AIPlayer {
 			case 'dumb':
 				return this.getMoveDumb();
 			case 'smart':
-				// Implement smart AI logic here
-				return this.getMoveDumb(); // Placeholder
+				return this.getMoveSmart();
 			case 'godlike':
 				// Implement godlike AI logic here
-				return this.getMoveDumb(); // Placeholder
+				return this.getMoveSmart(); // Placeholder
 			default:
-				return this.getMoveDumb();
+				return this.getMoveSmart();
 		}
 	}
 
-	private start(){
+	private calcNrOfFrames(hit_pos: number, old_pos: number): number {
+		const deltaTime = 1000 / this.gameParams.FPS;
+		const max_paddle_d = this.gameParams.paddle_maxv * (1000 / this.gameParams.FPS);
+		const d = Math.abs(hit_pos - old_pos);
+		const frames = Math.ceil(d / max_paddle_d);
+		return frames;
+	}
+
+	private calcMoveSmart(): void {
+		let toHit: number = this.side === 'left' ?
+			this.gameParams.paddle_offset + this.gameParams.paddle_w :
+			this.gameParams.arena_w - this.gameParams.paddle_offset - this.gameParams.paddle_w;
+		let nextbounce: { x: number, y: number, t: number } | null = null;
+		let tmpbounce: { x: number, y: number, t: number } | null = null;
+		let ball_v: vec2d = this.currState.ball_v;
+		let ball_pos: vec2d = this.currState.ball;
+		let t: number = 0;
+		while (true) {
+			if (ball_v.y === 0 || (this.side === 'left' ? ball_v.x > 0 : ball_v.x < 0)) {
+				this.smartAiCalcs = {
+					hit_pos: this.gameParams.arena_h / 2,
+					old_pos: this.side === 'left' ? this.currState.left.y : this.currState.right.y,
+					curr_frame: 0,
+					stop_frame: 0,
+				};
+				this.smartAiCalcs.stop_frame = this.calcNrOfFrames(ball_pos.y, this.smartAiCalcs.old_pos);
+				break;
+			}
+			nextbounce = intersectXLine(ball_pos, ball_v, toHit, this.gameParams.FPS);
+			tmpbounce = intersectYLine(ball_pos, ball_v, 0, this.gameParams.FPS);
+			if (!nextbounce || (tmpbounce && nextbounce.t > tmpbounce.t)) {
+				nextbounce = tmpbounce;
+			} else {
+				ball_pos = nextbounce;
+				t += nextbounce.t;
+				this.smartAiCalcs = {
+					hit_pos: ball_pos.y,
+					old_pos: this.side === 'left' ? this.currState.left.y : this.currState.right.y,
+					curr_frame: 0,
+					stop_frame: 0,
+				};
+				this.smartAiCalcs.stop_frame = this.calcNrOfFrames(ball_pos.y, this.smartAiCalcs.old_pos);
+				break;
+			}
+			tmpbounce = intersectYLine(ball_pos, ball_v, this.gameParams.arena_h, this.gameParams.FPS);
+			if (!nextbounce || (tmpbounce && nextbounce.t > tmpbounce.t)) {
+				nextbounce = tmpbounce;
+			} else {
+				ball_pos = nextbounce;
+				if (ball_pos.y < 0.01) {
+					ball_pos.y = 0.01;
+				} else if (ball_pos.y > this.gameParams.arena_h - 0.01) {
+					ball_pos.y = this.gameParams.arena_h - 0.01;
+				}
+				ball_v.y = -ball_v.y;
+				t += nextbounce.t;
+				continue;
+			}
+			if (!nextbounce) {
+				//error
+				console.error("Error: no intersection found");
+				break;
+			}
+			else {
+				ball_pos = nextbounce;
+				if (ball_pos.y < 0.01) {
+					ball_pos.y = 0.01;
+				} else if (ball_pos.y > this.gameParams.arena_h - 0.01) {
+					ball_pos.y = this.gameParams.arena_h - 0.01;
+				}
+				ball_v.x = -ball_v.x;
+				t += nextbounce.t;
+				continue;
+			}
+		}
+	}
+
+	private updateCalculation() {
+		switch (this.aiParams.smarts) {
+			case 'dumb':
+				break;
+			case 'smart':
+				this.calcMoveSmart();
+				break;
+			case 'godlike':
+				this.calcMoveSmart();
+				break;
+			default:
+				break;
+		}
+	}
+
+	private start() {
 		this.currState = this.newestState;
+		this.updateCalculation();
 		if (this.moveInterval) {
 			clearInterval(this.moveInterval);
 		}
@@ -83,11 +193,12 @@ export class AIPlayer {
 		}
 		this.checkInterval = setInterval(() => {
 			this.currState = this.newestState;
+			this.updateCalculation();
 		}
-		, 1000 / this.aiParams.checkUpdateSpeed);
+			, 1000 / this.aiParams.checkUpdateSpeed);
 	}
 
-	private stop(){
+	private stop() {
 		if (this.moveInterval) {
 			clearInterval(this.moveInterval);
 			this.moveInterval = null;
@@ -122,7 +233,11 @@ export class AIPlayer {
 				switch (parsedMsg.data.event) {
 					case "game_over":
 						break;
+					case "game_found":
+						this.side = parsedMsg.data.side;
+						break;
 					case "goal":
+						this.stop();
 						break;
 					case "start_countdown":
 						this.onSetCountdown(parsedMsg.data.time);
@@ -147,6 +262,37 @@ export class AIPlayer {
 		}
 	}
 
-	close(): void {}
+	close(): void {
+		this.stop();
+		this.callbacks = {};
+	}
 
 };
+
+function clamp(value: number, min: number, max: number): number {
+	if (value < min) return min;
+	if (value > max) return max;
+	return value;
+}
+
+function intersectYLine(ball_pos: vec2d, ball_v: vec2d, wall_y: number, fps: number): { x: number, y: number, t: number } | null {
+	if (ball_v.y === 0) {
+		return null; // No intersection if the ball is not moving vertically
+	}
+	if ((ball_v.y > 0 && ball_pos.y > wall_y) || (ball_v.y < 0 && ball_pos.y < wall_y)) {
+		return null; // No intersection if the ball is moving away from the wall
+	}
+	const t = (wall_y - ball_pos.y) / ball_v.y;
+	return { x: ball_pos.x + ball_v.x * t, y: wall_y, t: t * fps };
+}
+
+function intersectXLine(ball_pos: vec2d, ball_v: vec2d, wall_x: number, fps: number): { x: number, y: number, t: number } | null {
+	if (ball_v.x === 0) {
+		return null; // No intersection if the ball is not moving horizontally
+	}
+	if ((ball_v.x > 0 && ball_pos.x > wall_x) || (ball_v.x < 0 && ball_pos.x < wall_x)) {
+		return null; // No intersection if the ball is moving away from the wall
+	}
+	const t = (wall_x - ball_pos.x) / ball_v.x;
+	return { x: wall_x, y: ball_pos.y + ball_v.y * t, t: t * fps };
+}
