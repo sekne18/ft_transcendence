@@ -56,7 +56,7 @@ export function renderUserProfile() {
     const profile = response.user as Profile;
 
     // Set user details
-    (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
+    (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
     getElement('display_name').textContent = profile.display_name;
     getElement('username').textContent = profile.username;
     getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
