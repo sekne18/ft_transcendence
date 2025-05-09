@@ -56,7 +56,7 @@ export function renderUserProfile() {
     const profile = response.user as Profile;
 
     // Set user details
-    (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
+    (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
     getElement('display_name').textContent = profile.display_name;
     getElement('username').textContent = profile.username;
     getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
@@ -78,8 +78,6 @@ export function renderUserProfile() {
     (getElement('email-input') as HTMLInputElement).value = profile.email;
     (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
     (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
-    // TODO: change state
-    // (getElement('toggle-2fa') as HTMLInputElement).dataset.enabled = profile.has2fa ? 'true' : 'false';
   })
     .catch(() => {
       window.location.href = '/auth';
@@ -216,6 +214,7 @@ function onEditProfileSubmit(e: Event) {
 }
 
 function resetEditProfileForm() {
+  renderUserProfile();
   (getElement('avatar-input') as HTMLImageElement).src = (getElement('user-avatar') as HTMLImageElement).src;
   (getElement('current-password-input') as HTMLInputElement).value = '';
   (getElement('new-password-input') as HTMLInputElement).value = '';

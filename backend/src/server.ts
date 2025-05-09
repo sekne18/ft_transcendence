@@ -359,7 +359,7 @@ fastify.post('/api/2fa/confirm', { onRequest: [fastify.authenticate] }, async (r
 	}
 
 	// Mark 2FA as enabled
-	await updateUser(id, { has2fa: true });
+	await updateUser(id, { has2fa: 'true'});
 
 	return reply.send({ success: true });
 });
@@ -531,15 +531,17 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 	// Build the update object dynamically since we don't know which fields will be updated
 	if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
 	if (newAvatarUrl && newAvatarUrl.trim() !== '') updateData.avatarUrl = newAvatarUrl.trim();
+	if (twoFA === true || twoFA === false) updateData.has2fa = twoFA.toString();
 
-	if (Object.keys(updateData).length === 0) {
+	if (Object.keys(updateData).length === 0 ) {
 		return reply.code(400).send({
 			success: false,
 			message: 'No valid fields to update'
 		});
 	}
 
-	updateUser(id, { ...updateData, has2fa: twoFA });
+	console.log('Updating user with data:', updateData);
+	updateUser(id, { ...updateData });
 
 	return reply.send({ success: true });
 });
