@@ -1,19 +1,25 @@
-export interface TournamentPlayer {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  level: number;
-  wins: number;
-  losses: number;
-}
+// export interface TournamentPlayer {
+//   id: string;
+//   username: string;
+//   avatarUrl: string;
+//   level: number;
+//   wins: number;
+//   losses: number;
+//   stats: {
+//     wins: number;
+//     losses: number;
+//   }
+// }
+
+import { Profile } from "../profile/Types";
 
 export interface TournamentMatch {
   id: string;
   round: number;
   position: number;
-  player1?: TournamentPlayer;
-  player2?: TournamentPlayer;
-  winner?: TournamentPlayer;
+  player1?: Profile;
+  player2?: Profile;
+  winner?: Profile;
   score?: string;
   status: 'pending' | 'in_progress' | 'completed';
 }
@@ -21,7 +27,7 @@ export interface TournamentMatch {
 export interface Tournament {
   id: string;
   status: 'queuing' | 'in_progress' | 'completed';
-  players: TournamentPlayer[];
+  players: Profile[];
   matches: TournamentMatch[];
   maxPlayers: number;
 }
