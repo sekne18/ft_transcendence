@@ -77,9 +77,103 @@
     </div>
   </nav>
   <main id="app" class="flex-grow flex p-4">
-    
+
   </main>
-  <div class="absolute bottom-0 left-0 ml-4 mb-4 rounded-full h-8 w-8 bg-blue-500 z-50">CHAT</div>
+  <!-- Chat Widget -->
+  <div id="chat-container" class="fixed bottom-4 left-4 flex items-end space-x-2 z-50">
+
+    <!-- Chat Icon Button -->
+    <button id="chat-toggle"
+      class="w-12 h-12 rounded-full bg-blue-600 text-black flex items-center justify-center shadow-lg transition-all duration-300 hover:bg-blue-700">
+      💬
+      <!-- Notification badge -->
+      <span id="chat-badge"
+        class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+        1
+      </span>
+    </button>
+
+    <!-- Chat Window -->
+    <div id="chat-window"
+      class="text-black absolute bottom-16 left-0 w-0 h-0 overflow-hidden bg-white rounded-xl shadow-lg flex transition-all duration-300 scale-0 origin-bottom-left">
+      <!-- Chat List -->
+      <div id="chat-list" class="w-32 h-full overflow-y-auto border-r border-gray-200 p-2 bg-white">
+        <div class="font-bold mb-2">Chats</div>
+        <ul id="chat-items" class="space-y-2">
+          <!-- Example Chat Entry -->
+          <li class="flex items-center justify-between">
+            <!-- Username + Icon -->
+            <div class="flex items-center space-x-1">
+              <a href="https://example.com/profile/alice" target="_blank" class="text-blue-600 hover:underline">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4.418 0-8 1.79-8 4v1h16v-1c0-2.21-3.582-4-8-4z" />
+                </svg>
+              </a>
+              <span class="text-sm">Alice</span>
+            </div>
+
+            <!-- Unread Badge -->
+            <span id="badge-alice"
+              class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">2</span>
+          </li>
+
+          <!-- Repeat for Bob -->
+          <li class="flex items-center justify-between">
+            <div class="flex items-center space-x-1">
+              <a href="https://example.com/profile/bob" target="_blank" class="text-blue-600 hover:underline">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4.418 0-8 1.79-8 4v1h16v-1c0-2.21-3.582-4-8-4z" />
+                </svg>
+              </a>
+              <span class="text-sm">Bob</span>
+            </div>
+            <span id="badge-bob" class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">1</span>
+          </li>
+        </ul>
+      </div>
+      <!-- Chat List old
+      <div id="chat-list" class="w-32 h-full overflow-y-auto border-r border-gray-200 p-2 bg-white">
+        <div class="font-bold mb-2">Chats</div>
+        <ul>
+          <li class="mb-2">Alice</li>
+          <li class="mb-2">Bob</li>
+          <li class="mb-2">Charlie</li>
+        </ul>
+      </div>
+    -->
+
+      <!-- Message Area (includes messages and input) -->
+      <div class="flex flex-col w-full h-[300px] bg-white">
+
+        <!-- Message View -->
+        <div class="flex-1 flex-col p-4 overflow-y-auto space-y-2">
+          <!-- Your message -->
+          <div class="flex flex-col max-w-[70%] justify-self-start text-left">
+            <span class="text-[10px] text-gray-400 mb-1">12 May 2025, 14:32</span>
+            <div class="text-sm bg-blue-100 rounded p-2">You: Hello!</div>
+          </div>
+
+          <!-- Other user's message -->
+          <div class="flex flex-col max-w-[70%] justify-self-end text-right self-end">
+            <span class="text-[10px] text-gray-400 mb-1">12 May 2025, 14:33</span>
+            <div class="text-sm bg-green-100 rounded p-2">Alice: Hi!</div>
+          </div>
+
+          <!-- Your message -->
+          <div class="text-sm bg-blue-100 rounded p-2 max-w-[70%] justify-self-start text-left">You: How are you?</div>
+
+          <!-- Other user's message -->
+          <div class="text-sm bg-green-100 rounded p-2 max-w-[70%] justify-self-end text-right">Alice: I'm great!</div>
+        </div>
+
+        <!-- Input Bar (attached) -->
+        <div class="border-t border-gray-300 p-2">
+          <input id="chat-input" type="text" placeholder="Type a message..."
+            class="w-full h-10 rounded-lg px-4 bg-gray-100 border border-gray-300 focus:outline-none" />
+        </div>
+      </div>
+    </div>
+  </div>
   <script type="module" src="./main.ts"></script>
 </body>
 

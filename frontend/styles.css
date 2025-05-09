@@ -67,3 +67,21 @@ html, body {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+
+
+@keyframes grow-bounce {
+    0% {
+      transform: scale(0);
+    }
+    80% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-grow-bounce {
+    animation: grow-bounce 400ms ease-out forwards;
+  }
