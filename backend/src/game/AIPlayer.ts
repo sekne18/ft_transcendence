@@ -103,61 +103,55 @@ export class AIPlayer {
 		let ball_pos: vec2d = this.currState.ball;
 		let t: number = 0;
 		while (true) {
+			// Check if ball is past paddle
+			if ((this.side === 'left' && ball_pos.x < toHit + 0.01) ||
+				(this.side === 'right' && ball_pos.x > toHit - 0.01)) {
+				this.smartAiCalcs = {
+					hit_pos: this.gameParams.arena_h / 2, // or some default
+					old_pos: this.side === 'left' ? this.currState.left.y : this.currState.right.y,
+					curr_frame: 0,
+					stop_frame: this.calcNrOfFrames(this.gameParams.arena_h / 2, this.side === 'left' ? this.currState.left.y : this.currState.right.y),
+				};
+				return;
+			}
+			// If ball is going away from paddle or not moving vertically
 			if (ball_v.y === 0 || (this.side === 'left' ? ball_v.x > 0 : ball_v.x < 0)) {
 				this.smartAiCalcs = {
 					hit_pos: this.gameParams.arena_h / 2,
 					old_pos: this.side === 'left' ? this.currState.left.y : this.currState.right.y,
 					curr_frame: 0,
-					stop_frame: 0,
+					stop_frame: this.calcNrOfFrames(this.gameParams.arena_h / 2, this.side === 'left' ? this.currState.left.y : this.currState.right.y),
 				};
-				this.smartAiCalcs.stop_frame = this.calcNrOfFrames(ball_pos.y, this.smartAiCalcs.old_pos);
 				break;
 			}
-			nextbounce = intersectXLine(ball_pos, ball_v, toHit, this.gameParams.FPS);
-			tmpbounce = intersectYLine(ball_pos, ball_v, 0, this.gameParams.FPS);
-			if (!nextbounce || (tmpbounce && nextbounce.t > tmpbounce.t)) {
-				nextbounce = tmpbounce;
-			} else {
-				ball_pos = nextbounce;
-				t += nextbounce.t;
+
+			let xBounce = intersectXLine(ball_pos, ball_v, toHit, this.gameParams.FPS);
+			let yBounceTop = intersectYLine(ball_pos, ball_v, 0, this.gameParams.FPS);
+			let yBounceBottom = intersectYLine(ball_pos, ball_v, this.gameParams.arena_h, this.gameParams.FPS);
+
+			// Pick earliest bounce
+			let bounces = [xBounce, yBounceTop, yBounceBottom].filter(b => b !== null) as { x: number, y: number, t: number }[];
+			let next = bounces.reduce((min, b) => b.t < min.t ? b : min);
+
+			if (next === xBounce) {
+				// Ball is reaching paddle
 				this.smartAiCalcs = {
-					hit_pos: ball_pos.y,
+					hit_pos: next.y,
 					old_pos: this.side === 'left' ? this.currState.left.y : this.currState.right.y,
 					curr_frame: 0,
-					stop_frame: 0,
+					stop_frame: this.calcNrOfFrames(next.y, this.side === 'left' ? this.currState.left.y : this.currState.right.y),
 				};
-				this.smartAiCalcs.stop_frame = this.calcNrOfFrames(ball_pos.y, this.smartAiCalcs.old_pos);
 				break;
-			}
-			tmpbounce = intersectYLine(ball_pos, ball_v, this.gameParams.arena_h, this.gameParams.FPS);
-			if (!nextbounce || (tmpbounce && nextbounce.t > tmpbounce.t)) {
-				nextbounce = tmpbounce;
 			} else {
-				ball_pos = nextbounce;
+				// Reflect Y direction and keep going
+				ball_pos = { x: next.x, y: next.y };
 				if (ball_pos.y < 0.01) {
 					ball_pos.y = 0.01;
 				} else if (ball_pos.y > this.gameParams.arena_h - 0.01) {
 					ball_pos.y = this.gameParams.arena_h - 0.01;
 				}
 				ball_v.y = -ball_v.y;
-				t += nextbounce.t;
-				continue;
-			}
-			if (!nextbounce) {
-				//error
-				console.error("Error: no intersection found");
-				break;
-			}
-			else {
-				ball_pos = nextbounce;
-				if (ball_pos.y < 0.01) {
-					ball_pos.y = 0.01;
-				} else if (ball_pos.y > this.gameParams.arena_h - 0.01) {
-					ball_pos.y = this.gameParams.arena_h - 0.01;
-				}
-				ball_v.x = -ball_v.x;
-				t += nextbounce.t;
-				continue;
+				t += next.t;
 			}
 		}
 	}
