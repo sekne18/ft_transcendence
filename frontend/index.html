@@ -8,7 +8,7 @@
   <title>ft_transcendence</title>
 </head>
 
-<body class="dark text-foreground bg-background">
+<body class="dark text-foreground bg-background min-h-screen h-screen flex flex-col">
   <nav class="flex items-center justify-between bg-[var(--navbar)] px-4 py-4 shadow-sm">
     <div class="flex items-center">
       <a href="/" class="nav-link ml-4 text-xl font-semibold text-white hover:text-blue-500" data-i18n="nav_title"></a>
@@ -18,8 +18,8 @@
         data-page="game"></a>
       <a href="/leaderboard" class="nav-link px-3 py-2 text-white hover:text-blue-500 rounded"
         data-i18n="nav_leaderboard" data-page="leaderboard"></a>
-      <a href="/chat" class="nav-link px-3 py-2 text-white hover:text-blue-500 rounded" data-i18n="nav_chat"
-        data-page="chat"></a>
+      <a href="/tournament" class="nav-link px-3 py-2 text-white hover:text-blue-500 rounded" data-i18n="nav_tournament"
+        data-page="tournament"></a>
     </div>
 
     <div class="flex flex-row">
@@ -76,7 +76,8 @@
       </div>
     </div>
   </nav>
-  <main id="app" class="mx-auto h-full p-4">
+  <main id="app" class="flex-grow flex p-4">
+    <!-- <div>CHAT</div> -->
   </main>
   <script type="module" src="./main.ts"></script>
 </body>
