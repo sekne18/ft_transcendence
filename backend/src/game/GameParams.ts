@@ -9,7 +9,7 @@ export const gameParams: GameParams = {
 	paddle_maxv: 1.0,
 	ball_r: 5,
 	ball_maxa: 1.0,
-	ball_maxv: 0.5,
+	ball_maxv: 1.5,
 	ball_minv: 0.1,
 	arena_w: 300,
 	arena_h: 150,
@@ -30,5 +30,5 @@ export const matchmakerParams: MatchMakerParams = {
 	ratingWindowMax: 10,
 	WindowGrowthRate: 0.2,
 	updateInterval: 2,
-	timeUntilAI: 5,
+	timeUntilAI: 1,
 }
