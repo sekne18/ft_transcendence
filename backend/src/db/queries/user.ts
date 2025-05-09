@@ -68,7 +68,7 @@ export function updateUser(id: number, data: Partial<{
   display_name: string;
   password: string;
   avatarUrl: string;
-  has2fa: boolean;
+  has2fa: string;
   totp_secret: string;
 }>) {
   const fields = [];
@@ -88,7 +88,7 @@ export function updateUser(id: number, data: Partial<{
   }
   if (data.has2fa !== undefined) {
     fields.push('has2fa = ?');
-    values.push(data.has2fa ? 1 : 0);
+    values.push(data.has2fa === 'true' ? 1 : 0);
   }
   if (data.totp_secret !== undefined) {
     fields.push('totp_secret = ?');

@@ -54,6 +54,7 @@ export function renderUserProfile() {
     }
 
     const profile = response.user as Profile;
+    console.log(profile);
 
     // Set user details
     (getElement('user-avatar') as HTMLImageElement).src = profile.avatar_url;
@@ -216,6 +217,7 @@ function onEditProfileSubmit(e: Event) {
 }
 
 function resetEditProfileForm() {
+  renderUserProfile();
   (getElement('avatar-input') as HTMLImageElement).src = (getElement('user-avatar') as HTMLImageElement).src;
   (getElement('current-password-input') as HTMLInputElement).value = '';
   (getElement('new-password-input') as HTMLInputElement).value = '';

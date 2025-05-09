@@ -1,3 +1,5 @@
+import { getElement } from "../utils";
+
 export function init2FA() {
     const toggle2FA = document.getElementById('toggle-2fa') as HTMLInputElement;
     const modal2FA = document.getElementById('modal-2fa') as HTMLDivElement;
@@ -5,9 +7,14 @@ export function init2FA() {
     const cancel2FA = document.getElementById('cancel-2fa') as HTMLButtonElement;
     const qrCode = document.getElementById('2fa-qr') as HTMLImageElement;
     const secretCode = document.getElementById('2fa-secret') as HTMLInputElement;
+    let ignoreToggleEvent = false;
 
     toggle2FA.addEventListener('change', () => {
-        console.log("2FA toggle changed:", toggle2FA.checked);
+        if (ignoreToggleEvent) {
+            ignoreToggleEvent = false;
+            return;
+        }
+
         if (toggle2FA.checked) {
 
             modal2FA.classList.remove('hidden');
@@ -29,6 +36,7 @@ export function init2FA() {
                 }
                 else {
                     alert('Failed to set up 2FA. Please try again.');
+                    ignoreToggleEvent = true;
                     toggle2FA.checked = false;
                 }
             });
@@ -51,7 +59,8 @@ export function init2FA() {
                     alert('2FA disabled successfully!');
                     toggle2FA.checked = false;
                 } else {
-                    alert('Failed to disable 2FA. Please, if you just enabled it logout and login again.');
+                    alert('Failed to disable 2FA');
+                    ignoreToggleEvent = true;
                     toggle2FA.checked = true;
                 }
             });
@@ -60,12 +69,14 @@ export function init2FA() {
 
     const closeModal = () => {
         modal2FA.classList.add('hidden');
+        ignoreToggleEvent = true;
+        toggle2FA.checked = false;
     };
 
     close2FAModal.addEventListener('click', closeModal);
     cancel2FA.addEventListener('click', closeModal);
 
-    document.getElementById('confirm-2fa')?.addEventListener('click', () => {
+    getElement('confirm-2fa').addEventListener('click', () => {
         const codeInput = document.getElementById('2fa-code') as HTMLInputElement;
         const code = codeInput.value.trim();
         if (code.length === 6 && /^[0-9]+$/.test(code)) {
@@ -87,8 +98,8 @@ export function init2FA() {
             }).then((res) => {
                 if (res.success) {
                     alert('2FA enabled successfully!');
+                    ignoreToggleEvent = true;
                     toggle2FA.checked = true;
-                    toggle2FA.dataset.enabled = "true";
                     modal2FA.classList.add('hidden');
                 } else {
                     alert('Failed to enable 2FA. Please try again.');
