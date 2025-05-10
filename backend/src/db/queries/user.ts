@@ -68,7 +68,9 @@ export function updateUser(id: number, data: Partial<{
   display_name: string;
   password: string;
   avatarUrl: string;
-  has2fa: string;
+  has2fa: boolean;
+  online: boolean;
+  last_login: number;
   totp_secret: string;
 }>) {
   const fields = [];
@@ -88,7 +90,19 @@ export function updateUser(id: number, data: Partial<{
   }
   if (data.has2fa !== undefined) {
     fields.push('has2fa = ?');
-    values.push(data.has2fa === 'true' ? 1 : 0);
+    values.push(data.has2fa ? 1 : 0);
+  }
+  if (data.online !== undefined) {
+    fields.push('online = ?');
+    values.push(data.online ? 1 : 0);
+  }
+  if (data.last_login !== undefined) {
+    const now = new Date(data.last_login)
+      .toISOString()
+      .replace('T', ' ')
+      .replace(/\.\d{3}Z$/, '');
+    fields.push('last_login = ?');
+    values.push(now);
   }
   if (data.totp_secret !== undefined) {
     fields.push('totp_secret = ?');

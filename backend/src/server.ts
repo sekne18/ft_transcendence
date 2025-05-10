@@ -4,6 +4,7 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
 import { readFile } from 'fs/promises';
+import { getChatsByUserId, getChatMessages, markMessagesAsRead, getUnreadCount, createChat } from './db/queries/chat.js';
 import { createUser, getUserByEmail, getUserById, getUserProfileById, updateUser } from './db/queries/user.js';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
 import { getMatchesByUserId } from './db/queries/match.js';
@@ -24,11 +25,15 @@ import dotenv from 'dotenv';
 import { TournamentManager } from './tournament/TournamentManager.js';
 import { TournamentSession } from './tournament/TournamentSession.js';
 import { PlayerQueue } from './tournament/PlayerQueue.js';
+import { ChatMsg } from './types.js';
+import { create } from 'domain';
+import { ChatManager } from './chat/ChatManager.js';
 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
 const matchmaker = new MatchmakingManager();
+const chatManager = new ChatManager();
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -213,7 +218,9 @@ fastify.post('/api/login', async (req, reply) => {
 
 			const { token, refreshToken } = generateTokenPair(user.id);
 
-			fastify.log.info('Tokens generated:', token, refreshToken);
+			await updateUser(user.id, {
+				last_login: Math.floor(Date.now() / 1000),
+			});
 			// password match
 			return reply.code(200)
 				.setCookie('access', token, {
@@ -362,7 +369,7 @@ fastify.post('/api/2fa/confirm', { onRequest: [fastify.authenticate] }, async (r
 	}
 
 	// Mark 2FA as enabled
-	await updateUser(id, { has2fa: 'true'});
+	await updateUser(id, { has2fa: true });
 
 	return reply.send({ success: true });
 });
@@ -506,7 +513,7 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 		newAvatarUrl = `/uploads/avatars/${fileName}?t=${Date.now()}`;
 	}
 
-	const updateData: Record<string, string> = {};
+	const updateData: Record<string, string | boolean | number> = {};
 
 	// Validate the password if provided
 	if (currentPassword && newPassword && confirmPassword) {
@@ -534,9 +541,9 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 	// Build the update object dynamically since we don't know which fields will be updated
 	if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
 	if (newAvatarUrl && newAvatarUrl.trim() !== '') updateData.avatarUrl = newAvatarUrl.trim();
-	if (twoFA === true || twoFA === false) updateData.has2fa = twoFA.toString();
+	if (twoFA === true || twoFA === false) updateData.has2fa = twoFA;
 
-	if (Object.keys(updateData).length === 0 ) {
+	if (Object.keys(updateData).length === 0) {
 		return reply.code(400).send({
 			success: false,
 			message: 'No valid fields to update'
@@ -664,6 +671,148 @@ fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket
 		return;
 	}
 	tournamentManager.handleConnection(conn, req);
+});
+
+fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
+	const user = getUserById((req.user as { id: number }).id) as { id: number; };
+	console.log('WebSocket connection to the chat established:', user.id);
+	if (!user) {
+		console.error('User not found');
+		conn.close(1008, 'User not found');
+		return;
+	}
+	conn.send(JSON.stringify({ type: 'message', data: { content: "Connected to chat server" } }));
+	chatManager.addConnection({ id: user.id, socket: conn });
+});
+
+fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const chats = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
+	console.log('chats', chats);
+	if (!chats) {
+		return reply.code(500).send({
+			success: false,
+		});
+	}
+	const conn = chatManager.getChatConnection(id);
+	if (!conn) {
+		return reply.code(500).send({
+			success: false,
+			message: 'Invalid connection'
+		});
+	}
+	chats.forEach((chat) => {
+		chatManager.join(chat.chat_id, conn);
+	});
+	return reply.send({ success: true, chats });
+});
+
+fastify.post('/api/chat/register', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const chatId = createChat(id, otherId);
+	if (!chatId) {
+		return reply.code(500).send({
+			success: false,
+			message: 'Failed to create chat'
+		});
+	}
+	const conn = chatManager.getChatConnection(id);
+	if (!conn) {
+		return reply.code(500).send({
+			success: false,
+			message: 'Invalid connection'
+		});
+	}
+	await chatManager.join(chatId, conn);
+	return reply.send({ success: true });
+});
+
+fastify.get('/api/chat/:chat_id/unread-count', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const chatId = parseInt((req.params as any).chat_id);
+	if (!chatId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid chat ID'
+		});
+	}
+	const count = await getUnreadCount(chatId, id);
+	if (count === null) {
+		return reply.code(500).send({
+			success: false,
+		});
+	}
+	return reply.send({ success: true, count });
+});
+
+fastify.get('/api/chat/:chat_id/messages', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const before = parseInt((req.query as any).before) as number;
+	const limit = parseInt((req.query as any).limit) || 10;
+	const chatId = parseInt((req.params as any).chat_id);
+	if (!chatId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid chat ID'
+		});
+	}
+	if (!before) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid before timestamp'
+		});
+	}
+	const messages = await getChatMessages(chatId, limit, before);
+	if (!messages) {
+		return reply.code(500).send({
+			success: false,
+		});
+	}
+	return reply.send({ success: true, messages });
+});
+
+fastify.get('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const chatId = parseInt((req.params as any).chat_id);
+	if (!chatId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid chat ID'
+		});
+	}
+	await markMessagesAsRead(chatId, id);
+	return reply.send({ success: true });
 });
 
 const tournamentState = new TournamentSession(1);

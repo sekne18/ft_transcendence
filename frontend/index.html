@@ -84,7 +84,7 @@
 
     <!-- Chat Icon Button -->
     <button id="chat-toggle"
-      class="w-12 h-12 rounded-full bg-blue-600 text-black flex items-center justify-center shadow-lg transition-all duration-300 hover:bg-blue-700">
+      class="w-12 h-12 rounded-full bg-blue-600 text-black flex items-center justify-center shadow-lg hover:bg-blue-700 invisible">
       💬
       <!-- Notification badge -->
       <span id="chat-badge"
@@ -95,7 +95,7 @@
 
     <!-- Chat Window -->
     <div id="chat-window"
-      class="text-black absolute bottom-16 left-0 w-0 h-0 overflow-hidden bg-white rounded-xl shadow-lg flex transition-all duration-300 scale-0 origin-bottom-left">
+      class="text-black absolute bottom-16 left-0 w-0 h-0 overflow-hidden bg-white rounded-xl shadow-lg flex scale-0 origin-bottom-left">
       <!-- Chat List -->
       <div id="chat-list" class="w-32 h-full overflow-y-auto border-r border-gray-200 p-2 bg-white">
         <div class="font-bold mb-2">Chats</div>
@@ -131,16 +131,6 @@
           </li>
         </ul>
       </div>
-      <!-- Chat List old
-      <div id="chat-list" class="w-32 h-full overflow-y-auto border-r border-gray-200 p-2 bg-white">
-        <div class="font-bold mb-2">Chats</div>
-        <ul>
-          <li class="mb-2">Alice</li>
-          <li class="mb-2">Bob</li>
-          <li class="mb-2">Charlie</li>
-        </ul>
-      </div>
-    -->
 
       <!-- Message Area (includes messages and input) -->
       <div class="flex flex-col w-full h-[300px] bg-white">

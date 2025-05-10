@@ -17,6 +17,8 @@ export function initializeDatabase() {
           email TEXT NOT NULL UNIQUE,
           password TEXT NOT NULL,
           has2fa BOOLEAN DEFAULT false,
+          online BOOLEAN DEFAULT false,
+          last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
           totp_secret TEXT,
           avatar_url TEXT DEFAULT '',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -47,6 +49,30 @@ export function initializeDatabase() {
           FOREIGN KEY (player1_id) REFERENCES users(id),
           FOREIGN KEY (player2_id) REFERENCES users(id),
           FOREIGN KEY (winner_id) REFERENCES users(id)
+        );
+      `).run();
+
+      db.prepare(`
+        CREATE TABLE chats (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user1_id INTEGER NOT NULL,
+          user2_id INTEGER NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user1_id) REFERENCES users(id),
+          FOREIGN KEY (user2_id) REFERENCES users(id)
+        );
+      `).run();
+
+      db.prepare(`
+        CREATE TABLE messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          chat_id INTEGER NOT NULL,
+          sender_id INTEGER NOT NULL,
+          read BOOLEAN DEFAULT false,
+          content TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (chat_id) REFERENCES chats(id),
+          FOREIGN KEY (sender_id) REFERENCES users(id)
         );
       `).run();
 
