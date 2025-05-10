@@ -53,8 +53,11 @@ export class TournamentSession {
   // }
 
   private startTournament() {
-    console.log('About to create rounds with this players: ', this.players);
     this.createRoundMatches();
+    // this.broadcast({ type: 'tournament_started', matches: this.matches });
+    // setTimeout(() => {
+      this.notifyPlayers();
+    // }, 4000);
   }
 
   public addClient(client: Player) {
@@ -82,7 +85,6 @@ export class TournamentSession {
 
     this.matches = roundMatches;
     this.currentRound.push(roundMatches);
-    this.notifyPlayers();
   }
 
   private notifyPlayers() {
@@ -142,6 +144,12 @@ export class TournamentSession {
     this.players.forEach(player => {
       player.socket.send(JSON.stringify({ type: 'tournament_finished' }));
     });
+    this.spectators.forEach(spectators => {
+      spectators.forEach(spectator => {
+        spectator.socket.send(JSON.stringify({ type: 'tournament_finished' }));
+      });
+    });
+    this.isFinished = true;
     this.broadcast({ type: 'tournament_finished' });
   }
 

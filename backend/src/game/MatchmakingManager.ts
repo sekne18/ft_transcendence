@@ -86,4 +86,9 @@ export class MatchmakingManager {
 			}
 		}
 	}
+
+	public startSession(p1: PlayerConnection, p2: PlayerConnection): void {
+		const session = new GameSession(p1, p2, gameParams);
+		session.start();
+	};
 };

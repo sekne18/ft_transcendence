@@ -5,7 +5,7 @@ import { Player } from "./Types.js";
 export class PlayerQueue {
   private queue: Player[] = [];
   private tournamentSession: TournamentSession;
-  private maxPlayers: number = 2; // Assuming a 2-player tournament
+  private maxPlayers: number = 2;
 
   constructor(tournamentSession: TournamentSession) {
     this.tournamentSession = tournamentSession;
@@ -34,12 +34,17 @@ export class PlayerQueue {
       username: p.username,
       avatar_url: p.avatar_url,
     }));
-    // Send the updated queue to all players in the queue
-    // this.queue.forEach(player => {
-    //   player.socket.send(JSON.stringify({ type: 'queue_updated', players: playersInQueue }));
-    // });
     this.tournamentSession.broadcast({ type: 'queue_updated', players: playersInQueue });
   }
+
+  // private broadcastTournamentStarted() {
+  //   const playersInQueue = this.queue.map(p => ({
+  //     id: p.id,
+  //     username: p.username,
+  //     avatar_url: p.avatar_url,
+  //   }));
+  //   this.tournamentSession.broadcast({ type: 'tournament_started', players: playersInQueue });
+  // }
 
   private startTournament() {
     this.queue.forEach(player => this.tournamentSession.enqueue(player));

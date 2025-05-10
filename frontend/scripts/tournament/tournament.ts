@@ -62,8 +62,7 @@ function joinTournament(): void {
 }
 
 function leaveTournament(): void {
-    tournamentConnection.sendMessage('leave_tournament', {}); // No specific data needed
-    // Optionally update local state immediately (e.g., reset UI to queuing state)
+    tournamentConnection.sendMessage('leave_tournament', {}); 
     tournament.players = tournament.players.filter(p => p.id !== user.id);
     tournament.status = 'queuing';
     tournament.matches = [];
@@ -85,6 +84,7 @@ const handleServerUpdate = (data: any): void => {
             }
             break;
         case "tournament_started":
+            console.log("Tournament started:", data);
             tournament.status = "in_progress";
             tournament.matches = data.matches;
             renderTournament();
@@ -107,6 +107,7 @@ const handleServerUpdate = (data: any): void => {
                     tournament.matches.push(newMatch);
                     renderTournament();
                 }
+                showToast("Match Found", `You are matched with ${opponent.username}`, "success");
             }
             break;
         case "queue_updated":
@@ -303,6 +304,7 @@ function renderTournament(): void {
     const contentEl = document.getElementById('tournament-content');
     if (!contentEl) return;
     contentEl.innerHTML = '';
+    console.log('Rendering tournament state:', tournament);
     if (tournament.status === 'queuing') {
         contentEl.appendChild(renderQueueingState());
     } else {
