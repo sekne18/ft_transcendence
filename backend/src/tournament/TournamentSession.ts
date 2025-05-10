@@ -6,16 +6,50 @@ export class TournamentSession {
   currentRound: Match[][] = [];
   isFinished: boolean = false;
   tournamentId: number;
+  private spectators: Map<number, Player[]> = new Map(); // Map of matchId to spectators
 
   constructor(tournamentId: number) {
     this.tournamentId = tournamentId;
   }
 
-  enqueue(player: Player) {
+  public enqueue(player: Player) {
     this.players.push(player);
+    this.broadcastPlayerList();
     if (this.players.length === 8) {
       this.startTournament();
     }
+  }
+
+  public removePlayer(playerToRemove: Player) {
+    this.players = this.players.filter(player => player.id !== playerToRemove.id);
+    this.broadcastPlayerList();
+  }
+
+  public getMatchById(matchId: number): Match | undefined {
+    return this.matches.find(m => m.id === matchId);
+  }
+
+  public addSpectator(matchId: number, spectator: Player) {
+    if (!this.spectators.has(matchId)) {
+      this.spectators.set(matchId, []);
+    }
+    this.spectators.get(matchId)?.push(spectator);
+  }
+
+  public broadcast(data: any) {
+    this.players.forEach(player => {
+      player.socket.send(JSON.stringify(data));
+    });
+    this.spectators.forEach(spectators => {
+      spectators.forEach(spectator => {
+        spectator.socket.send(JSON.stringify(data));
+      });
+    });
+  }
+
+  private broadcastPlayerList() {
+    const currentPlayers = this.players.map(p => ({ id: p.id }));
+    this.broadcast({ type: 'tournament_players_updated', players: currentPlayers });
   }
 
   private startTournament() {
@@ -29,6 +63,7 @@ export class TournamentSession {
         id: i / 2,
         player1: this.players[i],
         player2: this.players[i + 1],
+        isFinished: false,
       };
       roundMatches.push(match);
     }
@@ -53,7 +88,7 @@ export class TournamentSession {
     });
   }
 
-  handleMatchResult(matchId: number, winnerId: number) {
+  public handleMatchResult(matchId: number, winnerId: number) {
     const match = this.matches.find(m => m.id === matchId);
     if (!match) return;
 
@@ -69,6 +104,7 @@ export class TournamentSession {
     } else {
       this.moveToNextRound();
     }
+    this.broadcastMatchUpdate(match);
   }
 
   private moveToNextRound() {
@@ -80,6 +116,7 @@ export class TournamentSession {
         id: i / 2,
         player1: winners[i] as Player,
         player2: winners[i + 1] as Player,
+        isFinished: false,
       };
       newRoundMatches.push(match);
     }
@@ -93,5 +130,10 @@ export class TournamentSession {
     this.players.forEach(player => {
       player.socket.send(JSON.stringify({ type: 'tournament_finished' }));
     });
+    this.broadcast({ type: 'tournament_finished' });
+  }
+
+  private broadcastMatchUpdate(match: Match) {
+    this.broadcast({ type: 'match_updated', match });
   }
 }

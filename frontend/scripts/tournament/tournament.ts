@@ -19,11 +19,6 @@ let tournament: Tournament = {
 // Tournament WebSocket connection instance
 let tournamentConnection: TournamentConnection;
 
-// Function to find a match by its ID
-function findMatch(matchId: string): TournamentMatch | undefined {
-    return tournament.matches.find(m => m.id === matchId);
-}
-
 // --- Modal Logic ---
 function openJoinModal(): void {
     const modal = document.getElementById('join-modal');
@@ -42,9 +37,6 @@ function openJoinModal(): void {
     if (modalUsername) {
         modalUsername.textContent = user.username;
     }
-    // if (modalLevel) {
-    //     modalLevel.textContent = `Level ${user.level}`;
-    // }
     if (modalWins) {
         modalWins.textContent = user.wins?.toString() || '0';
     }
@@ -63,27 +55,36 @@ function closeJoinModal(): void {
 // --- Tournament Logic ---
 function joinTournament(): void {
     tournamentConnection.joinTournament(user);
-    
     const modal = document.getElementById('join-modal');
     if (modal) modal.classList.add('hidden');
-
-    tournament.players.push(user);
     renderTournament();
 }
 
-// function startTournament(): void {
-//     // Assuming the server manages the initial matches when the tournament starts
-//     tournamentConnection.startTournament([]);
-// }
+function leaveTournament(): void {
+    tournamentConnection.sendMessage('leave_tournament', {}); // No specific data needed
+    // Optionally update local state immediately (e.g., reset UI to queuing state)
+    tournament.players = tournament.players.filter(p => p.id !== user.id);
+    tournament.status = 'queuing';
+    tournament.matches = [];
+    renderTournament();
+}
 
-// function updateMatchStatus(matchId: string, status: string, winner: string | null): void {
-//     tournamentConnection.updateMatchStatus(matchId, status, winner);
-// }
+function requestSpectate(matchId: string): void {
+    tournamentConnection.sendMessage('spectate_request', { matchId });
+    // Optionally update local UI to indicate spectating
+}
 
 const handleServerUpdate = (data: any): void => {
     switch (data.type) {
         case "player_joined":
-            tournament.players.push(data.player);
+            const newPlayer = data.player;
+            if (!tournament.players.some(p => p.id === newPlayer.id)) {
+                tournament.players.push(newPlayer);
+                renderTournament();
+            }
+            break;
+        case "tournament_players_updated":
+            tournament.players = data.players;
             renderTournament();
             break;
         case "tournament_started":
@@ -91,13 +92,44 @@ const handleServerUpdate = (data: any): void => {
             tournament.matches = data.matches;
             renderTournament();
             break;
+        case "match_found":
+            const { opponentId, matchId: foundMatchId } = data;
+            const opponent = tournament.players.find(p => p.id === opponentId);
+            if (opponent && user) {
+                const existingMatchIndex = tournament.matches.findIndex(m => m.id === String(foundMatchId));
+                const newMatch: TournamentMatch = {
+                    id: String(foundMatchId),
+                    player1: user,
+                    player2: opponent,
+                    status: 'pending',
+                    round: 1,
+                    position: 0,
+                };
+                if (existingMatchIndex === -1) {
+                    tournament.matches.push(newMatch);
+                    renderTournament();
+                }
+            }
+            break;
+        case "queue_updated":
+            console.log("Queue updated:", data.players);
+            const updatedQueuePlayers = data.players as Profile[];
+            tournament.players = updatedQueuePlayers;
+            renderTournament();
+            break;
         case "match_status":
-            const match = findMatch(data.matchId);
-            if (match) {
-                match.status = data.status;
-                if (data.winner) match.winner = data.winner;
+            const matchIndex = tournament.matches.findIndex(m => m.id === data.matchId);
+            if (matchIndex > -1) {
+                tournament.matches[matchIndex] = { ...tournament.matches[matchIndex], status: data.status, winner: data.winner };
                 renderTournament();
             }
+            break;
+        case "spectate_init":
+            console.log("Spectating match:", data.match);
+            // Update UI to show the spectated match - requestSpectate
+            break;
+        case "spectate_failed":
+            showToast("Spectate Error", data.message, "error");
             break;
         default:
             console.log("Unknown event type:", data.type);
@@ -131,9 +163,9 @@ function renderMatchCardTree(match: TournamentMatch): string {
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-right text-xs text-gray-400">${match.status.replace('_', ' ')}</span>
-                ${match.status === 'pending' && match.player1 && match.player2 ?
-                    `<button class="text-indigo-500 hover:text-indigo-400 text-xs">Spectate</button>` : ''
-                }
+                ${match.status === 'pending' && match.player1 && match.player2 && !tournament.players.some(p => p.id === user.id) ?
+            `<button class="text-indigo-500 hover:text-indigo-400 text-xs" onclick="requestSpectate('${match.id}')">Spectate</button>` : ''
+        }
             </div>
         </div>
     `;
@@ -221,36 +253,34 @@ function renderQueueingState(): HTMLDivElement {
 function renderHeader(): void {
     const headerEl = document.getElementById('tournament-header');
     if (!headerEl) return;
-
     headerEl.innerHTML = '';
     const title = document.createElement('h1');
     title.className = 'text-2xl font-bold';
     title.textContent = 'Tournament';
-
     const subtitle = document.createElement('p');
     subtitle.className = 'text-gray-500';
     subtitle.textContent = 'Compete in 6-player tournaments';
-
     const headerInfo = document.createElement('div');
     headerInfo.appendChild(title);
     headerInfo.appendChild(subtitle);
-
-    const joinBtnContainer = document.createElement('div');
+    const headerActions = document.createElement('div');
     if (tournament.status === 'queuing' && !tournament.players.some((p: Profile) => p.id === user.id)) {
         const joinButton = document.createElement('button');
         joinButton.id = 'join-button';
-        joinButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2';
-        joinButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-            Join Tournament
-        `;
+        joinButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mr-2';
+        joinButton.innerHTML = `Join Tournament`;
         joinButton.addEventListener('click', openJoinModal);
-        joinBtnContainer.appendChild(joinButton);
+        headerActions.appendChild(joinButton);
+    } else if (tournament.status === 'queuing' && tournament.players.some((p: Profile) => p.id === user.id)) {
+        const leaveButton = document.createElement('button');
+        leaveButton.className = 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mr-2';
+        leaveButton.textContent = 'Leave Queue';
+        leaveButton.addEventListener('click', leaveTournament);
+        headerActions.appendChild(leaveButton);
     }
-
     headerEl.className = 'mb-8 flex justify-between items-center';
     headerEl.appendChild(headerInfo);
-    headerEl.appendChild(joinBtnContainer);
+    headerEl.appendChild(headerActions);
 
     const statusBadgeContainer = document.getElementById('tournament-status-container');
     if (statusBadgeContainer) {
@@ -258,15 +288,14 @@ function renderHeader(): void {
 
         const statusBadge = document.createElement('span');
         statusBadge.id = 'tournament-status';
-        statusBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            tournament.status === 'queuing' ? 'bg-yellow-100 text-yellow-800' :
+        statusBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tournament.status === 'queuing' ? 'bg-yellow-100 text-yellow-800' :
             tournament.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-            'bg-green-100 text-green-800'
-        }`;
+                'bg-green-100 text-green-800'
+            }`;
         statusBadge.textContent =
             tournament.status === 'queuing' ? 'Queuing' :
-            tournament.status === 'in_progress' ? 'In Progress' :
-            'Completed';
+                tournament.status === 'in_progress' ? 'In Progress' :
+                    'Completed';
         statusBadgeContainer.appendChild(statusBadge);
     }
 }
