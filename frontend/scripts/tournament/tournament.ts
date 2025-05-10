@@ -13,7 +13,7 @@ let tournament: Tournament = {
     status: 'queuing',
     players: [],
     matches: [],
-    maxPlayers: 6
+    maxPlayers: 8
 };
 
 // Tournament WebSocket connection instance
@@ -28,6 +28,7 @@ function openJoinModal(): void {
     const modalWins = document.getElementById('modal-wins');
     const modalLosses = document.getElementById('modal-losses');
 
+    
     if (modal) {
         modal.classList.remove('hidden');
     }

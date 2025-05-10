@@ -30,41 +30,31 @@ export class TournamentManager {
       isEliminated: false,
     };
 
-    this.playerQueue.enqueue(player);
-
-
     // Send the initial queue state to the newly connected client
-    const initialQueue = this.playerQueue.getPlayersInQueue().map(p => ({ id: p.id }));
+    const initialQueue = this.playerQueue.getPlayersInQueue().map(p => ({ id: p.id, username: p.username, avatar_url: p.avatar_url }));
     conn.send(JSON.stringify({ type: 'queue_updated', players: initialQueue }));
-
-    console.log(`WebSocket connection established for user: ${player.id}`);
 
     conn.on('message', (raw: any) => {
       const msg = JSON.parse(raw.toString());
 
-
       switch (msg.type) {
         case 'join_tournament':
-          console.log(`Received 'join_tournament' message from user: ${player.id}`);
+          console.log(`Received 'join_tournament' message from user: ${player.username}`);
           this.playerQueue.enqueue(player);
-          // You might send a confirmation back to the client if needed
-          conn.send(JSON.stringify({ type: 'join_confirmation', playerId: player.id }));
           break;
         case 'leave_tournament':
           console.log(`Received 'leave_tournament' message from user: ${player.id}`);
-          this.playerQueue.remove(player); // Implement this in PlayerQueue
-          this.tournamentSession.removePlayer(player); // Implement this in TournamentSession
-          conn.send(JSON.stringify({ type: 'leave_confirmation', playerId: player.id }));
-          this.broadcastPlayerUpdate(); // Implement this to notify other clients
+          this.playerQueue.remove(player);
+          this.tournamentSession.removePlayer(player);
           break;
         case 'spectate_request':
           const { matchId } = msg;
           console.log(`Received 'spectate_request' for match ${matchId} from user: ${player.id}`);
-          this.handleSpectateRequest(player, matchId); // Implement this
+          this.handleSpectateRequest(player, matchId);
           break;
         case 'match_result':
-          const { matchId: resultMatchId, winnerId } = msg;
-          this.tournamentSession.handleMatchResult(matchId, winnerId);
+          const { resultMatchId, winnerId } = msg;
+          this.tournamentSession.handleMatchResult(resultMatchId, winnerId);
           break;
         default:
           console.log('Received unknown message type:', msg.type);
@@ -76,23 +66,23 @@ export class TournamentManager {
       console.log(`WebSocket connection closed for user: ${player.id}`);
       this.playerQueue.remove(player);
       this.tournamentSession.removePlayer(player);
-      this.broadcastPlayerUpdate(); // Notify others of the disconnection
-      // Clean up any resources associated with the player
     });
   }
 
-  private broadcastPlayerUpdate() {
-    const playersInQueue = this.playerQueue.getPlayersInQueue().map(p => p.id);
-    this.tournamentSession.broadcast({ type: 'player_list_updated', players: playersInQueue });
-  }
+  // private broadcastPlayerUpdate() {
+  //   const playersInQueue = this.playerQueue.getPlayersInQueue().map(p => ({
+  //     id: p.id,
+  //     username: p.username,
+  //     avatar_url: p.avatar_url,
+  //   }));
+  //   this.tournamentSession.broadcast({ type: 'player_list_updated', players: playersInQueue });
+  // }
 
   private handleSpectateRequest(spectator: Player, matchId: number) {
-    const match = this.tournamentSession.getMatchById(matchId); // Implement this in TournamentSession
+    const match = this.tournamentSession.getMatchById(matchId);
     if (match && !match.isFinished) {
-      // Send initial match state to the spectator
       spectator.socket.send(JSON.stringify({ type: 'spectate_init', match }));
-      // Store the spectator and the match they are watching (you might need a dedicated structure)
-      this.tournamentSession.addSpectator(matchId, spectator); // Implement this
+      this.tournamentSession.addSpectator(matchId, spectator);
     } else {
       spectator.socket.send(JSON.stringify({ type: 'spectate_failed', message: 'Match not found or finished.' }));
     }

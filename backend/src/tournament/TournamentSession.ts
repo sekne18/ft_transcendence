@@ -14,7 +14,7 @@ export class TournamentSession {
 
   public enqueue(player: Player) {
     this.players.push(player);
-    this.broadcastPlayerList();
+    // this.broadcastPlayerList();
     if (this.players.length === 8) {
       this.startTournament();
     }
@@ -22,7 +22,7 @@ export class TournamentSession {
 
   public removePlayer(playerToRemove: Player) {
     this.players = this.players.filter(player => player.id !== playerToRemove.id);
-    this.broadcastPlayerList();
+    // this.broadcastPlayerList();
   }
 
   public getMatchById(matchId: number): Match | undefined {
@@ -37,6 +37,8 @@ export class TournamentSession {
   }
 
   public broadcast(data: any) {
+    console.log('Broadcasting data:', data);
+    console.log('Players:', this.players);
     this.players.forEach(player => {
       player.socket.send(JSON.stringify(data));
     });
@@ -47,10 +49,10 @@ export class TournamentSession {
     });
   }
 
-  private broadcastPlayerList() {
-    const currentPlayers = this.players.map(p => ({ id: p.id }));
-    this.broadcast({ type: 'tournament_players_updated', players: currentPlayers });
-  }
+  // private broadcastPlayerList() {
+  //   const currentPlayers = this.players.map(p => ({ id: p.id }));
+  //   this.broadcast({ type: 'tournament_players_updated', players: currentPlayers });
+  // }
 
   private startTournament() {
     this.createRoundMatches();

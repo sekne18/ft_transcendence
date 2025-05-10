@@ -20,7 +20,7 @@ export class PlayerQueue {
 
   remove(playerToRemove: Player) {
     this.queue = this.queue.filter(player => player.id !== playerToRemove.id);
-    this.broadcastQueueUpdate(); 
+    this.broadcastQueueUpdate();
   }
 
   getPlayersInQueue(): Player[] {
@@ -28,16 +28,21 @@ export class PlayerQueue {
   }
 
   private broadcastQueueUpdate() {
+    // console.log('Broadcasting queue update:', this.queue);
     const playersInQueue = this.queue.map(p => ({
-        id: p.id,
-        username: p.username,
-        avatar_url: p.avatar_url,
+      id: p.id,
+      username: p.username,
+      avatar_url: p.avatar_url,
     }));
-    this.tournamentSession.broadcast({ type: 'queue_updated', players: playersInQueue });
-}
+    // Send the updated queue to all players in the queue
+    this.queue.forEach(player => {
+      player.socket.send(JSON.stringify({ type: 'queue_updated', players: playersInQueue }));
+    });
+    //this.tournamentSession.broadcast({ type: 'queue_updated', players: playersInQueue });
+  }
 
   private startTournament() {
-    this.queue.forEach(player => this.tournamentSession.enqueue(player));
+    // this.queue.forEach(player => this.tournamentSession.enqueue(player));
     this.queue = [];
     this.broadcastQueueUpdate();
   }
