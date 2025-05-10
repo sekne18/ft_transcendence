@@ -41,6 +41,14 @@ class TournamentConnection {
         this.sendMessage("match_status", { matchId, status, winner });
     }
 
+    public leaveTournament() {
+        this.sendMessage("leave_tournament", {});
+    }
+
+    public requestSpectate(matchId: string) {
+        this.sendMessage("spectate_request", { matchId });
+    }
+
     public closeConnection() {
         this.socket.close();
     }
