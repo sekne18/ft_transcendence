@@ -84,16 +84,13 @@ const handleServerUpdate = (data: any): void => {
                 renderTournament();
             }
             break;
-        case "tournament_players_updated":
-            tournament.players = data.players;
-            renderTournament();
-            break;
         case "tournament_started":
             tournament.status = "in_progress";
             tournament.matches = data.matches;
             renderTournament();
             break;
         case "match_found":
+            console.log("Match found:", data);
             const { opponentId, matchId: foundMatchId } = data;
             const opponent = tournament.players.find(p => p.id === opponentId);
             if (opponent && user) {

@@ -6,6 +6,8 @@ export class TournamentSession {
   currentRound: Match[][] = [];
   isFinished: boolean = false;
   tournamentId: number;
+  maxPlayers: number = 2; // Assuming a 2-player tournament
+  private clients: Player[] = [];
   private spectators: Map<number, Player[]> = new Map(); // Map of matchId to spectators
 
   constructor(tournamentId: number) {
@@ -14,15 +16,13 @@ export class TournamentSession {
 
   public enqueue(player: Player) {
     this.players.push(player);
-    // this.broadcastPlayerList();
-    if (this.players.length === 8) {
+    if (this.players.length === this.maxPlayers) {
       this.startTournament();
     }
   }
 
   public removePlayer(playerToRemove: Player) {
     this.players = this.players.filter(player => player.id !== playerToRemove.id);
-    // this.broadcastPlayerList();
   }
 
   public getMatchById(matchId: number): Match | undefined {
@@ -37,9 +37,7 @@ export class TournamentSession {
   }
 
   public broadcast(data: any) {
-    console.log('Broadcasting data:', data);
-    console.log('Players:', this.players);
-    this.players.forEach(player => {
+    this.clients.forEach(player => {
       player.socket.send(JSON.stringify(data));
     });
     this.spectators.forEach(spectators => {
@@ -55,12 +53,24 @@ export class TournamentSession {
   // }
 
   private startTournament() {
+    console.log('About to create rounds with this players: ', this.players);
     this.createRoundMatches();
+  }
+
+  public addClient(client: Player) {
+    if (!this.clients.some(c => c.id === client.id)) {
+      this.clients.push(client);
+    }
+  }
+
+  public removeClient(clientToRemove: Player) {
+    this.clients = this.clients.filter(client => client.id !== clientToRemove.id);
+    this.players = this.players.filter(player => player.id !== clientToRemove.id);
   }
 
   private createRoundMatches() {
     const roundMatches: Match[] = [];
-    for (let i = 0; i < 8; i += 2) {
+    for (let i = 0; i < this.maxPlayers; i += 2) {
       const match: Match = {
         id: i / 2,
         player1: this.players[i],
@@ -76,8 +86,8 @@ export class TournamentSession {
   }
 
   private notifyPlayers() {
-    this.matches.forEach((match) => {
-      match.player1.socket.send(JSON.stringify({
+    this.matches.forEach((match: Match) => {
+      (match.player1 as Player).socket.send(JSON.stringify({
         type: 'match_found',
         opponentId: match.player2.id,
         matchId: match.id

@@ -30,6 +30,8 @@ export class TournamentManager {
       isEliminated: false,
     };
 
+    this.tournamentSession.addClient(player);
+
     // Send the initial queue state to the newly connected client
     const initialQueue = this.playerQueue.getPlayersInQueue().map(p => ({ id: p.id, username: p.username, avatar_url: p.avatar_url }));
     conn.send(JSON.stringify({ type: 'queue_updated', players: initialQueue }));
@@ -45,7 +47,7 @@ export class TournamentManager {
         case 'leave_tournament':
           console.log(`Received 'leave_tournament' message from user: ${player.id}`);
           this.playerQueue.remove(player);
-          this.tournamentSession.removePlayer(player);
+          // this.tournamentSession.removePlayer(player);
           break;
         case 'spectate_request':
           const { matchId } = msg;
@@ -65,7 +67,7 @@ export class TournamentManager {
     conn.on('close', () => {
       console.log(`WebSocket connection closed for user: ${player.id}`);
       this.playerQueue.remove(player);
-      this.tournamentSession.removePlayer(player);
+      this.tournamentSession.removeClient(player);
     });
   }
 

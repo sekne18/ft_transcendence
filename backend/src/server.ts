@@ -657,7 +657,6 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 
 fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
-	console.log('WebSocket connection to the tournament established:', user.id);
 	if (!user) {
 		console.error('User not found');
 		conn.close(1008, 'User not found');
