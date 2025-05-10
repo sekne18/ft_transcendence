@@ -20,7 +20,7 @@ export const gameParams: GameParams = {
 };
 
 export const aiParams: AIPlayerParams = {
-	smarts: 'smart',
+	skill_deviation: 0,
 	checkUpdateSpeed: 1,
 	moveUpdateSpeed: gameParams.FPS
 };
