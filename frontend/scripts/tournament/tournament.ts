@@ -13,7 +13,7 @@ let tournament: Tournament = {
     status: 'queuing',
     players: [],
     matches: [],
-    maxPlayers: 6
+    maxPlayers: 8
 };
 
 // Tournament WebSocket connection instance
@@ -28,6 +28,7 @@ function openJoinModal(): void {
     const modalWins = document.getElementById('modal-wins');
     const modalLosses = document.getElementById('modal-losses');
 
+    
     if (modal) {
         modal.classList.remove('hidden');
     }
@@ -61,8 +62,7 @@ function joinTournament(): void {
 }
 
 function leaveTournament(): void {
-    tournamentConnection.sendMessage('leave_tournament', {}); // No specific data needed
-    // Optionally update local state immediately (e.g., reset UI to queuing state)
+    tournamentConnection.sendMessage('leave_tournament', {}); 
     tournament.players = tournament.players.filter(p => p.id !== user.id);
     tournament.status = 'queuing';
     tournament.matches = [];
@@ -83,16 +83,14 @@ const handleServerUpdate = (data: any): void => {
                 renderTournament();
             }
             break;
-        case "tournament_players_updated":
-            tournament.players = data.players;
-            renderTournament();
-            break;
         case "tournament_started":
+            console.log("Tournament started:", data);
             tournament.status = "in_progress";
             tournament.matches = data.matches;
             renderTournament();
             break;
         case "match_found":
+            console.log("Match found:", data);
             const { opponentId, matchId: foundMatchId } = data;
             const opponent = tournament.players.find(p => p.id === opponentId);
             if (opponent && user) {
@@ -109,6 +107,7 @@ const handleServerUpdate = (data: any): void => {
                     tournament.matches.push(newMatch);
                     renderTournament();
                 }
+                showToast("Match Found", `You are matched with ${opponent.username}`, "success");
             }
             break;
         case "queue_updated":
@@ -305,6 +304,7 @@ function renderTournament(): void {
     const contentEl = document.getElementById('tournament-content');
     if (!contentEl) return;
     contentEl.innerHTML = '';
+    console.log('Rendering tournament state:', tournament);
     if (tournament.status === 'queuing') {
         contentEl.appendChild(renderQueueingState());
     } else {

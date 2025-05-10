@@ -41,11 +41,11 @@ export function initializeDatabase() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           player1_id INTEGER NOT NULL,
           player2_id INTEGER NOT NULL,
-          winner_id INTEGER NOT NULL,
+          winner_id INTEGER,
           player1_score INTEGER NOT NULL,
           player2_score INTEGER NOT NULL,
           played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          status TEXT DEFAULT 'completed', -- 'completed', 'ongoing'
+          status TEXT DEFAULT 'ongoing', -- 'completed', 'ongoing'
           FOREIGN KEY (player1_id) REFERENCES users(id),
           FOREIGN KEY (player2_id) REFERENCES users(id),
           FOREIGN KEY (winner_id) REFERENCES users(id)

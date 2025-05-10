@@ -1,16 +1,3 @@
-// export interface TournamentPlayer {
-//   id: string;
-//   username: string;
-//   avatarUrl: string;
-//   level: number;
-//   wins: number;
-//   losses: number;
-//   stats: {
-//     wins: number;
-//     losses: number;
-//   }
-// }
-
 import { Profile } from "../profile/Types";
 
 export interface TournamentMatch {
