@@ -23,9 +23,9 @@ export class PlayerQueue {
     this.broadcastQueueUpdate(); 
   }
 
-  // getPlayersInQueue(): Player[] {
-  //   return [...this.queue];
-  // }
+  getPlayersInQueue(): Player[] {
+    return [...this.queue];
+  }
 
   private broadcastQueueUpdate() {
     const playersInQueue = this.queue.map(p => ({
