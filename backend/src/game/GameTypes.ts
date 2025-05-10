@@ -36,7 +36,7 @@ export type UserInput = number; // range: -1 to 1
 export type AIPlayerParams = {
 	checkUpdateSpeed: number,
 	moveUpdateSpeed: number,
-	smarts: 'dumb' | 'smart' | 'godlike',
+	skill_deviation: number, // [0, ...[ 0 = smartest
 }
 
 export type PlayerConnection = {

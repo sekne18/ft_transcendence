@@ -21,6 +21,7 @@ export class AIPlayer {
 	constructor(gameParams: GameParams, params: AIPlayerParams) {
 		this.gameParams = gameParams;
 		this.aiParams = params;
+		this.aiParams.skill_deviation = Math.max(0, this.aiParams.skill_deviation);
 		this.currState = {
 			left: { x: gameParams.paddle_offset, y: gameParams.arena_h / 2 },
 			right: { x: gameParams.arena_w - gameParams.paddle_offset, y: gameParams.arena_h / 2 },
@@ -118,44 +119,6 @@ export class AIPlayer {
 		}
 	}
 
-	private getMoveDumb(): { paddle: 'left' | 'right', input: UserInput } {
-		const ball = this.currState.ball;
-		const paddle = this.side === 'left' ? this.currState.left : this.currState.right;
-
-		let input: UserInput = clamp(((ball.y - paddle.y) / this.gameParams.arena_h), -1, 1);
-
-		return { paddle: this.side, input };
-	}
-
-	private getMove(): { paddle: 'left' | 'right', input: UserInput } {
-		switch (this.aiParams.smarts) {
-			case 'dumb':
-				return this.getMoveDumb();
-			case 'smart':
-				return this.getMoveSmart();
-			case 'godlike':
-				// Implement godlike AI logic here
-				return this.getMoveSmart(); // Placeholder
-			default:
-				return this.getMoveSmart();
-		}
-	}
-
-	private updateCalculation() {
-		switch (this.aiParams.smarts) {
-			case 'dumb':
-				break;
-			case 'smart':
-				this.calcMoveSmart();
-				break;
-			case 'godlike':
-				this.calcMoveSmart();
-				break;
-			default:
-				break;
-		}
-	}
-
 	private start() {
 		this.currState = this.newestState;
 		this.updateCalculation();
@@ -177,7 +140,7 @@ export class AIPlayer {
 			, 1000 / this.aiParams.checkUpdateSpeed);
 	}
 
-	private getMoveSmart(): { paddle: 'left' | 'right', input: UserInput } {
+	private getMove(): { paddle: 'left' | 'right', input: UserInput } {
 		let out: { paddle: 'left' | 'right', input: UserInput } = { paddle: this.side, input: 0 };
 
 		const s = this.smartAiCalcs;
@@ -215,8 +178,7 @@ export class AIPlayer {
 		return frames;
 	}
 
-	private calcMoveSmart(): void {
-		console.log("Calculating smart move");
+	private updateCalculation(): void {
 		let toHit: number = this.side === 'left' ?
 			this.gameParams.paddle_offset + this.gameParams.paddle_w :
 			this.gameParams.arena_w - this.gameParams.paddle_offset - this.gameParams.paddle_w;
@@ -245,6 +207,7 @@ export class AIPlayer {
 			// Pick earliest bounce
 			let bounces = [xBounce, yBounceTop, yBounceBottom].filter(b => b !== null) as { x: number, y: number, t: number }[];
 			let next = bounces.reduce((min, b) => b.t < min.t ? b : min);
+			next.t *= (3 + Math.random() * 2 * this.aiParams.skill_deviation - this.aiParams.skill_deviation);
 
 			if (next === xBounce) {
 				// Ball is reaching paddle
@@ -255,7 +218,6 @@ export class AIPlayer {
 					curr_frame: 0,
 					stop_frame: this.calcNrOfFrames(next.y, this.side === 'left' ? this.currState.left.y : this.currState.right.y),
 				};
-				console.log("Hit paddle at: ", this.smartAiCalcs.hit_time);
 				break;
 			} else {
 				// Reflect Y direction and keep going
@@ -286,7 +248,7 @@ function intersectYLine(ball_pos: vec2d, ball_v: vec2d, wall_y: number, fps: num
 		return null; // No intersection if the ball is moving away from the wall
 	}
 	const t = (wall_y - ball_pos.y) / ball_v.y;
-	return { x: ball_pos.x + ball_v.x * t, y: wall_y, t: t * 3}; // t is in milliseconds
+	return { x: ball_pos.x + ball_v.x * t, y: wall_y, t: t }; // t is in milliseconds
 }
 
 function intersectXLine(ball_pos: vec2d, ball_v: vec2d, wall_x: number, fps: number): { x: number, y: number, t: number } | null {
@@ -297,7 +259,7 @@ function intersectXLine(ball_pos: vec2d, ball_v: vec2d, wall_x: number, fps: num
 		return null; // No intersection if the ball is moving away from the wall
 	}
 	const t = (wall_x - ball_pos.x) / ball_v.x;
-	return { x: wall_x, y: ball_pos.y + ball_v.y * t, t: t * 3};
+	return { x: wall_x, y: ball_pos.y + ball_v.y * t, t: t };
 }
 
 function easeInOut(t: number): number { // t should be in [0, 1]
