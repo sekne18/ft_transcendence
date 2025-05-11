@@ -219,7 +219,8 @@ fastify.post('/api/login', async (req, reply) => {
 			const { token, refreshToken } = generateTokenPair(user.id);
 
 			await updateUser(user.id, {
-				last_login: Math.floor(Date.now() / 1000),
+				last_login: Date.now(),
+				online: true
 			});
 			// password match
 			return reply.code(200)
@@ -674,13 +675,15 @@ fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket
 
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
-	console.log('WebSocket connection to the chat established:', user.id);
 	if (!user) {
-		console.error('User not found');
+		fastify.log.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
-	conn.send(JSON.stringify({ type: 'message', data: { content: "Connected to chat server" } }));
+	updateUser(user.id, {
+		last_login: Date.now(),
+		online: true
+	});
 	chatManager.addConnection({ id: user.id, socket: conn });
 });
 
@@ -754,13 +757,13 @@ fastify.get('/api/chat/:chat_id/unread-count', { onRequest: [fastify.authenticat
 			message: 'Invalid chat ID'
 		});
 	}
-	const count = await getUnreadCount(chatId, id);
+	const count = await getUnreadCount(chatId, id) as { unread_count: number };
 	if (count === null) {
 		return reply.code(500).send({
 			success: false,
 		});
 	}
-	return reply.send({ success: true, count });
+	return reply.send({ success: true, count: count.unread_count });
 });
 
 fastify.get('/api/chat/:chat_id/messages', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -786,16 +789,18 @@ fastify.get('/api/chat/:chat_id/messages', { onRequest: [fastify.authenticate] }
 			message: 'Invalid before timestamp'
 		});
 	}
-	const messages = await getChatMessages(chatId, limit, before);
+	let messages: any[] = await getChatMessages(chatId, limit, before);
+
 	if (!messages) {
 		return reply.code(500).send({
 			success: false,
 		});
 	}
-	return reply.send({ success: true, messages });
+		
+	return reply.send({ success: true, messages});
 });
 
-fastify.get('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	if (!id) {
 		return reply.code(401).send({

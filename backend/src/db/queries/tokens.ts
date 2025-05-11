@@ -6,7 +6,7 @@ export function getTokenByjti(jti: string) {
 }
 
 export function setUsedToken(jti: string, iat: number) {
-	const stmt = db.prepare(`UPDATE refresh_tokens SET iat = ? WHERE jti = ?`);
+	const stmt = db.prepare(`UPDATE refresh_tokens SET last_used_at = ? WHERE jti = ?`);
 	const result = stmt.run(iat, jti);
 	if (result.changes === 0) {
 		throw new Error("Token not found");

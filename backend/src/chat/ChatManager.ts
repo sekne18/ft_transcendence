@@ -11,6 +11,11 @@ export class ChatManager {
 	}
 
 	public addConnection(ws: ChatConnection): void {
+		const existingConnection = this.connections.get(ws.id);
+		if (existingConnection) {
+			console.error(`Connection with id ${ws.id} already exists, closing old one.`);
+			this.leave(ws.id, existingConnection);
+		}
 		this.connections.set(ws.id, ws);
 		ws.socket.on('close', () => {
 			console.log('Socket closed:', ws.id);
@@ -29,7 +34,8 @@ export class ChatManager {
 					// Handle chat message
 					const content = parsedMsg.data.content;
 					const chatId = parsedMsg.data.chat_id;
-					createMessage(chatId, ws.id, content);
+					const createdAt = parsedMsg.data.created_at;
+					createMessage(chatId, ws.id, content, createdAt);
 					this.forwardMessage(chatId, ws.id, parsedMsg);
 					break;
 				default:
@@ -46,6 +52,10 @@ export class ChatManager {
 		if (!this.chats.has(chatId)) {
 			this.chats.set(chatId, []);
 		}
+		if (this.chats.get(chatId)?.includes(ws.id)) {
+			console.error(`Connection with id ${ws.id} already in chat ${chatId}`);
+			return;
+		}
 		this.chats.get(chatId)?.push(ws.id);
 	}
 
@@ -54,6 +64,7 @@ export class ChatManager {
 	}
 
 	public leave(chatId: number, ws: ChatConnection): void {
+		ws.socket.close();
 		this.connections.delete(ws.id);
 		if (this.chats.has(chatId)) {
 			const chatSockets = this.chats.get(chatId);
@@ -67,13 +78,22 @@ export class ChatManager {
 	}
 
 	public forwardMessage(chatId: number, senderId: number, msg: ChatMsg): void {
+		const msgToSend = {
+			type: 'message',
+			data: {
+				chat_id: chatId,
+				content: msg.data.content,
+				sender_id: senderId,
+				created_at: msg.data.created_at,
+			},
+		};
 		const chatConnections = this.chats.get(chatId);
 		if (chatConnections) {
 			chatConnections.forEach(id => {
 				if (id === senderId) return;
 				const connection = this.connections.get(id);
 				if (connection) {
-					connection.socket.send(JSON.stringify(msg));
+					connection.socket.send(JSON.stringify(msgToSend));
 				}
 			});
 		}

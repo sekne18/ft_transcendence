@@ -32,8 +32,8 @@ export function getChatMessages(chatId: number, limit = 10, before?: number) {
 			.toISOString()
 			.replace('T', ' ')
 			.replace(/\.\d{3}Z$/, '');
-		console.log('before', now);
-		params.push(now);
+		console.log('fetchhing messages before', now);
+		params.push(before);
 	}
 
 	query += ` ORDER BY created_at DESC LIMIT ?`;
@@ -67,9 +67,14 @@ export function createChat(user1Id: number, user2Id: number) {
 	return chatId;
 }
 
-export function createMessage(chatId: number, senderId: number, content: string) {
+export function createMessage(chatId: number, senderId: number, content: string, createdAt: number) {
+	const now = new Date(createdAt)
+		.toISOString()
+		.replace('T', ' ')
+		.replace(/\.\d{3}Z$/, '');
+	console.log('creating message', now);
 	return db.prepare(`
-	  INSERT INTO messages (chat_id, sender_id, content)
-	  VALUES (?, ?, ?)
-	`).run(chatId, senderId, content);
+	  INSERT INTO messages (chat_id, sender_id, content, created_at)
+	  VALUES (?, ?, ?, ?)
+	`).run(chatId, senderId, content, createdAt);
 }

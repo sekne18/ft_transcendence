@@ -70,7 +70,7 @@ export function initializeDatabase() {
           sender_id INTEGER NOT NULL,
           read BOOLEAN DEFAULT false,
           content TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          created_at DATETIME NOT NULL,
           FOREIGN KEY (chat_id) REFERENCES chats(id),
           FOREIGN KEY (sender_id) REFERENCES users(id)
         );
