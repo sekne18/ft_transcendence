@@ -1,8 +1,32 @@
 import { Profile } from "../profile/Types";
 import { showToast } from "../utils";
+import { wsConfig } from "../wsConfig";
 import TournamentConnection from "./tournamentConnection";
 import { Tournament, TournamentMatch } from "./types";
 
+// --- Initialization ---
+export function initTournament(): void {
+    tournamentConnection = new TournamentConnection(`${wsConfig.scheme}://${wsConfig.host}/api/tournament/ws`, handleServerUpdate);
+
+    // Fetch user profile
+    fetch('/api/user/profile', {
+        method: 'GET',
+        credentials: 'include',
+    }).then(res => {
+        if (res.status === 401) {
+            window.location.href = '/auth';
+            return null;
+        }
+        return res.json();
+    }).then((res) => {
+        user = res.user as Profile;
+        renderTournament();
+    });
+
+    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal);
+    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament);
+    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal);
+}
 
 // Mock current user (consider fetching this dynamically)
 let user: Profile;
@@ -28,7 +52,7 @@ function openJoinModal(): void {
     const modalWins = document.getElementById('modal-wins');
     const modalLosses = document.getElementById('modal-losses');
 
-    
+
     if (modal) {
         modal.classList.remove('hidden');
     }
@@ -62,7 +86,7 @@ function joinTournament(): void {
 }
 
 function leaveTournament(): void {
-    tournamentConnection.sendMessage('leave_tournament', {}); 
+    tournamentConnection.sendMessage('leave_tournament', {});
     tournament.players = tournament.players.filter(p => p.id !== user.id);
     tournament.status = 'queuing';
     tournament.matches = [];
@@ -310,28 +334,4 @@ function renderTournament(): void {
     } else {
         contentEl.appendChild(renderBracketTree());
     }
-}
-
-// --- Initialization ---
-export function initTournament(): void {
-    tournamentConnection = new TournamentConnection("ws://localhost:8080/api/tournament/ws", handleServerUpdate);
-
-    // Fetch user profile
-    fetch('/api/user/profile', {
-        method: 'GET',
-        credentials: 'include',
-    }).then(res => {
-        if (res.status === 401) {
-            window.location.href = '/auth';
-            return null;
-        }
-        return res.json();
-    }).then((res) => {
-        user = res.user as Profile;
-        renderTournament();
-    });
-
-    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal);
-    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament);
-    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal);
 }

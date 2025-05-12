@@ -1,3 +1,4 @@
+import { wsConfig } from "../wsConfig";
 import { ChatMessage } from "./ChatTypes";
 
 /* 
@@ -6,7 +7,7 @@ import { ChatMessage } from "./ChatTypes";
 */
 export function initChat(): void {
     // open a new websocket connection for chat
-    const chatManager = new ChatManager("ws://localhost:8080/api/chat/ws");
+    const chatManager = new ChatManager(`${wsConfig.scheme}://${wsConfig.host}/api/chat/ws`);
     // fetch unread messages (amount of unread messages)
     // /api/chat => returns all chats the user is in
     // /api/chat/<chat_id>/unread-count => returns the amount of unread messages
@@ -68,7 +69,7 @@ class ChatManager {
         });
         this.ChatSocket = new WebSocket(chatUrl);
         this.ChatSocket.addEventListener("message", (event: MessageEvent) => {
-            this.handleIncomingMessage(event);  
+            this.handleIncomingMessage(event);
         });
         this.ChatSocket.addEventListener("error", (event: Event) => {
             console.error("WebSocket error:", event);
@@ -273,7 +274,7 @@ class ChatManager {
         }
         );
     }
-        
+
 
     private async fetchUnreadCount(chatId: number): Promise<number> {
         const response = await fetch(`/api/chat/${chatId}/unread-count`);
@@ -374,7 +375,7 @@ class ChatManager {
         }
     }
 
-    private handleNewMessage(data: { content: string; chat_id: number, sender_id: number, created_at: number}): void {
+    private handleNewMessage(data: { content: string; chat_id: number, sender_id: number, created_at: number }): void {
         const chatId = data.chat_id;
         const message: ChatMessage = {
             chat_id: chatId,
