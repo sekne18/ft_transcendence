@@ -17,7 +17,14 @@ all: build up
 # Build the Docker containers
 .PHONY: build
 build:
-	chmod +x ./backend/keygen.sh && ./keygen.sh
+	@echo "Generating keys..."
+	mkdir -p nginx/ssl
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+		-keyout nginx/ssl/selfsigned.key \
+		-out nginx/ssl/selfsigned.crt \
+		-subj "/C=BE/L=Antwerp/O=c19/CN=pongy.com"
+	@echo "Generating JWT keys..."
+	cd backend && chmod +x ./keygen.sh && ./keygen.sh && cd ..
 	@echo "Building frontend..."
 	npm run build --prefix frontend
 	@echo "Building backend..."

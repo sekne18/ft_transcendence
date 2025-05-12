@@ -1,5 +1,13 @@
 FROM node:22.15.0-alpine
 
+# Install build dependencies
+RUN apk update && apk add --no-cache \
+  python3 \
+  py3-pip \
+  make \
+  g++ \
+  bash
+
 WORKDIR /app
 
 COPY package*.json ./

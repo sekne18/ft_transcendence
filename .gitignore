@@ -5,3 +5,5 @@
 **/.env
 **/db.sqlite*
 **/*.key*
+**/backend/db
+nginx/ssl

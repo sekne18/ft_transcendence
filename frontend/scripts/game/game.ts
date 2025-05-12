@@ -1,3 +1,4 @@
+import { wsConfig } from "../wsConfig";
 import { GameEngine } from "./GameEngine";
 import { GameParams } from "./GameTypes";
 /* 
@@ -32,7 +33,7 @@ export function initGame(): void {
             };
 
             const wsParams = {
-                url: `ws://localhost:3000/api/game/ws`,
+                url: `${wsConfig.scheme}://${wsConfig.host}/api/game/ws`,
             };
 
             const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams);

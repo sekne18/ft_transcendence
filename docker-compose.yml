@@ -3,6 +3,8 @@ services:
     build:
       context: ./backend
     container_name: backend
+    volumes:
+      - backend_db:/app/db
     expose:
       - "3000"
     networks:
@@ -14,15 +16,24 @@ services:
       context: ./nginx
     container_name: nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "8081:80"
+      - "8443:443"
     volumes:
       - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
     networks:
       - app-network
     restart: unless-stopped
+
+volumes:
+  backend_db:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./backend/db
+      o: bind
 
 networks:
   app-network:

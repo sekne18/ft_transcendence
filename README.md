@@ -2,6 +2,7 @@
 Full-Stack App showcasing Pong game with user authentication, etc.
 
 # DEV SETUP GUIDE:
+make sure you are using version 22.15.0 of node
 ## setting up the backend:
 ```
 cd backend
@@ -26,3 +27,24 @@ npm i
 npm run dev
 ```
 You are ready to go! browse to ``http://localhost:5173/``
+
+# PROD SETUP GUIDE:
+in ./backend/src/server.js line 32: make sure these values are set
+```
+const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
+	httpOnly: true,
+	secure: true, // <-- Set to true in production (requires HTTPS)
+	sameSite: 'strict',
+};
+```
+in ./frontend/scripts/wsConfig.ts: make sure this is set
+```
+export const wsConfig: {
+	scheme: "wss" | "ws",
+	host: string,
+} = {
+	scheme: "wss", // "ws" in dev, "wss" in prod
+	host: window.location.host, // "localhost:3000" in dev, window.location.host in prod
+}
+```
+Now you are ready to go! browse to ``https://localhost:8443/``

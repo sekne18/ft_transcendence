@@ -29,6 +29,12 @@ import { ChatMsg } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
 
+const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
+	httpOnly: true,
+	secure: false, // Set to true in production (requires HTTPS)
+	sameSite: 'strict',
+};
+
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
@@ -147,16 +153,16 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		reply
 			.setCookie('access', token, {
 				path: '/',
-				httpOnly: true,
-				secure: false,
+				httpOnly: cookieOptions.httpOnly,
+				secure: cookieOptions.secure,
+				sameSite: cookieOptions.sameSite,
 				maxAge: access_exp,
-				sameSite: 'strict'
 			})
 			.setCookie('refresh', refreshToken, {
 				path: '/',
-				httpOnly: true,
-				secure: false,
-				sameSite: 'strict',
+				httpOnly: cookieOptions.httpOnly,
+				secure: cookieOptions.secure,
+				sameSite: cookieOptions.sameSite,
 				maxAge: refresh_exp
 			})
 			.redirect('http://localhost:5173'); // After handling cookies, redirect the user to frontend
@@ -226,16 +232,16 @@ fastify.post('/api/login', async (req, reply) => {
 			return reply.code(200)
 				.setCookie('access', token, {
 					path: '/',
-					httpOnly: true,
-					secure: false, // Set to true in production (requires HTTPS)
+					httpOnly: cookieOptions.httpOnly,
+					secure: cookieOptions.secure,
+					sameSite: cookieOptions.sameSite,
 					maxAge: access_exp, // 15 min
-					sameSite: 'strict'
 				})
 				.setCookie('refresh', refreshToken, {
 					path: '/',
-					httpOnly: true,
-					secure: false, // Set to true in production (requires HTTPS)
-					sameSite: 'strict',
+					httpOnly: cookieOptions.httpOnly,
+					secure: cookieOptions.secure,
+					sameSite: cookieOptions.sameSite,
 					maxAge: refresh_exp // 7 days
 				})
 				.send({
@@ -302,16 +308,16 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 		return reply.code(200)
 			.setCookie('access', token, {
 				path: '/',
-				httpOnly: true,
-				secure: false, // Set to true in production (requires HTTPS)
+				httpOnly: cookieOptions.httpOnly,
+				secure: cookieOptions.secure,
+				sameSite: cookieOptions.sameSite,
 				maxAge: access_exp,
-				sameSite: 'strict'
 			})
 			.setCookie('refresh', refreshToken, {
 				path: '/',
-				httpOnly: true,
-				secure: false, // Set to true in production (requires HTTPS)
-				sameSite: 'strict',
+				httpOnly: cookieOptions.httpOnly,
+				secure: cookieOptions.secure,
+				sameSite: cookieOptions.sameSite,
 				maxAge: refresh_exp
 			})
 			.send({ success: true });
@@ -418,8 +424,20 @@ fastify.post('/api/token/refresh', async (req, reply) => {
 			const { token, refreshToken } = generateTokenPair(verifiedRefreshToken.id);
 
 			return reply
-				.setCookie('access', token, { path: '/', httpOnly: true, sameSite: 'strict', maxAge: access_exp })
-				.setCookie('refresh', refreshToken, { path: '/', httpOnly: true, sameSite: 'strict', maxAge: refresh_exp })
+				.setCookie('access', token, {
+					path: '/',
+					httpOnly: cookieOptions.httpOnly,
+					secure: cookieOptions.secure,
+					sameSite: cookieOptions.sameSite,
+					maxAge: access_exp
+				})
+				.setCookie('refresh', refreshToken, {
+					path: '/',
+					httpOnly: cookieOptions.httpOnly,
+					secure: cookieOptions.secure,
+					sameSite: cookieOptions.sameSite,
+					maxAge: refresh_exp
+				})
 				.send({ success: true });
 		} catch (err) {
 			fastify.log.warn('Refresh token invalid or expired');

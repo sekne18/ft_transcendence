@@ -1,3 +1,4 @@
+import { wsConfig } from "../wsConfig";
 import { ChatMessage } from "./ChatTypes";
 
 /* 
@@ -6,7 +7,7 @@ import { ChatMessage } from "./ChatTypes";
 */
 export function initChat(): void {
     // open a new websocket connection for chat
-    const chatManager = new ChatManager("ws://localhost:3000/api/chat/ws");
+    const chatManager = new ChatManager(`${wsConfig.scheme}://${wsConfig.host}/api/chat/ws`);
     // fetch unread messages (amount of unread messages)
     // /api/chat => returns all chats the user is in
     // /api/chat/<chat_id>/unread-count => returns the amount of unread messages
