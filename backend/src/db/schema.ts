@@ -26,6 +26,11 @@ export function initializeDatabase() {
       `).run();
 
       db.prepare(`
+        INSERT INTO users (username, display_name, email, password)
+        VALUES ('ai_bot', 'AI BOT', 'ai@ai.com', 'ai');
+      `).run();
+
+      db.prepare(`
         CREATE TABLE friends (
           user_id INTEGER,
           friend_id INTEGER,
@@ -102,7 +107,9 @@ export function initializeDatabase() {
       console.log('Database tables already exist');
     }
   });
-
+  
   // Execute the transaction
   createTables();
+
+  
 }
