@@ -13,7 +13,7 @@ const routes: Record<string, { file: string; init?: () => void }> = {
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
     '/tournament': { file: 'pages/tournament.html', init: initTournament },
     '/auth': { file: 'pages/auth.html', init: initAuth },
-    '/friends': { file: 'pages/friends.html', init: initFriends},
+    '/friends': { file: 'pages/friends.html', init: initFriends },
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
 
@@ -111,6 +111,7 @@ export async function checkAuth(): Promise<boolean> {
         );
         if (!res.ok) throw new Error('Access token expired');
         const data = await res.json();
+        if (data.success) document.dispatchEvent(new Event('auth-ready'));
         return data.success;
     } catch (err) {
         const refreshRes = await fetch('/api/token/refresh', {
@@ -124,6 +125,7 @@ export async function checkAuth(): Promise<boolean> {
         }
 
         const res = await fetch('/api/auth/status', { credentials: 'include' });
+        if (res.ok) document.dispatchEvent(new Event('auth-ready'));
         return res.ok;
     }
 }

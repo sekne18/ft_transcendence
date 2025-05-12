@@ -1,23 +1,19 @@
 import { wsConfig } from "../wsConfig";
 import { ChatMessage } from "./ChatTypes";
 
+let chatManager: ChatManager | null = null;
+
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
 export function initChat(): void {
     // open a new websocket connection for chat
-    const chatManager = new ChatManager(`${wsConfig.scheme}://${wsConfig.host}/api/chat/ws`);
-    // fetch unread messages (amount of unread messages)
-    // /api/chat => returns all chats the user is in
-    // /api/chat/<chat_id>/unread-count => returns the amount of unread messages
-    //for every chat fetch the first x messages
-    // /api/chat/<chat_id>/messages?limit=<x>&before=<timestamp> => returns the first x messages before the timestamp
-    // /api/chat/<chat_id>/mark-as-read => mark all messages as read
-    //when user scrolls to the top, fetch more messages
-    //handle new incoming messages
-    //handle sending messages
-
+    if (chatManager) {
+        console.log("Chat already initialized");
+        return;
+    }
+    chatManager = new ChatManager(`${wsConfig.scheme}://${wsConfig.host}/api/chat/ws`);
     console.log("Chat initialized");
     const chatToggle = document.getElementById("chat-toggle") as HTMLButtonElement;
     const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
