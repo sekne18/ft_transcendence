@@ -30,12 +30,13 @@ export const translations: Record<string, LanguageMap> = {
     chat_send: 'Send',
 
     // Friendslist items
-    friendslist_title: 'Friendslist',
+    friendslist_title: 'Friends',
     friendslist_desc: 'Manage friends and connections',
-    friendslist_all_friends: 'All friends',
+    friendslist_all_friends: 'All Friends',
     friendslist_online: 'Online',
     friendslist_pending: 'Pending',
-    friendslist_blocked: 'Blocked'
+    friendslist_blocked: 'Blocked',
+    friendslist_search: 'Search friends...'
   },
   nl: {
     // Navbar items
