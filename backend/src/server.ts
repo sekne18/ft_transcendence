@@ -796,8 +796,8 @@ fastify.get('/api/chat/:chat_id/messages', { onRequest: [fastify.authenticate] }
 			success: false,
 		});
 	}
-		
-	return reply.send({ success: true, messages});
+
+	return reply.send({ success: true, messages });
 });
 
 fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -826,7 +826,7 @@ const tournamentManager = new TournamentManager(tournamentState, playerQueue);
 try {
 	initializeDatabase();
 	matchmaker.start();
-	await fastify.listen({ port: 8080 }); //, host: '0.0.0.0' });
+	await fastify.listen({ port: 3000, host: '0.0.0.0' });
 } catch (err) {
 	fastify.log.error(err)
 	process.exit(1)

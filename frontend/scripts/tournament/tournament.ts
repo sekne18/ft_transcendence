@@ -28,7 +28,7 @@ function openJoinModal(): void {
     const modalWins = document.getElementById('modal-wins');
     const modalLosses = document.getElementById('modal-losses');
 
-    
+
     if (modal) {
         modal.classList.remove('hidden');
     }
@@ -62,7 +62,7 @@ function joinTournament(): void {
 }
 
 function leaveTournament(): void {
-    tournamentConnection.sendMessage('leave_tournament', {}); 
+    tournamentConnection.sendMessage('leave_tournament', {});
     tournament.players = tournament.players.filter(p => p.id !== user.id);
     tournament.status = 'queuing';
     tournament.matches = [];
@@ -314,7 +314,7 @@ function renderTournament(): void {
 
 // --- Initialization ---
 export function initTournament(): void {
-    tournamentConnection = new TournamentConnection("ws://localhost:8080/api/tournament/ws", handleServerUpdate);
+    tournamentConnection = new TournamentConnection("ws://localhost:3000/api/tournament/ws", handleServerUpdate);
 
     // Fetch user profile
     fetch('/api/user/profile', {

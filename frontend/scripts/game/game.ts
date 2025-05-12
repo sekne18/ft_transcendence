@@ -32,7 +32,7 @@ export function initGame(): void {
             };
 
             const wsParams = {
-                url: `ws://localhost:8080/api/game/ws`,
+                url: `ws://localhost:3000/api/game/ws`,
             };
 
             const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams);
