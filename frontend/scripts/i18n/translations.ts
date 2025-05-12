@@ -8,6 +8,7 @@ export const translations: Record<string, LanguageMap> = {
     nav_leaderboard: 'Leaderboard',
     nav_chat: 'Chat',
     nav_tournament: 'Tournament',
+    nav_friends: 'Friends',
     
     // Game items
     game_start: 'Start Game',
@@ -35,6 +36,7 @@ export const translations: Record<string, LanguageMap> = {
     nav_leaderboard: 'Leiderschapsbord',
     nav_chat: 'Spreek',
     nav_tournament: 'Toernooi',
+    nav_friends: 'Vrienden',
     
     // Game items
     game_start: 'Start Spel',
@@ -62,6 +64,7 @@ export const translations: Record<string, LanguageMap> = {
     nav_leaderboard: 'Lestvica',
     nav_chat: 'Pogovor',
     nav_tournament: 'Turnir',
+    nav_friends: 'Prijatelji',
     
     // Game items
     game_start: 'Začni igro',

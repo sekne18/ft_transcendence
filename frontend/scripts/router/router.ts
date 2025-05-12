@@ -1,4 +1,5 @@
 import { initAuth } from "../auth/auth";
+import { initFriends } from "../friends/friends";
 import { initGame } from "../game/game";
 import { languageService } from "../i18n";
 import { initLeaderboard } from "../leaderboard/leaderboard";
@@ -12,13 +13,14 @@ const routes: Record<string, { file: string; init?: () => void }> = {
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
     '/tournament': { file: 'pages/tournament.html', init: initTournament },
     '/auth': { file: 'pages/auth.html', init: initAuth },
+    '/friends': { file: 'pages/friends.html', init: initFriends},
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
 
 export async function initRouter() {
     let path = window.location.pathname;
 
-    const protectedRoutes = ['/', '/game', '/leaderboard', '/chat', '/profile'];
+    const protectedRoutes = ['/', '/game', '/leaderboard', '/tournament', '/friends', '/profile'];
     const isProtected = protectedRoutes.includes(path);
 
     if (isProtected) {
