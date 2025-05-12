@@ -28,6 +28,7 @@ import { PlayerQueue } from './tournament/PlayerQueue.js';
 import { ChatMsg } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
+import { getLeaderboard } from './db/queries/leaderboard.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -657,6 +658,20 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 	const matches = getMatchesByUserId(id);
 
 	return reply.send({ success: true, matches });
+});
+
+fastify.get('/api/leaderboard', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const limit = parseInt((req.query as any).limit) || 10;
+	const offset = parseInt((req.query as any).offset) || 0;
+	const leaderboard = await getLeaderboard(limit, offset) as { user_id: number; display_name: string; avatar_url: string; wins: number; losses: number; games_played: number; }[];
+	if (!leaderboard) {
+		return reply.code(500).send({
+			success: false,
+			message: 'Failed to fetch leaderboard'
+		});
+	}
+	console.log('leaderboard', leaderboard);
+	return reply.send({ success: true, leaderboard });
 });
 
 fastify.get('/api/game/params', { onRequest: [fastify.authenticate] }, async (req, reply) => {
