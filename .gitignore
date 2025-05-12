@@ -7,3 +7,5 @@
 **/*.key*
 **/backend/db
 nginx/ssl
+**/backend/public/uploads/avatars/*
+!**/backend/public/uploads/avatars/default.png
