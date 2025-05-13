@@ -7,14 +7,17 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-
 export function initProfile(userId?: number): void {
   if (userId && userId > 0) {
     fetchUserProfile(userId).then((userProfile) => {
       renderUserProfile(userProfile);
       renderMatchHistory(userId);
     });
+    setProfileButtons(true);
+
   } else {
+    setProfileButtons(false);
+    
     renderUserProfile();
     renderMatchHistory();
   }
@@ -26,6 +29,29 @@ export function initProfile(userId?: number): void {
     resetEditProfileForm,
     onAvatarChange
   );
+}
+
+function setProfileButtons(isFriend: boolean) {
+  const editProfileBtn = getElement('edit-profile-btn') as HTMLButtonElement;
+  const friendDiv = getElement('friend-div') as HTMLDivElement;
+  const addFriendBtn = getElement('add-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('block-btn') as HTMLButtonElement;
+
+  if (isFriend) {
+    editProfileBtn.classList.add('hidden');
+    friendDiv.classList.remove('hidden');
+
+    addFriendBtn.addEventListener('click', () => {
+      console.log('Add friend button clicked');
+    });
+
+    blockBtn.addEventListener('click', () => {
+      console.log('Block button clicked');
+    });
+  } else {
+    editProfileBtn.classList.remove('hidden');
+    friendDiv.classList.add('hidden');
+  }
 }
 
 async function fetchUserProfile(userId: number): Promise<Profile | undefined> {
