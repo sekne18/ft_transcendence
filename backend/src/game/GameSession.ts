@@ -1,8 +1,7 @@
-import { time } from "console";
 import { GameInstance } from "./GameInstance.js";
-import { GameParams, GameState, UserInput, wsMsg } from "./GameTypes.js";
+import { GameParams, UserInput, wsMsg } from "./GameTypes.js";
 import { PlayerConnection } from "./GameTypes.js";
-import { AIPlayer } from "./AIPlayer.js";
+import { createMatch, updateMatch } from "../db/queries/match.js";
 
 export class GameSession {
 	private game: GameInstance;
@@ -10,19 +9,19 @@ export class GameSession {
 	private intervalId: NodeJS.Timeout | null = null;
 	private startTime: number | null = null;
 	private params: GameParams;
+	private matchId: number;
 
 	constructor(Player1: PlayerConnection, Player2: PlayerConnection, params: GameParams) {
 		this.params = params;
 		this.game = new GameInstance(params, this.onGoal.bind(this), this.onGameOver.bind(this));
 		this.players.push(Player1, Player2);
+		this.matchId = createMatch(Player1.id, Player2.id);
 		this.players.forEach((player, i) => {
 			player.socket.on("close", () => {
-				this.stopGame();
 				this.onDisconnect(player);
 			});
 			player.socket.on("error", (err) => {
 				console.error("Socket error:", err);
-				this.stopGame();
 				this.onDisconnect(player);
 			});
 			player.socket.on("message", (msg: string) => {
@@ -74,11 +73,16 @@ export class GameSession {
 
 	private onGoal(paddle: 'left' | 'right'): void {
 		console.log("Goal scored by:", paddle);
+		const gameState = this.game.getState();
+		updateMatch(this.matchId, {
+			score1: gameState.left_score,
+			score2: gameState.right_score
+		});
 		this.players.forEach((player) => {
-			player.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));
+			player.socket.send(JSON.stringify({ type: "game_state", data: gameState, timestamp: Date.now() }));
 			player.socket.send(JSON.stringify({ type: "goal", data: paddle, timestamp: Date.now() }));
 		});
-		if (this.game.getState().left_score >= this.params.max_score || this.game.getState().right_score >= this.params.max_score) {
+		if (gameState.left_score >= this.params.max_score || gameState.right_score >= this.params.max_score) {
 			return;
 		}
 		setTimeout(() => {
@@ -92,6 +96,13 @@ export class GameSession {
 	};
 
 	private onGameOver(): void {
+		const gameState = this.game.getState();
+		updateMatch(this.matchId, {
+			winnerId: gameState.left_score > gameState.right_score ? this.players[0].id : this.players[1].id,
+			endTime: Date.now(),
+			score1: gameState.left_score,
+			score2: gameState.right_score
+		});
 		this.players.forEach((player) => {
 			player.socket.send(JSON.stringify({ type: "game_event", data: { event: "game_over" }, timestamp: Date.now() }));
 		});
@@ -100,6 +111,13 @@ export class GameSession {
 
 	private onDisconnect(player: PlayerConnection): void {
 		this.players = this.players.filter((p) => p.id !== player.id);
+		const gameState = this.game.getState();
+		updateMatch(this.matchId, {
+			winnerId: this.players[0].id,
+			endTime: Date.now(),
+			score1: gameState.left_score,
+			score2: gameState.right_score
+		})
 		this.players.forEach((p) => {
 			p.socket.send(JSON.stringify({ type: "error", data: "disconnect", timestamp: Date.now() }));
 			p.socket.send(JSON.stringify({ type: "game_event", data: { event: "game_over" }, timestamp: Date.now() }));

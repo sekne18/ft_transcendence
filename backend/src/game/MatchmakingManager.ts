@@ -5,6 +5,7 @@ import { AIPlayer } from "./AIPlayer.js";
 
 export class MatchmakingManager {
 	private queue: QueuedPlayer[] = [];
+	private tournamentQueues: Map<number, PlayerConnection[]> = new Map();
 	private updateInterval: NodeJS.Timeout | null = null;
 
 	constructor() {
@@ -35,12 +36,27 @@ export class MatchmakingManager {
 		});
 		conn.socket.on("close", () => {
 			this.dequeue(conn);
+		});
+	}
+
+	public enqueueTournament(conn: PlayerConnection, tournamentId: number): void {
+		if (!this.tournamentQueues.has(tournamentId)) {
+			this.tournamentQueues.set(tournamentId, []);
 		}
-		);
+		this.tournamentQueues.get(tournamentId)?.push(conn);
+		conn.socket.on("close", () => {
+			this.dequeueTournament(conn, tournamentId);
+		});
 	}
 
 	public dequeue(conn: PlayerConnection): void {
 		this.queue = this.queue.filter(p => p.conn.id !== conn.id);
+	}
+
+	public dequeueTournament(conn: PlayerConnection, tournamentId: number): void {
+		if (this.tournamentQueues.has(tournamentId)) {
+			this.tournamentQueues.set(tournamentId, this.tournamentQueues.get(tournamentId)?.filter(p => p.id !== conn.id) || []);
+		}
 	}
 
 	private ratingWindow(player: QueuedPlayer, now: number): number {
@@ -79,7 +95,7 @@ export class MatchmakingManager {
 			if (Date.now() - p1.joinedAt > matchmakerParams.timeUntilAI * 1000) {
 				// If player has been waiting too long, assign AI
 				const aiPlayer = new AIPlayer(gameParams, aiParams);
-				const session = new GameSession(p1.conn, { id: -1, socket: aiPlayer }, gameParams);
+				const session = new GameSession(p1.conn, { id: 1, socket: aiPlayer }, gameParams);
 				this.queue.splice(i, 1);
 				session.start();
 				return;

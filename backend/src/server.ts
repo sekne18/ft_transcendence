@@ -707,6 +707,21 @@ fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket
 	tournamentManager.handleConnection(conn, req);
 });
 
+fastify.get('/api/tournament/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
+	const user = getUserById((req.user as { id: number }).id) as { id: number; };
+	if (!user) {
+		console.error('User not found');
+		conn.close(1008, 'User not found');
+		return;
+	}
+	const tournamentId = parseInt((req.query as any).tournament_id);
+	if (!tournamentId) {
+		console.error('Tournament ID not found');
+		conn.close(1008, 'Tournament ID not found');
+		return;
+	}
+});
+
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
 	if (!user) {
