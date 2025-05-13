@@ -5,6 +5,7 @@ export class GameConnection {
 	private socket: WebSocket | null = null;
 	private wsParams: WsParams;
 	private params: GameParams;
+	private isUsingExternalSocket: boolean = false;
 
 	constructor(
 		params: GameParams,
@@ -13,7 +14,8 @@ export class GameConnection {
 		private onSetCountdown: (time: number) => void,
 		private onGoal: (paddle: 'left' | 'right') => void,
 		private onGameOver: () => void,
-		private onError: (error: Error) => void) {
+		private onError: (error: Error) => void,
+		existingSocket?: WebSocket) {
 		this.params = params;
 		this.wsParams = wsParams;
 		this.currState = {
@@ -28,6 +30,10 @@ export class GameConnection {
 			left_a: { x: 0, y: 0 },
 			right_a: { x: 0, y: 0 },
 		};
+		if (existingSocket) {
+			this.socket = existingSocket;
+			this.isUsingExternalSocket = true;
+		}
 	}
 
 	private initState(): void {
@@ -46,11 +52,12 @@ export class GameConnection {
 	}
 
 	public connect(): void {
-		if (this.socket) {
-			throw new Error('WebSocket already initialized');
-		}
-		this.socket = new WebSocket(this.wsParams.url);
-
+		// If we already have socket that means we are in tournament mode
+		if (!this.socket || !this.isUsingExternalSocket) {
+			this.socket = new WebSocket(this.wsParams.url);
+			this.isUsingExternalSocket = false;
+		} 
+		
 		this.socket.addEventListener('open', () => {
 			console.log('Connected to server');
 		});
@@ -90,6 +97,17 @@ export class GameConnection {
 		if (!this.socket) {
 			throw new Error('WebSocket not initialized');
 		}
+
+		const msgData: { paddle: 'left' | 'right'; input: number; matchId?: number } = { 
+			paddle,
+			input,
+		};
+
+		// If it's a tournament game, your backend might expect the matchId with the input
+		if (this.isUsingExternalSocket && this.wsParams.isTournament && this.wsParams.matchId) {
+			msgData.matchId = this.wsParams.matchId;
+		}
+
 		const msg: wsMsg = {
 			type: 'user_input',
 			data: {
@@ -101,7 +119,10 @@ export class GameConnection {
 		this.socket.send(JSON.stringify(msg));
 	}
 
-	private processMsg(msg: wsMsg): void {
+	public processMsg(msg: wsMsg): void {
+		if ((msg as any).type === "game_data" && (msg as any).payload) {
+			msg = (msg as any).payload;
+		}
 		switch (msg.type) {
 			case 'game_state':
 				this.currState = msg.data;
@@ -120,13 +141,14 @@ export class GameConnection {
 						this.onSetCountdown(msg.data.time);
 						break;
 					default:
+						console.log(`Game event: ${msg}`);
 						console.error(`Unknown game event: ${msg.data}`);
 						break;
 				}
 				break;
 			case 'goal':
-				console.log('Received message:', msg);
-				this.onGoal(msg.data);
+				console.log('Received message:', msg.data);
+				this.onGoal(msg.data.side);
 				break;
 			case 'error':
 				this.onError(new Error(msg.data));

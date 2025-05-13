@@ -70,7 +70,11 @@ export class AIPlayer {
 	}
 
 	public send(msg: string): void {
-		const parsedMsg = JSON.parse(msg);
+		let parsedMsg = JSON.parse(msg);
+		if ((parsedMsg as any).type === "game_data" && (parsedMsg as any).payload) {
+			parsedMsg = (parsedMsg as any).payload;
+		}
+
 		switch (parsedMsg.type) {
 			case "game_state":
 				this.newestState = parsedMsg.data;
@@ -82,9 +86,6 @@ export class AIPlayer {
 					case "game_found":
 						this.side = parsedMsg.data.side;
 						break;
-					case "goal":
-						this.stop();
-						break;
 					case "start_countdown":
 						this.onSetCountdown(parsedMsg.data.time);
 						break;
@@ -95,6 +96,9 @@ export class AIPlayer {
 				break;
 			case "error":
 				this.onError(new Error(parsedMsg.data));
+				break;
+			case "goal":
+				this.stop();
 				break;
 			default:
 				console.error(`Unknown message type: ${parsedMsg.type}`);

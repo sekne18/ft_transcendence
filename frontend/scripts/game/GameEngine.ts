@@ -1,8 +1,10 @@
 import { GameConnection } from './GameConnection';
-import { GameParams, RenderDetails, GameStatus, WsParams } from './GameTypes';
+import { GameParams, RenderDetails, GameStatus, WsParams, wsMsg } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
+import { loadConfigFromFile } from 'vite';
+import { loadContent } from '../router/router';
 
 
 export class GameEngine {
@@ -11,25 +13,46 @@ export class GameEngine {
 	private gameRenderer: GameRenderer;
 	private inputController: PointerInputController;
 	private UIManager: UIManager;
-	private player: 'left' | 'right' | null;
+	public player: 'left' | 'right' | null;
 	private enemyDisconnected: boolean = false;
+	private isTournament: boolean = false;
+	private tournamentMatchId: number | null = null;
+	// private isSpectator: boolean = false;
 
-	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams) {
+	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams, existingSocket?: WebSocket) {
 		this.status = 'idle';
 		this.player = null;
+		this.isTournament = wsParams.isTournament || false;
+		this.tournamentMatchId = wsParams.matchId || null;
+		// this.isSpectator = wsParams.isSpectator || false;
+
+		// Pass wsParams which might include matchId if it's a tournament
+		const gameConnectionWsParams: WsParams = {
+			...wsParams,
+			url: existingSocket ? '' : wsParams.url,
+		};
+
 		this.game = new GameConnection(
 			gameParams,
-			wsParams,
+			gameConnectionWsParams,
 			this.onMatchFound.bind(this),
 			this.onSetCountdown.bind(this),
 			this.onGoal.bind(this),
 			this.onGameOver.bind(this),
 			this.onError.bind(this),
+			existingSocket
 		);
+
 		this.gameRenderer = new GameRenderer(canvas, gameParams, renderDetails, this.game.getState.bind(this.game));
 		this.inputController = new PointerInputController(canvas, gameParams, this.game.getState.bind(this.game), this.game.receiveInput.bind(this.game));
 		this.UIManager = new UIManager(this.matchmake.bind(this));
 		this.UIManager.updateScore(0, 0);
+
+		this.changeState('idle');
+	}
+
+	public getGame(): GameConnection {
+		return this.game;
 	}
 
 	public start(): void {
@@ -37,9 +60,21 @@ export class GameEngine {
 	}
 
 	public matchmake(): void {
+		console.log('GameEngine: matchmake() called. Tournament is set to: ', this.isTournament);
 		this.enemyDisconnected = false;
+		if (this.isTournament) {
+			return;
+		}
 		this.changeState('matchmaking');
 	}
+
+	// public handleGameMessage(message: wsMsg): void {
+	// 	if (this.game) {
+	// 		this.game.processMsg(message);
+	// 	} else {
+	// 		console.error("GameEngine: GameConnection not initialized to handle message:", message);
+	// 	}
+	// }
 
 	public async onMatchFound(side: 'left' | 'right', enemy_id: number): Promise<void> {
 		//TODO: setup enemy info on the left/right side
@@ -79,10 +114,10 @@ export class GameEngine {
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {
+		console.log('Goal scored by:', paddle);
 		const gameState = this.game.getState();
 		this.UIManager.updateScore(gameState.left_score, gameState.right_score);
 		this.UIManager.setGoalOverlay(paddle);
-		// potentially add some logic to add some winner or loser flourish
 		this.changeState('goal');
 	}
 
@@ -132,7 +167,8 @@ export class GameEngine {
 				break;
 			case 'matchmaking':
 				this.UIManager.toggleOverlayVisibility('visible');
-				this.game.connect();
+				if (!this.isTournament || !this.tournamentMatchId)
+					this.game.connect();
 				break;
 			case 'playing':
 				this.inputController.start();
@@ -151,6 +187,8 @@ export class GameEngine {
 					));
 				this.UIManager.setMatchmakingOverlay('button');
 				this.UIManager.toggleOverlayVisibility('visible');
+				if (this.isTournament)
+					loadContent('/tournament', false);
 				break;
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('visible');

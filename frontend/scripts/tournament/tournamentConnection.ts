@@ -24,6 +24,10 @@ class TournamentConnection {
         });
     }
 
+    public getSocket(): WebSocket { 
+        return this.socket;
+    }
+
     public sendMessage(type: string, data: any) {
         const message = JSON.stringify({ type, ...data });
         this.socket.send(message);
@@ -33,13 +37,13 @@ class TournamentConnection {
         this.sendMessage("join_tournament", { player });
     }
 
-    public startTournament(matches: any[]) {
-        this.sendMessage("tournament_started", { matches });
-    }
-
     public updateMatchStatus(matchId: string, status: string, winner: string | null = null) {
         this.sendMessage("match_status", { matchId, status, winner });
     }
+
+    // public matchFinished(matchId: string, winner: string) {
+    //     this.sendMessage("match_finished", { matchId, winner });
+    // }
 
     public leaveTournament() {
         this.sendMessage("leave_tournament", {});

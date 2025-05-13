@@ -8,19 +8,24 @@ export type Player = {
     isEliminated: boolean;
 };
 
-export type Match = {
+export interface TournamentMatch {
     id: number;
+    round: number;
+    position: number;
     player1: Player;
     player2: Player;
-    winner?: Player;
+    winner: Player;
+    score: string;
     isFinished: boolean;
-};
+    status: 'pending' | 'in_progress' | 'completed';
+  }
+
 
 export type Tournament = {
     id: number;
     players: Player[];
-    matches: Match[];
-    currentRound: Match[][];
+    matches: TournamentMatch[];
+    currentRound: TournamentMatch[][];
     isFinished: boolean;
 };
 

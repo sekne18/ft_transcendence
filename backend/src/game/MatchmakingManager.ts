@@ -2,6 +2,7 @@ import { MatchMakerParams, PlayerConnection, QueuedPlayer, GameParams, AIPlayerP
 import { GameSession } from "./GameSession.js";
 import { gameParams, matchmakerParams, aiParams } from "./GameParams.js";
 import { AIPlayer } from "./AIPlayer.js";
+import { getUserByUsername } from "../db/queries/user.js";
 
 export class MatchmakingManager {
 	private queue: QueuedPlayer[] = [];
@@ -67,7 +68,7 @@ export class MatchmakingManager {
 				if (ratingDiff <= maxAllowedDiff) {
 					// Found match
 					console.log(`Matched players ${p1.conn.id} and ${p2.conn.id} with rating difference ${ratingDiff}`);
-					const session = new GameSession(p1.conn, p2.conn, gameParams);
+					const session = new GameSession(p1.conn, p2.conn, gameParams, -1);
 
 					this.queue.splice(j, 1);
 					this.queue.splice(i, 1);
@@ -79,7 +80,8 @@ export class MatchmakingManager {
 			if (Date.now() - p1.joinedAt > matchmakerParams.timeUntilAI * 1000) {
 				// If player has been waiting too long, assign AI
 				const aiPlayer = new AIPlayer(gameParams, aiParams);
-				const session = new GameSession(p1.conn, { id: -1, socket: aiPlayer }, gameParams);
+				const aiPlayer_id: number = (getUserByUsername("ai_bot") as { id: number }).id;
+				const session = new GameSession(p1.conn, { id: aiPlayer_id, socket: aiPlayer }, gameParams, -1);
 				this.queue.splice(i, 1);
 				session.start();
 				return;
@@ -88,7 +90,7 @@ export class MatchmakingManager {
 	}
 
 	public startSession(p1: PlayerConnection, p2: PlayerConnection): void {
-		const session = new GameSession(p1, p2, gameParams);
+		const session = new GameSession(p1, p2, gameParams, -1);
 		session.start();
 	};
 };

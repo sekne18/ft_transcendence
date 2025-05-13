@@ -2,7 +2,7 @@ import { time } from "console";
 import { GameInstance } from "./GameInstance.js";
 import { GameParams, GameState, UserInput, wsMsg } from "./GameTypes.js";
 import { PlayerConnection } from "./GameTypes.js";
-import { AIPlayer } from "./AIPlayer.js";
+import { createMatch, updateMatch } from "../db/queries/match.js";
 
 export class GameSession {
 	private game: GameInstance;
@@ -10,11 +10,16 @@ export class GameSession {
 	private intervalId: NodeJS.Timeout | null = null;
 	private startTime: number | null = null;
 	private params: GameParams;
+	private matchId: number;
 
-	constructor(Player1: PlayerConnection, Player2: PlayerConnection, params: GameParams) {
+	constructor(Player1: PlayerConnection, Player2: PlayerConnection, params: GameParams, matchId: number) {
 		this.params = params;
 		this.game = new GameInstance(params, this.onGoal.bind(this), this.onGameOver.bind(this));
 		this.players.push(Player1, Player2);
+		if (matchId == -1)
+			this.matchId = createMatch(this.players[0].id, this.players[1].id, 0, 0);
+		else 
+			this.matchId = matchId;
 		this.players.forEach((player, i) => {
 			player.socket.on("close", () => {
 				this.stopGame();
@@ -39,6 +44,10 @@ export class GameSession {
 				timestamp: Date.now()
 			}));
 		});
+	}
+
+	public getPlayers(): PlayerConnection[] {
+		return this.players;
 	}
 
 	public start(): void {
@@ -74,13 +83,18 @@ export class GameSession {
 
 	private onGoal(paddle: 'left' | 'right'): void {
 		console.log("Goal scored by:", paddle);
+
 		this.players.forEach((player) => {
 			player.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));
 			player.socket.send(JSON.stringify({ type: "goal", data: paddle, timestamp: Date.now() }));
 		});
+
+		updateMatch(this.matchId, this.game.getState().left_score, this.game.getState().right_score);
+
 		if (this.game.getState().left_score >= this.params.max_score || this.game.getState().right_score >= this.params.max_score) {
 			return;
 		}
+
 		setTimeout(() => {
 			this.players.forEach((player) => {
 				player.socket.send(JSON.stringify({ type: "game_event", data: { event: "start_countdown", time: this.params.countdown }, timestamp: Date.now() }));
@@ -95,6 +109,7 @@ export class GameSession {
 		this.players.forEach((player) => {
 			player.socket.send(JSON.stringify({ type: "game_event", data: { event: "game_over" }, timestamp: Date.now() }));
 		});
+		updateMatch(this.matchId, this.game.getState().left_score, this.game.getState().right_score, winner, 'completed');
 		this.stopGame();
 	};
 
@@ -107,6 +122,7 @@ export class GameSession {
 		);
 		this.stopGame();
 	};
+
 
 	private handleUserInput(input: { paddle: 'left' | 'right', input: UserInput }): void {
 		this.game.receiveInput(input.paddle, input.input);

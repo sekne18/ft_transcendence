@@ -33,6 +33,8 @@ export function initGame(): void {
 
             const wsParams = {
                 url: `ws://localhost:8080/api/game/ws`,
+                isTournament: false,
+                matchId: undefined,
             };
 
             const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams);

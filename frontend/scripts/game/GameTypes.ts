@@ -32,6 +32,8 @@ export type RenderDetails = {
 
 export type WsParams = {
 	url: string,
+	isTournament: boolean,
+	matchId?: number,
 }
 
 export type GameStatus = 'idle' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
@@ -66,9 +68,11 @@ export type wsMsg = {
 	timestamp: number,
 } | {
 	type: 'goal',
-	data: 'left' | 'right',
+	data: {
+		side: 'left' | 'right',
+	}
 	timestamp: number,
-} | {
+} | {	
 	type: 'error',
 	data: string,
 	timestamp: number,

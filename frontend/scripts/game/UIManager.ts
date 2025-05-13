@@ -7,19 +7,21 @@ export class UIManager {
 	private userInfo: HTMLDivElement;
 	private enemyInfo: HTMLDivElement;
 
-	constructor(MatchmakeHandler: () => void) {
+	constructor(MatchmakeHandler: () => void, isTournament: boolean = false) {
 		this.overlay = document.getElementById('game-overlay') as HTMLDivElement;
 		this.scoreLeft = document.getElementById('score-left') as HTMLDivElement;
 		this.scoreRight = document.getElementById('score-right') as HTMLDivElement;
 		this.userInfo = document.getElementById('game-user-info') as HTMLDivElement;
 		this.enemyInfo = document.getElementById('game-enemy-info') as HTMLDivElement;
 		this.matchmakeButton = document.getElementById('game-matchmake-button') as HTMLButtonElement;
-		this.matchmakeButton.addEventListener('click', () => {
-			this.setMatchmakingOverlay('loading');
-			MatchmakeHandler();
-		});
-		this.setMatchmakingOverlay('button');
-		this.toggleOverlayVisibility('visible');
+		// if (!isTournament) {
+			this.matchmakeButton.addEventListener('click', () => {
+				this.setMatchmakingOverlay('loading');
+				MatchmakeHandler();
+			});
+			this.setMatchmakingOverlay('button');
+			this.toggleOverlayVisibility('visible');
+		// }
 	}
 
 	public toggleOverlayVisibility(visibility: 'hidden' | 'visible' | null = null): void {
@@ -61,7 +63,7 @@ export class UIManager {
 					this.overlay.innerText = "Searching for opponent";
 				}
 			}
-			, 1000);
+				, 1000);
 		}
 		else if (state === 'found') {
 			this.overlay.innerText = "Opponent Found!";

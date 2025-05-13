@@ -126,7 +126,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		const googleUser = await userRes.json() as { email: string; id: string; name: string; picture: string };
 
 		// Step 3: Get or create user in your DB
-		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; // Same as your login
+		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; 
 
 		if (!user) {
 			// If user doesn't exist, create them
@@ -601,7 +601,7 @@ fastify.get('/api/user/profile',
 		return reply.send({ success: true, user });
 	});
 
-fastify.get('/api/user/stats',
+fastify.get('/api/user/stats',	
 	{ onRequest: [fastify.authenticate] },
 	async (req, reply) => {
 		const id = (req.user as { id: number }).id;
@@ -648,6 +648,13 @@ fastify.get('/api/game/params', { onRequest: [fastify.authenticate] }, async (re
 	});
 });
 
+fastify.get('/api/game/tournamentParams', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	return reply.send({
+		success: true,
+		params: gameParams
+	});
+});
+
 fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
 	console.log('WebSocket connection established:', user.id);
@@ -687,33 +694,33 @@ fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true
 	chatManager.addConnection({ id: user.id, socket: conn });
 });
 
-fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-	const id = (req.user as { id: number }).id;
-	if (!id) {
-		return reply.code(401).send({
-			success: false,
-			message: 'Invalid user ID'
-		});
-	}
-	const chats = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
-	console.log('chats', chats);
-	if (!chats) {
-		return reply.code(500).send({
-			success: false,
-		});
-	}
-	const conn = chatManager.getChatConnection(id);
-	if (!conn) {
-		return reply.code(500).send({
-			success: false,
-			message: 'Invalid connection'
-		});
-	}
-	chats.forEach((chat) => {
-		chatManager.join(chat.chat_id, conn);
-	});
-	return reply.send({ success: true, chats });
-});
+// fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+// 	const id = (req.user as { id: number }).id;
+// 	if (!id) {
+// 		return reply.code(401).send({
+// 			success: false,
+// 			message: 'Invalid user ID'
+// 		});
+// 	}
+// 	const chats = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
+// 	console.log('chats', chats);
+// 	if (!chats) {
+// 		return reply.code(500).send({
+// 			success: false,
+// 		});
+// 	}
+// 	const conn = chatManager.getChatConnection(id);
+// 	if (!conn) {
+// 		return reply.code(500).send({
+// 			success: false,
+// 			message: 'Invalid connection'
+// 		});
+// 	}
+// 	chats.forEach((chat) => {
+// 		chatManager.join(chat.chat_id, conn);
+// 	});
+// 	return reply.send({ success: true, chats });
+// });
 
 fastify.post('/api/chat/register', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;

@@ -61,7 +61,7 @@ export async function initRouter() {
 }
 
 
-export function loadContent(url: string) {
+export async function loadContent(url: string, ignoreScripts: boolean = false) {
     const appElement = document.getElementById('app');
     if (appElement) {
         appElement.innerHTML = '<div class="loading">Loading...</div>';
@@ -85,7 +85,8 @@ export function loadContent(url: string) {
                     } else {
                         appElement.classList.remove("absolute", "top-0", "bg-[#0F0F13]", "w-full");
                     }
-                    routes[url].init?.();
+                    if (!ignoreScripts)
+                        routes[url].init?.();
                     languageService.init();
                 }
             })
