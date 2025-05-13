@@ -87,5 +87,32 @@ export const translations: Record<string, LanguageMap> = {
     // Chat items
     chat_title: 'Pogovor',
     chat_send: 'Pošlji'
+  },
+  ua: {
+    // Navbar items
+    nav_title: 'Pongy',
+    nav_game: 'Грати',
+    nav_leaderboard: 'Таблиця лідерів',
+    nav_chat: 'Чат',
+    nav_tournament: 'Турнір',
+    
+    // Game items
+    game_start: 'Почати гру',
+    game_score: 'Рахунок',
+    game_lives: 'Життя',
+    
+    // Leaderboard item
+    leaderboard_level: 'Рівень',
+    leaderboard_wins: 'Перемоги',
+    leaderboard_win_rate: 'Відсоток перемог',
+    leaderboard_score: 'Очки',
+    leaderboard_desc: "Дізнайся, хто домінує на арені Pong",
+    leaderboard_title: 'Таблиця лідерів',
+    leaderboard_rank: 'Ранг',
+    leaderboard_player: 'Гравець',
+    
+    // Chat items
+    chat_title: 'Чат',
+    chat_send: 'Відправити'
   }
 };
