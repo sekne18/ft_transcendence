@@ -1,3 +1,4 @@
+import { botData } from "../Config.js";
 import db from "./connection.js";
 
 export function initializeDatabase() {
@@ -21,6 +22,7 @@ export function initializeDatabase() {
           last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
           totp_secret TEXT,
           avatar_url TEXT DEFAULT '',
+          role TEXT DEFAULT 'user', -- 'user', 'admin', 'bot'
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
       `).run();
@@ -97,12 +99,21 @@ export function initializeDatabase() {
         );
       `).run();
 
+      db.prepare(`
+        INSERT INTO users (username, display_name, email, password, avatar_url, role)
+        VALUES ('${botData.username}', '${botData.display_name}', '${botData.email}', '', '${botData.avatarPath}', 'bot');
+      `).run();
+
+      db.prepare(`
+        INSERT INTO stats (user_id, wins, losses, games_played)
+        VALUES (1, 0, 0, 0);
+      `).run();
+
       console.log('Database tables created successfully');
     } else {
       console.log('Database tables already exist');
     }
   });
 
-  // Execute the transaction
   createTables();
 }

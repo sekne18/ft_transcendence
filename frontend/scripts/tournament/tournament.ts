@@ -1,32 +1,11 @@
+import { GameEngine } from "../game/GameEngine";
+import { GameParams, wsMsg, WsParams } from "../game/GameTypes";
 import { Profile } from "../profile/Types";
+import { loadContent } from "../router/router";
 import { showToast } from "../utils";
-import { wsConfig } from "../wsConfig";
 import TournamentConnection from "./tournamentConnection";
 import { Tournament, TournamentMatch } from "./types";
 
-// --- Initialization ---
-export function initTournament(): void {
-    tournamentConnection = new TournamentConnection(`${wsConfig.scheme}://${wsConfig.host}/api/tournament/ws`, handleServerUpdate);
-
-    // Fetch user profile
-    fetch('/api/user/profile', {
-        method: 'GET',
-        credentials: 'include',
-    }).then(res => {
-        if (res.status === 401) {
-            window.location.href = '/auth';
-            return null;
-        }
-        return res.json();
-    }).then((res) => {
-        user = res.user as Profile;
-        renderTournament();
-    });
-
-    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal);
-    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament);
-    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal);
-}
 
 // Mock current user (consider fetching this dynamically)
 let user: Profile;
@@ -37,7 +16,7 @@ let tournament: Tournament = {
     status: 'queuing',
     players: [],
     matches: [],
-    maxPlayers: 8
+    maxPlayers: 2
 };
 
 // Tournament WebSocket connection instance
@@ -93,71 +72,140 @@ function leaveTournament(): void {
     renderTournament();
 }
 
-function requestSpectate(matchId: string): void {
-    tournamentConnection.sendMessage('spectate_request', { matchId });
-    // Optionally update local UI to indicate spectating
+function ensureCanvasAndInitGameEngine(matchId: number, gameFoundData: any /* data from server's game_found event */): Promise<GameEngine | null> {
+    return new Promise(resolve => {
+        const interval = setInterval(() => {
+            const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null;
+            if (canvas) {
+                clearInterval(interval);
+                // Now call the function that creates the GameEngine
+                createGameEngineForTournament(matchId, gameParamsFromServerOrLocal, canvas, gameFoundData)
+                    .then(gameEngine => resolve(gameEngine));
+            }
+        }, 100);
+    });
 }
 
 const handleServerUpdate = (data: any): void => {
-    switch (data.type) {
-        case "player_joined":
-            const newPlayer = data.player;
-            if (!tournament.players.some(p => p.id === newPlayer.id)) {
-                tournament.players.push(newPlayer);
-                renderTournament();
+    if (data.type === "game_data" && data.matchId && data.payload) {
+        const matchIdNum = Number(data.matchId);
+        let gameEngine = activeTournamentGameEngines.get(matchIdNum);
+
+        const gamePayload = data.payload as wsMsg; // Cast to your shared wsMsg type
+
+        if (!gameEngine) {
+            // If GameEngine doesn't exist, and this is the 'game_found' event, we need to create it.
+            if (gamePayload.type === "game_event" && gamePayload.data.event === "game_found") {
+                const gameFoundData = gamePayload.data as {
+                    event: "game_found";
+                    side: "left" | "right";
+                    enemy_id: number;
+                };
+                const opponentDetails = tournament.players.find(p => p.id === gameFoundData.enemy_id);
+                showToast("Match Found!", `You are playing against ${opponentDetails?.username || 'Opponent'} for match ${matchIdNum}`, "success");
+
+                // Navigate to the game page/view
+                loadContent('/game', true); 
+
+                // Wait for canvas, then create GameEngine
+                ensureCanvasAndInitGameEngine(matchIdNum, gameFoundData);
+            } else if (gamePayload.type !== "game_event" || gamePayload.data.event !== "game_found") {
+                console.warn(`[Frontend] Received game data for match ${matchIdNum}, but no GameEngine instance found and not a game_found event. Payload:`, gamePayload);
             }
-            break;
+        }
+        return;
+    }
+
+    switch (data.type) {
         case "tournament_started":
             console.log("Tournament started:", data);
             tournament.status = "in_progress";
             tournament.matches = data.matches;
             renderTournament();
             break;
-        case "match_found":
-            console.log("Match found:", data);
-            const { opponentId, matchId: foundMatchId } = data;
-            const opponent = tournament.players.find(p => p.id === opponentId);
-            if (opponent && user) {
-                const existingMatchIndex = tournament.matches.findIndex(m => m.id === String(foundMatchId));
-                const newMatch: TournamentMatch = {
-                    id: String(foundMatchId),
-                    player1: user,
-                    player2: opponent,
-                    status: 'pending',
-                    round: 1,
-                    position: 0,
-                };
-                if (existingMatchIndex === -1) {
-                    tournament.matches.push(newMatch);
-                    renderTournament();
-                }
-                showToast("Match Found", `You are matched with ${opponent.username}`, "success");
-            }
-            break;
         case "queue_updated":
-            console.log("Queue updated:", data.players);
-            const updatedQueuePlayers = data.players as Profile[];
-            tournament.players = updatedQueuePlayers;
+            tournament.players = data.players as Profile[];
+            // const updatedQueuePlayers = data.players as Profile[];
+            // if (data.players.length > 0) // is not null
+            //     tournament.players = updatedQueuePlayers;
             renderTournament();
             break;
-        case "match_status":
-            const matchIndex = tournament.matches.findIndex(m => m.id === data.matchId);
+        case "match_updated":
+            console.log("Match updated (tournament level):", data);
+            const updatedMatchData = { ...data.match, id: Number(data.match.id) };
+            const matchIndex = tournament.matches.findIndex(m => m.id === updatedMatchData.id);
             if (matchIndex > -1) {
-                tournament.matches[matchIndex] = { ...tournament.matches[matchIndex], status: data.status, winner: data.winner };
-                renderTournament();
+                tournament.matches[matchIndex] = { ...tournament.matches[matchIndex], ...updatedMatchData };
+            } else {
+                tournament.matches.push(updatedMatchData);
             }
+            renderTournament();
             break;
-        case "spectate_init":
-            console.log("Spectating match:", data.match);
-            // Update UI to show the spectated match - requestSpectate
+        case "round_updated":
+            console.log("Round updated:", data);
+            tournament.matches = data.matches;
+            renderTournament();
             break;
-        case "spectate_failed":
-            showToast("Spectate Error", data.message, "error");
+        case "tournament_finished":
+            console.log("Tournament finished:", data);
+            tournament.status = "completed";
+            if (data.winner) {
+                showToast("Tournament Over", `Winner: ${data.winner.username}`, "success");
+            } else {
+                showToast("Tournament Over", "The tournament has concluded.", "info");
+            }
+            if (data.matches) tournament.matches = data.matches;
+            renderTournament();
+            activeTournamentGameEngines.clear();
             break;
         default:
-            console.log("Unknown event type:", data.type);
+            console.log("Unknown tournament-level event type:", data.type, data);
     }
 };
+
+async function createGameEngineForTournament(
+    matchId: number,
+    gameParams: GameParams, // These params should ideally come from server or be fixed client-side
+    canvas: HTMLCanvasElement,
+    gameFoundData: { side: 'left' | 'right', enemy_id: number, matchId: number }
+): Promise<GameEngine | null> {
+    if (!tournamentConnection || !tournamentConnection.getSocket()) {
+        showToast("Error", "Tournament connection lost. Cannot start game.", "error");
+        return null;
+    }
+
+    if (activeTournamentGameEngines.has(matchId)) {
+        console.warn(`[Frontend] GameEngine for match ${matchId} already exists. Disposing old one.`);
+        activeTournamentGameEngines.delete(matchId);
+    }
+
+    // These are parameters for the GameEngine constructor and GameConnection
+    const wsParams: WsParams = {
+        url: '', // URL not used by GameConnection when an existing socket is provided
+        isTournament: true,
+        matchId: matchId // Essential for GameConnection if it needs to tag outgoing messages
+    };
+
+    const renderDetails = {
+        ball_color: "white",
+        paddle_color: "yellow",
+        arena_color: "black",
+        max_canvas_width: 2000,
+        canvas_margin: 32
+    };
+
+    const gameEngine = new GameEngine(
+        canvas,
+        gameParams,
+        renderDetails,
+        wsParams,
+        tournamentConnection.getSocket()
+    );
+    activeTournamentGameEngines.set(matchId, gameEngine);
+    gameEngine.getGame().connect();
+    return gameEngine;
+
+}
 
 // --- Rendering Logic ---
 function renderPlayerInfo(player: Profile | undefined): string {
@@ -173,9 +221,10 @@ function renderPlayerInfo(player: Profile | undefined): string {
 }
 
 function renderMatchCardTree(match: TournamentMatch): string {
-    const winnerClass = match.winner ? 'bg-green-900 border-green-500' : 'bg-[#272735] border-[#3A3A49]';
+    console.log('Rendering match card:', match);
+    // const winnerClass = match.winner ? 'bg-green-900 border-green-500' : 'bg-[#272735] border-[#3A3A49]';
     return `
-        <div class="rounded-md border ${winnerClass} p-2 w-52 text-white flex flex-col justify-between h-32">
+        <div class="rounded-md border bg-[#ffc038] border-[#d49204] p-2 w-52 text-white flex flex-col justify-between h-32">
             <div>
                 <div class="flex justify-between items-center">
                     <span>${renderPlayerInfo(match.player1)} <span class="text-xs">${match.score?.split('-')[0] || ''}</span></span>
@@ -334,4 +383,43 @@ function renderTournament(): void {
     } else {
         contentEl.appendChild(renderBracketTree());
     }
+}
+
+
+const activeTournamentGameEngines: Map<number, GameEngine> = new Map();
+let gameParamsFromServerOrLocal: GameParams;
+
+// --- Initialization ---
+export function initTournament(): void {
+    activeTournamentGameEngines.clear();
+
+    // Establish WebSocket connection
+    tournamentConnection = new TournamentConnection("ws://localhost:8080/api/tournament/ws", handleServerUpdate); //
+
+    // Fetch user profile
+    fetch('/api/user/profile', {
+        method: 'GET',
+        credentials: 'include',
+    }).then(res => res.json())
+        .then((profileRes) => {
+            user = profileRes.user as Profile;
+            return fetch('/api/game/tournamentParams');
+        })
+        .then(paramsRes => {
+            if (!paramsRes.ok) throw new Error('Failed to load game params');
+            return paramsRes.json();
+        })
+        .then(paramsData => {
+            gameParamsFromServerOrLocal = paramsData.params as GameParams;
+            renderTournament();
+        })
+        .catch(error => {
+            console.error("Initialization error:", error);
+            showToast("Error", "Could not initialize tournament data.", "error");
+        });
+
+    // Add event listeners for modal
+    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal); //
+    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament); //
+    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal); //
 }

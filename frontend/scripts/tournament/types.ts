@@ -1,7 +1,7 @@
 import { Profile } from "../profile/Types";
 
 export interface TournamentMatch {
-  id: string;
+  id: number;
   round: number;
   position: number;
   player1?: Profile;

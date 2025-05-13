@@ -1,8 +1,10 @@
 import fastifyWebsocket from "@fastify/websocket";
 import { getUserById } from "../db/queries/user.js";
-import { Match, Player } from "./Types.js";
+import { Player } from "./Types.js";
 import { TournamentSession } from "./TournamentSession.js";
 import { PlayerQueue } from "./PlayerQueue.js";
+import { GameSession } from "../game/GameSession.js";
+import { PlayerConnection, wsMsg } from "../game/GameTypes.js";
 
 export class TournamentManager {
   private tournamentSession: TournamentSession;
@@ -38,6 +40,30 @@ export class TournamentManager {
 
     conn.on('message', (raw: any) => {
       const msg = JSON.parse(raw.toString());
+      
+      let isGameMessage = false;
+      if (msg.type === 'user_input') { 
+        let targetSession: GameSession | undefined;
+        let targetMatchId: number | undefined;
+
+        for (const [matchId, session] of this.tournamentSession.getActiveGameSessions().entries()) {
+         if (session.getPlayers().some(pConn => pConn.id === player.id)) {
+            targetSession = session;
+            targetMatchId = matchId;
+            break;
+          }
+        }
+
+        if (targetSession) {
+          console.log(`[TournamentManager] Routing message from P:<span class="math-inline">\{player\.id\} to GameSession for matchId\:</span>{targetMatchId}, type: ${msg.type}`);
+          const playerConnForGame: PlayerConnection = { id: player.id, socket: player.socket };
+          targetSession.processMsg(msg as wsMsg, playerConnForGame);
+          isGameMessage = true;
+        }
+      }
+      if (isGameMessage) {
+        return; 
+      }
 
       switch (msg.type) {
         case 'join_tournament':
@@ -47,12 +73,6 @@ export class TournamentManager {
         case 'leave_tournament':
           console.log(`Received 'leave_tournament' message from user: ${player.id}`);
           this.playerQueue.remove(player);
-          // this.tournamentSession.removePlayer(player);
-          break;
-        case 'spectate_request':
-          const { matchId } = msg;
-          console.log(`Received 'spectate_request' for match ${matchId} from user: ${player.id}`);
-          this.handleSpectateRequest(player, matchId);
           break;
         case 'match_result':
           const { resultMatchId, winnerId } = msg;
@@ -69,24 +89,5 @@ export class TournamentManager {
       this.playerQueue.remove(player);
       this.tournamentSession.removeClient(player);
     });
-  }
-
-  // private broadcastPlayerUpdate() {
-  //   const playersInQueue = this.playerQueue.getPlayersInQueue().map(p => ({
-  //     id: p.id,
-  //     username: p.username,
-  //     avatar_url: p.avatar_url,
-  //   }));
-  //   this.tournamentSession.broadcast({ type: 'player_list_updated', players: playersInQueue });
-  // }
-
-  private handleSpectateRequest(spectator: Player, matchId: number) {
-    const match = this.tournamentSession.getMatchById(matchId);
-    if (match && !match.isFinished) {
-      spectator.socket.send(JSON.stringify({ type: 'spectate_init', match }));
-      this.tournamentSession.addSpectator(matchId, spectator);
-    } else {
-      spectator.socket.send(JSON.stringify({ type: 'spectate_failed', message: 'Match not found or finished.' }));
-    }
   }
 }

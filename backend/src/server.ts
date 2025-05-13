@@ -29,6 +29,7 @@ import { ChatMsg } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
+import { defaultAvatarPath } from './Config.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -468,7 +469,7 @@ fastify.post('/api/register', async (req, reply) => {
 			display_name: username,
 			email,
 			hash,
-			avatarUrl: '/uploads/avatars/default.png'
+			avatarUrl: `${defaultAvatarPath}`
 		});
 
 		if (!userId) {
