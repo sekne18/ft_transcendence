@@ -96,7 +96,7 @@ export function loadContent(url: string) {
                 }
             });
     } else if (url.startsWith('/profile/')) {
-        // handle dynamic profile route
+        history.pushState(null, '', '/profile');
         fetch(routes['/profile'].file)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);

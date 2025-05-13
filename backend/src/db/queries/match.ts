@@ -15,7 +15,7 @@ export function createMatch(
     return result.lastInsertRowid as number;
 }
 
-export function getMatchesByUserId(userId: number) {
+export function getMatchesByUserId(userId: string) {
     const stmt = db.prepare(`SELECT * FROM matches WHERE player1_id = ? OR player2_id = ?`);
     return stmt.all(userId, userId);
 }

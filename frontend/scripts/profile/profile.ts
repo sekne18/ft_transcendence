@@ -7,12 +7,17 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-let profile : Profile | null;
 
-export function initProfile(userId?: number, existingProfile?: Profile): void {
-  profile = existingProfile || null;
-  renderUserProfile();
-  renderMatchHistory()
+export function initProfile(userId?: number): void {
+  if (userId && userId > 0) {
+    fetchUserProfile(userId).then((userProfile) => {
+      renderUserProfile(userProfile);
+      renderMatchHistory(userId);
+    });
+  } else {
+    renderUserProfile();
+    renderMatchHistory();
+  }
 
   const modalManager = new ModalManager("edit-profile-modal");
 
@@ -21,6 +26,26 @@ export function initProfile(userId?: number, existingProfile?: Profile): void {
     resetEditProfileForm,
     onAvatarChange
   );
+}
+
+async function fetchUserProfile(userId: number): Promise<Profile | undefined> {
+  try {
+    const response = await fetch(`/api/user/profile/${userId}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error:', errorData.message || response.statusText);
+      return undefined;
+    }
+    const data = await response.json();
+    return data.user as Profile;
+  } catch (error) {
+    console.error('Network error:', error);
+    return undefined;
+  }
 }
 
 function onAvatarChange() {
@@ -39,66 +64,73 @@ function onAvatarChange() {
 }
 
 // Render user profile
-export function renderUserProfile() {
-  if (profile) {
-    // Dont fetch but fill the data
+function renderUserProfile(profile: Profile | undefined = undefined) {
+
+  if (profile)
+    fillProfileData(profile);
+  else {
+    fetch('/api/user/profile', {
+      method: 'GET',
+      credentials: 'include',
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((response) => {
+      if (!response || !response.success) {
+        window.location.href = '/auth';
+        return;
+      }
+      profile = response.user as Profile;
+      fillProfileData(profile);
+    })
+      .catch(() => {
+        window.location.href = '/auth';
+      });
   }
-  // Fill user details
-  fetch('/api/user/profile', {
-    method: 'GET',
-    credentials: 'include',
-  }).then(res => {
-    if (res.status === 401) {
-      window.location.href = '/auth';
-      return null;
-    }
-    return res.json();
-  }).then((response) => {
-    if (!response || !response.success) {
-      window.location.href = '/auth';
-      return;
-    }
+}
 
-    const profile = response.user as Profile;
+function fillProfileData(profile: Profile) {
+  // Set user details
+  (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
+  getElement('display_name').textContent = profile.display_name;
+  getElement('username').textContent = profile.username;
+  getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
 
-    // Set user details
-    (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
-    getElement('display_name').textContent = profile.display_name;
-    getElement('username').textContent = profile.username;
-    getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
+  // Set user stats
+  getElement('games-played').textContent = profile.games_played.toString();
+  getElement('wins').textContent = profile.wins.toString();
+  getElement('losses').textContent = profile.losses.toString();
+  // Calculate win rate
+  const winRate = profile.games_played > 0
+    ? Math.round((profile.wins / profile.games_played) * 100)
+    : 0;
+  getElement('win-rate').textContent = `${winRate}%`;
+  getElement('win-rate-bar').style.width = `${winRate}%`;
 
-    // Set user stats
-    getElement('games-played').textContent = profile.games_played.toString();
-    getElement('wins').textContent = profile.wins.toString();
-    getElement('losses').textContent = profile.losses.toString();
-    // Calculate win rate
-    const winRate = profile.games_played > 0
-      ? Math.round((profile.wins / profile.games_played) * 100)
-      : 0;
-    getElement('win-rate').textContent = `${winRate}%`;
-    getElement('win-rate-bar').style.width = `${winRate}%`;
-
-    // Set modal details
-    (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
-    (getElement('username-input') as HTMLInputElement).value = profile.username;
-    (getElement('email-input') as HTMLInputElement).value = profile.email;
-    (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
-    (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
-  })
-    .catch(() => {
-      window.location.href = '/auth';
-    });
+  // Set modal details
+  (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
+  (getElement('username-input') as HTMLInputElement).value = profile.username;
+  (getElement('email-input') as HTMLInputElement).value = profile.email;
+  (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
+  (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
 }
 
 // Render match history
-function renderMatchHistory() {
+function renderMatchHistory(userId?: number) {
   const matchHistoryContainer = getElement('match-history');
   const recentActivityContainer = getElement('recent-activity');
   // Clear containers
   matchHistoryContainer.innerHTML = '';
   recentActivityContainer.innerHTML = '';
 
-  fetch('/api/user/recent-matches', {
+  const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
+
+  console.log(apiUrl);
+
+  fetch(apiUrl, {
     method: 'GET',
     credentials: 'include',
   }).then(res => {
@@ -109,6 +141,7 @@ function renderMatchHistory() {
     return res.json();
   }).then((res) => {
     const matchHistory = res.matchHistory as Match[];
+    console.log(matchHistory);
     if (!matchHistory) {
       return;
     }
