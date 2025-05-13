@@ -6,12 +6,13 @@ import { createMatch, updateMatch } from "../db/queries/match.js";
 export class GameSession {
 	private game: GameInstance;
 	private players: PlayerConnection[] = [];
+	private spectators: PlayerConnection[] = [];
 	private intervalId: NodeJS.Timeout | null = null;
 	private startTime: number | null = null;
 	private params: GameParams;
 	private matchId: number;
 
-	constructor(Player1: PlayerConnection, Player2: PlayerConnection, params: GameParams) {
+	constructor(Player1: PlayerConnection, Player2: PlayerConnection, params: GameParams, private onEnd: (id: number) => void) {
 		this.params = params;
 		this.game = new GameInstance(params, this.onGoal.bind(this), this.onGameOver.bind(this));
 		this.players.push(Player1, Player2);
@@ -28,16 +29,46 @@ export class GameSession {
 				const parsedMsg = JSON.parse(msg);
 				this.processMsg(parsedMsg);
 			});
-			player.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));
-			player.socket.send(JSON.stringify({
-				type: "game_event", data: {
+			this.broadcastMsg({
+				type: "game_state",
+				data: this.game.getState(),
+				timestamp: Date.now()
+			});
+			this.broadcastMsg({
+				type: "game_event",
+				data: {
 					event: "game_found",
 					side: i === 0 ? 'left' : 'right',
 					enemy_id: i === 0 ? this.players[1].id : this.players[0].id
 				},
 				timestamp: Date.now()
-			}));
+			});
 		});
+	}
+
+	private broadcastMsg(msg: wsMsg): void {
+		this.players.forEach((player) => {
+			player.socket.send(JSON.stringify(msg));
+		});
+		this.spectators.forEach((spectator) => {
+			spectator.socket.send(JSON.stringify(msg));
+		});
+	}
+
+	public spectate(spectre: PlayerConnection): void {
+		this.spectators.push(spectre);
+		spectre.socket.on("close", () => {
+			this.spectators = this.spectators.filter((s) => s.id !== spectre.id);
+		});
+		spectre.socket.on("error", (err) => {
+			console.error("Socket error:", err);
+			this.spectators = this.spectators.filter((s) => s.id !== spectre.id);
+		});
+		spectre.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));
+	}
+
+	public getId(): number {
+		return this.matchId;
 	}
 
 	public start(): void {
@@ -46,14 +77,17 @@ export class GameSession {
 		}
 		this.intervalId = setInterval(() => {
 			this.game.updateState(1000 / this.params.FPS);
-			this.players.forEach((player) => {
-				//TODO: save state to db
-				player.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));
+			this.broadcastMsg({
+				type: "game_state",
+				data: this.game.getState(),
+				timestamp: Date.now()
 			});
 		}
 			, 1000 / this.params.FPS);
-		this.players.forEach((player) => {
-			player.socket.send(JSON.stringify({ type: "game_event", data: { event: "start_countdown", time: this.params.countdown }, timestamp: Date.now() }));
+		this.broadcastMsg({
+			type: "game_event",
+			data: { event: "start_countdown", time: this.params.countdown },
+			timestamp: Date.now()
 		});
 		setTimeout(() => {
 			this.startTime = Date.now();
@@ -65,10 +99,14 @@ export class GameSession {
 		this.players.forEach((player) => {
 			player.socket.close(1000, "Game Over");
 		});
+		this.spectators.forEach((spectator) => {
+			spectator.socket.close(1000, "Game Over");
+		});
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
+		this.onEnd(this.matchId);
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {
@@ -78,16 +116,24 @@ export class GameSession {
 			score1: gameState.left_score,
 			score2: gameState.right_score
 		});
-		this.players.forEach((player) => {
-			player.socket.send(JSON.stringify({ type: "game_state", data: gameState, timestamp: Date.now() }));
-			player.socket.send(JSON.stringify({ type: "goal", data: paddle, timestamp: Date.now() }));
+		this.broadcastMsg({
+			type: "game_state",
+			data: gameState,
+			timestamp: Date.now()
+		});
+		this.broadcastMsg({
+			type: "goal",
+			data: paddle,
+			timestamp: Date.now()
 		});
 		if (gameState.left_score >= this.params.max_score || gameState.right_score >= this.params.max_score) {
 			return;
 		}
 		setTimeout(() => {
-			this.players.forEach((player) => {
-				player.socket.send(JSON.stringify({ type: "game_event", data: { event: "start_countdown", time: this.params.countdown }, timestamp: Date.now() }));
+			this.broadcastMsg({
+				type: "game_event",
+				data: { event: "start_countdown", time: this.params.countdown },
+				timestamp: Date.now()
 			});
 			setTimeout(() => {
 				this.game.startGame();
@@ -103,8 +149,10 @@ export class GameSession {
 			score1: gameState.left_score,
 			score2: gameState.right_score
 		});
-		this.players.forEach((player) => {
-			player.socket.send(JSON.stringify({ type: "game_event", data: { event: "game_over" }, timestamp: Date.now() }));
+		this.broadcastMsg({
+			type: "game_event",
+			data: { event: "game_over" },
+			timestamp: Date.now()
 		});
 		this.stopGame();
 	};
@@ -117,12 +165,17 @@ export class GameSession {
 			endTime: Date.now(),
 			score1: gameState.left_score,
 			score2: gameState.right_score
-		})
-		this.players.forEach((p) => {
-			p.socket.send(JSON.stringify({ type: "error", data: "disconnect", timestamp: Date.now() }));
-			p.socket.send(JSON.stringify({ type: "game_event", data: { event: "game_over" }, timestamp: Date.now() }));
-		}
-		);
+		});
+		this.broadcastMsg({
+			type: "error",
+			data: "disconnect",
+			timestamp: Date.now()
+		});
+		this.broadcastMsg({
+			type: "game_event",
+			data: { event: "game_over" },
+			timestamp: Date.now()
+		});
 		this.stopGame();
 	};
 

@@ -34,7 +34,7 @@ export type WsParams = {
 	url: string,
 }
 
-export type GameStatus = 'idle' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
+export type GameStatus = 'idle' | 'idle-tournament' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'gameover-tournament' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
 
 export type wsMsg = {
 	type: 'game_state',

@@ -47,7 +47,6 @@ export async function initRouter() {
                 updateActiveLink('/auth');
                 return;
             }
-
             history.pushState(null, '', url);
             loadContent(url);
             updateActiveLink(url);

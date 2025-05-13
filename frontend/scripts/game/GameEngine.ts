@@ -13,9 +13,11 @@ export class GameEngine {
 	private UIManager: UIManager;
 	private player: 'left' | 'right' | null;
 	private enemyDisconnected: boolean = false;
+	private isTournament: boolean;
 
-	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams) {
-		this.status = 'idle';
+	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams, isTournament: boolean = false) {
+		this.isTournament = isTournament;
+		this.status = isTournament ? 'idle-tournament' : 'idle';
 		this.player = null;
 		this.game = new GameConnection(
 			gameParams,
@@ -33,7 +35,7 @@ export class GameEngine {
 	}
 
 	public start(): void {
-		this.changeState('idle');
+		this.changeState(this.isTournament ? 'idle-tournament' : 'idle');
 	}
 
 	public matchmake(): void {

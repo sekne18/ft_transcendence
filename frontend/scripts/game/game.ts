@@ -1,3 +1,4 @@
+import { State } from "../state/State";
 import { wsConfig } from "../wsConfig";
 import { GameEngine } from "./GameEngine";
 import { GameParams } from "./GameTypes";
@@ -32,11 +33,13 @@ export function initGame(): void {
                 canvas_margin: 32
             };
 
+            const isTournament = State.getState("tournament") === true;
+
             const wsParams = {
-                url: `${wsConfig.scheme}://${wsConfig.host}/api/game/ws`,
+                url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? "tournament" : ""}game/ws`,
             };
 
-            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams);
+            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, isTournament);
             gameEngine.start();
         })
         .catch(error => {

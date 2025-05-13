@@ -15,21 +15,17 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import './types.js';
 import { MatchmakingManager } from './game/MatchmakingManager.js';
-import { MatchMakerParams } from './game/GameTypes.js';
 import { gameParams } from './game/GameParams.js';
-import path, { dirname } from 'path';
+import path from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { TournamentManager } from './tournament/TournamentManager.js';
-import { TournamentSession } from './tournament/TournamentSession.js';
-import { PlayerQueue } from './tournament/PlayerQueue.js';
-import { ChatMsg } from './types.js';
-import { create } from 'domain';
+
 import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { defaultAvatarPath } from './Config.js';
+import { GameStore } from './game/GameStore.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -40,7 +36,8 @@ const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
-const matchmaker = new MatchmakingManager();
+const gameStore = new GameStore();
+const matchmaker = new MatchmakingManager(gameStore);
 const chatManager = new ChatManager();
 
 const fastify: FastifyInstance = Fastify({
@@ -698,7 +695,7 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 });
 
 fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
-	tournamentManager.handleConnection(conn, req);
+	
 });
 
 fastify.get('/api/tournament/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
@@ -714,10 +711,7 @@ fastify.get('/api/tournament/game/ws', { onRequest: [fastify.authenticate], webs
 		conn.close(1008, 'Tournament ID not found');
 		return;
 	}
-	matchmaker.enqueueTournament({
-		id: user.id,
-		socket: conn
-	}, tournamentId);
+	
 });
 
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
@@ -865,10 +859,6 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	await markMessagesAsRead(chatId, id);
 	return reply.send({ success: true });
 });
-
-const tournamentState = new TournamentSession(1);
-const playerQueue = new PlayerQueue(tournamentState);
-const tournamentManager = new TournamentManager(tournamentState, playerQueue);
 
 try {
 	initializeDatabase();

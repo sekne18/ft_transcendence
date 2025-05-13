@@ -385,14 +385,8 @@ function renderTournament(): void {
     }
 }
 
-
-const activeTournamentGameEngines: Map<number, GameEngine> = new Map();
-let gameParamsFromServerOrLocal: GameParams;
-
 // --- Initialization ---
 export function initTournament(): void {
-    activeTournamentGameEngines.clear();
-
     // Establish WebSocket connection
     tournamentConnection = new TournamentConnection("ws://localhost:8080/api/tournament/ws", handleServerUpdate); //
 
@@ -403,14 +397,6 @@ export function initTournament(): void {
     }).then(res => res.json())
         .then((profileRes) => {
             user = profileRes.user as Profile;
-            return fetch('/api/game/tournamentParams');
-        })
-        .then(paramsRes => {
-            if (!paramsRes.ok) throw new Error('Failed to load game params');
-            return paramsRes.json();
-        })
-        .then(paramsData => {
-            gameParamsFromServerOrLocal = paramsData.params as GameParams;
             renderTournament();
         })
         .catch(error => {
