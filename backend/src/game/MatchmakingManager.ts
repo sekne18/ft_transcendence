@@ -47,6 +47,12 @@ export class MatchmakingManager {
 		conn.socket.on("close", () => {
 			this.dequeueTournament(conn, tournamentId);
 		});
+		if (this.tournamentQueues.get(tournamentId)?.length === 2) {
+			const players = this.tournamentQueues.get(tournamentId)!;
+			const session = new GameSession(players[0], players[1], gameParams);
+			this.tournamentQueues.delete(tournamentId);
+			session.start();
+		}
 	}
 
 	public dequeue(conn: PlayerConnection): void {

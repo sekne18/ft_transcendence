@@ -683,14 +683,14 @@ fastify.get('/api/game/params', { onRequest: [fastify.authenticate] }, async (re
 });
 
 fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
-	const user = getUserById((req.user as { id: number }).id) as { id: number; };
+	const user = getUserProfileById((req.user as { id: number }).id) as { id: number, wins: number };
 	console.log('WebSocket connection established:', user.id);
 	if (!user) {
 		console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
-	const rating = parseInt("5") || 0;
+	const rating = user.wins || 0;
 	matchmaker.enqueue({
 		id: user.id,
 		socket: conn
@@ -698,12 +698,6 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 });
 
 fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
-	const user = getUserById((req.user as { id: number }).id) as { id: number; };
-	if (!user) {
-		console.error('User not found');
-		conn.close(1008, 'User not found');
-		return;
-	}
 	tournamentManager.handleConnection(conn, req);
 });
 
@@ -720,6 +714,10 @@ fastify.get('/api/tournament/game/ws', { onRequest: [fastify.authenticate], webs
 		conn.close(1008, 'Tournament ID not found');
 		return;
 	}
+	matchmaker.enqueueTournament({
+		id: user.id,
+		socket: conn
+	}, tournamentId);
 });
 
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
