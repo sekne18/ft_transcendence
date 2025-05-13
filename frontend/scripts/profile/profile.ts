@@ -7,7 +7,10 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-export function initProfile(): void {
+let profile : Profile | null;
+
+export function initProfile(userId?: number, existingProfile?: Profile): void {
+  profile = existingProfile || null;
   renderUserProfile();
   renderMatchHistory()
 
@@ -37,6 +40,9 @@ function onAvatarChange() {
 
 // Render user profile
 export function renderUserProfile() {
+  if (profile) {
+    // Dont fetch but fill the data
+  }
   // Fill user details
   fetch('/api/user/profile', {
     method: 'GET',

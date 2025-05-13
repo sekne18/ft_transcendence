@@ -621,6 +621,24 @@ fastify.get('/api/user/profile',
 		return reply.send({ success: true, user });
 	});
 
+fastify.post('/api/user/profile',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		// const id = (req.user as { id: number }).id;
+		const friend_id = (req.body as { id: number }).id;
+	
+		if (!friend_id || isNaN(Number(friend_id))) {
+			return reply.code(400).send({ success: false, message: 'Invalid user ID' });
+		}
+			const user = getUserProfileById(Number(friend_id));
+	
+		if (!user) {
+			return reply.code(404).send({ success: false, message: 'User not found' });
+		}
+	
+		return reply.send({ success: true, user });
+	});
+	
 fastify.get('/api/user/stats',
 	{ onRequest: [fastify.authenticate] },
 	async (req, reply) => {
