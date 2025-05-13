@@ -1,23 +1,23 @@
 export interface FriendListPlayer
 {
-    id: string;
+    id: number;
     username: string;
     state: string;
+    online: boolean;
     avatarUrl: string;
-    profileUrl: string;
 }
 
 function createAllFriendsRow(friend: FriendListPlayer): string {
     const borderColor = friend.state == "In Game"
       ? 'border-[#6366F1]'
-      : friend.state == "Online"
+      : friend.online == true
         ? 'border-[#45D483]'
-        : friend.state == "Offline"
+        : friend.online == false
           ? 'border-[#F4407F]'
           : 'border-gray-500';
   
     return `
-      <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] border-l-4 transition-colors duration-200">
+      <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">
         <!-- Avatar -->
         <div class="relative mr-3">
           <img src="${friend.avatarUrl}" alt="${friend.username}" class="w-10 h-10 rounded-full ${borderColor} border-2">
@@ -57,9 +57,7 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
         </div>
       </div>
     `;
-  }
-  
-  
+}
 
 function renderFriendsRows(players: FriendListPlayer[]) {
   const leaderboardBody = document.getElementById('friendslist-body') as HTMLElement;

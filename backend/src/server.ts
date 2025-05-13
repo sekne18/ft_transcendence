@@ -28,6 +28,7 @@ import { PlayerQueue } from './tournament/PlayerQueue.js';
 import { ChatMsg } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
+import { getAllFriends, FriendListPlayer } from './db/queries/friends.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -835,6 +836,13 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	}
 	await markMessagesAsRead(chatId, id);
 	return reply.send({ success: true });
+});
+
+fastify.get('/api/friends', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	console.log(req.user);
+	const id = (req.user as { id: number }).id;
+	const friendlist: FriendListPlayer[] = await getAllFriends(id);
+	return reply.send(friendlist);
 });
 
 const tournamentState = new TournamentSession(1);

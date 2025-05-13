@@ -8,16 +8,13 @@
       <div class="shadow-md rounded-lg mt-6 p-4 bg-[#15151E]">
             <div class="flex flex-row items-center justify-between">
                 <div class="flex space-x-4 overflow-x-auto rounded-lg" id="tabs">
-                    <button data-tab="all_friends" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-600 hover:text-white" data-i18n="friendslist_all_friends">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A6.001 6.001 0 0112 15a6.001 6.001 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                    <button data-tab="all_friends" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-600 hover:text-white active:bg-gray-600" data-i18n="friendslist_all_friends">
                     </button>
-                    <button data-tab="online" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-green-600 hover:text-white" data-i18n="friendslist_online">
+                    <button data-tab="online" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-green-600 hover:text-white active:bg-green-600" data-i18n="friendslist_online">
                     </button>
-                    <button data-tab="pending" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-yellow-600 hover:text-white" data-i18n="friendslist_pending">
+                    <button data-tab="pending" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-yellow-600 hover:text-white active:bg-yellow-600" data-i18n="friendslist_pending">
                     </button>
-                    <button data-tab="blocked" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-red-600 hover:text-white" data-i18n="friendslist_blocked">
+                    <button data-tab="blocked" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 rounded-lg hover:bg-red-600 hover:text-white active:bg-red-600" data-i18n="friendslist_blocked">
                     </button>
                 </div>
                 <div class="relative ml-4">
@@ -32,7 +29,12 @@
                         data-i18nplaceholder="friendslist_search" 
                         class="block w-full px-3 py-2 pl-10 text-sm text-white border border-gray-600 rounded-lg bg-gray-700 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
                 </div>
+
             </div>
+                <table class="min-w-full table-auto border-separate border-spacing-y-2">
+                    <tbody id="friendslist-body" class="text-sm divide-y divide-gray-200 dark:divide-gray-800">
+                    </tbody>
+                </table>
           </div>
     </div>
 </div>
