@@ -92,49 +92,29 @@ function renderMatchHistory() {
   matchHistoryContainer.innerHTML = '';
   recentActivityContainer.innerHTML = '';
 
-
-  const matchHistory = [
-    { id: 1, opponent: "Felix Daems", result: "ongoing", score: "1-1", date: "2025-05-05" },
-    { id: 2, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
-    { id: 3, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
-    { id: 4, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
-    { id: 5, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
-    { id: 6, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" }
-  ] as Match[];
-
-  matchHistory.forEach(match => {
-    const matchElement = createMatchElement(match);
-    matchHistoryContainer.appendChild(matchElement);
-    // Add only the first 3 matches to recent activity
-    if (matchHistory.indexOf(match) < 5) {
-      const recentMatchElement = createMatchElement(match, false);
-      recentActivityContainer.appendChild(recentMatchElement);
+  fetch('/api/user/recent-matches', {
+    method: 'GET',
+    credentials: 'include',
+  }).then(res => {
+    if (res.status === 401) {
+      window.location.href = '/auth';
+      return null;
     }
+    return res.json();
+  }).then((res) => {
+    const matchHistory = res.matchHistory as Match[];
+    if (!matchHistory) {
+      return;
+    }
+    matchHistory.forEach(match => {
+      const matchElement = createMatchElement(match);
+      matchHistoryContainer.appendChild(matchElement);
+      if (matchHistory.indexOf(match) < 5) {
+        const recentMatchElement = createMatchElement(match, false);
+        recentActivityContainer.appendChild(recentMatchElement);
+      }
+    });
   });
-
-  // fetch('/api/user/match-history', {
-  //   method: 'GET',
-  //   credentials: 'include',
-  // }).then(res => {
-  //   if (res.status === 401) {
-  //     window.location.href = '/auth';
-  //     return null;
-  //   }
-  //   return res.json();
-  // }).then((res) => {
-  //   const matchHistory = res.match_history as Match[];
-  //   // console.log(matchHistory);
-  //   // Create match history items
-  //   matchHistory.forEach(match => {
-  //     const matchElement = createMatchElement(match);
-  //     matchHistoryContainer.appendChild(matchElement);
-  //     // Add only the first 3 matches to recent activity
-  //     if (matchHistory.indexOf(match) < 5) {
-  //       const recentMatchElement = createMatchElement(match, false);
-  //       recentActivityContainer.appendChild(recentMatchElement);
-  //     }
-  //   });
-  // });
 
 }
 // Create match element
@@ -144,6 +124,8 @@ function createMatchElement(match: Match, showDetailsButton = false) {
   const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
   const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
   const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
+  const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDay();
+
   matchElement.innerHTML = `
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1">
@@ -152,7 +134,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
         </div>
         <div>
           <p class="font-semibold">Match vs ${match.opponent}</p>
-          <p class="text-gray-400 text-sm">${match.date}</p>
+          <p class="text-gray-400 text-sm">${date}</p>
         </div>
       </div>
       <div class="text-right">

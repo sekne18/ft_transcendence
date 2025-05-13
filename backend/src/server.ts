@@ -29,6 +29,7 @@ import { ChatMsg } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
+import { Match } from './tournament/Types.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -655,9 +656,24 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 			message: 'Invalid user ID'
 		});
 	}
-	const matches = getMatchesByUserId(id);
 
-	return reply.send({ success: true, matches });
+	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
+	const opponentNames = matches.map(match => getUserById(match.player2_id) as { id: number; display_name: string; });
+	const username = getUserById(id) as { display_name: string; };
+	
+	const matchHistory = matches.map(match => {
+		const opponent = opponentNames.find(user => user.id === match.player2_id);
+		return {
+			id: match.id,
+			opponent: opponent ? opponent.display_name : 'Unknown',
+			result: match.winner_id === id ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
+			score: `${match.player1_score}-${match.player2_score}`,
+			date: match.played_at
+		};
+	});
+
+
+	return reply.send({ success: true, matchHistory });
 });
 
 fastify.get('/api/leaderboard', { onRequest: [fastify.authenticate] }, async (req, reply) => {
