@@ -25,9 +25,17 @@ export const languageService = {
   
     document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
       const key = el.dataset.i18n!;
-      if (texts[key]) {
-        el.innerText = texts[key];
-      }
+      if (texts[key])
+        {
+          if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'textarea')
+            {
+              el.setAttribute('placeholder', texts[key]);
+            }
+          else
+            {
+              el.innerText = texts[key];
+            }
+        }
     });
     
     localStorage.setItem('lang', lang);
