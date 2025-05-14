@@ -25,7 +25,7 @@ import dotenv from 'dotenv';
 import { TournamentManager } from './tournament/TournamentManager.js';
 import { TournamentSession } from './tournament/TournamentSession.js';
 import { PlayerQueue } from './tournament/PlayerQueue.js';
-import { ChatMsg } from './types.js';
+import { ChatMsg, User } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
@@ -134,22 +134,22 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		const googleUser = await userRes.json() as { email: string; id: string; name: string; picture: string };
 
 		// Step 3: Get or create user in your DB
-		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; // Same as your login
+		let user = await getUserByEmail(googleUser.email) as User; // Same as your login
+		let userId;
 
 		if (!user) {
 			// If user doesn't exist, create them
-			const userId = await createUser({
+			userId = createUser({
 				email: googleUser.email,
 				hash: "",
 				username: googleUser.name,
 				display_name: googleUser.name,
 				avatarUrl: googleUser.picture,
 			});
-			user = await getUserById(userId) as { id: number; email: string; hash: string; name: string; picture: string; };
 		}
 
 		// Step 4: Issue token pair
-		const { token, refreshToken } = generateTokenPair(user.id);
+		const { token, refreshToken } = generateTokenPair(userId || user.id);
 
 		// Step 5: Set same cookies as in password login
 		reply
