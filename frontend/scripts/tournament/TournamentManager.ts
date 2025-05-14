@@ -2,7 +2,7 @@ import { Profile } from "../profile/Types";
 import { State } from "../state/State";
 import { showToast } from "../utils";
 import { wsConfig } from "../wsConfig";
-import { Tournament, TournamentMatch, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
+import { Bracket, Tournament, TournamentMatch, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
 export class TournamentManager {
 	private socket: WebSocket;
@@ -92,6 +92,23 @@ export class TournamentManager {
 		else {
 			console.error('Tournament not found:', data.tournamentId);
 		}
+	}
+
+	private handleBracketUpdate(data: {tournamentId: number, bracket: Bracket}): void {
+		const tournament = this.tournaments.get(data.tournamentId);
+		if (tournament) {
+			tournament.bracket = data.bracket;
+			this.renderTournaments();
+		}
+		else {
+			console.error('Tournament not found:', data.tournamentId);
+		}
+	}
+
+	private handleSetupMatch(data: {tournamentId: number, p1: number, p2: number}): void {
+		const tournament = this.tournaments.get(data.tournamentId);
+		if (tournament) {
+			
 	}
 
 	private processMsg(msg: TournamentMsgIn): void {
@@ -266,7 +283,7 @@ export class TournamentManager {
 				</div>
 				<div class="flex justify-between items-center">
 					<span class="text-right text-xs text-gray-400">${match.status.replace('_', ' ')}</span>
-					${match.status === 'pending' && match.player1 && match.player2 && !tournament.players.some(p => p.id === this.myId) ?
+					${match.status === 'pending' && match.player1 && match.player2 && !tournament.players.some(p => p.id === this.user.id) ?
 				`<button class="text-indigo-500 hover:text-indigo-400 text-xs" onclick="requestSpectate('${match.id}')">Spectate</button>` : ''
 			}
 				</div>
