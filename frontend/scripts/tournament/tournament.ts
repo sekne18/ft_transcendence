@@ -1,23 +1,9 @@
 import { GameEngine } from "../game/GameEngine";
-import { GameParams, wsMsg, WsParams } from "../game/GameTypes";
+import { wsMsg } from "../game/GameTypes";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { showToast } from "../utils";
 import { TournamentManager } from "./TournamentManager";
-import { Tournament, TournamentMatch } from "./types";
-
-
-// Mock current user (consider fetching this dynamically)
-let user: Profile;
-
-// Initialize tournament state
-let tournament: Tournament = {
-    id: '1',
-    status: 'queuing',
-    players: [],
-    matches: [],
-    maxPlayers: 2
-};
 
 function ensureCanvasAndInitGameEngine(matchId: number, gameFoundData: any /* data from server's game_found event */): Promise<GameEngine | null> {
     return new Promise(resolve => {
@@ -113,10 +99,10 @@ const handleServerUpdate = (data: any): void => {
 // --- Initialization ---
 export function initTournament(): void {
     // Establish WebSocket connection
+    document.body.classList.remove('disable-scroll');
 
-
-    fetch('/api/user').then(res => res.json()).then(data => {
-        const tournamentConnection = new TournamentManager(data.user.id);
+    fetch('/api/user/profile').then(res => res.json()).then(data => {
+        const tournamentConnection = new TournamentManager(data.user);
     }
     ).catch(err => {
         console.error('Error fetching user data:', err);
@@ -124,8 +110,8 @@ export function initTournament(): void {
     });
 
     // Add event listeners for modal
-    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal);
-    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament);
-    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal);
+    // document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal);
+    // document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament);
+    // document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal);
 }
 

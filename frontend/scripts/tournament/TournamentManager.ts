@@ -2,22 +2,35 @@ import { Profile } from "../profile/Types";
 import { State } from "../state/State";
 import { showToast } from "../utils";
 import { wsConfig } from "../wsConfig";
-import { Tournament, TournamentMatch, TournamentMsgIn, TournamentView } from "./types";
+import { Tournament, TournamentMatch, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
 export class TournamentManager {
 	private socket: WebSocket;
-	private myId: number;
+	private user: {
+		id: number,
+		username: string,
+		display_name: string,
+		email: string,
+		avatar_url: string,
+		wins: number,
+		losses: number,
+		games_played: number,
+	};
 	private tournaments: Map<number, Tournament> = new Map();
 	private tournamentContainer: HTMLDivElement;
 
-	constructor(userId: number) {
+	constructor(user: Profile) {
 		this.tournamentContainer = document.getElementById("tournament-container") as HTMLDivElement;
 		this.tournamentContainer.innerHTML = "";
 		// document.getElementById('modal-close-btn')?.addEventListener('click', this.closeJoinModal.bind(this));
-		// document.getElementById('join-tournament-btn')?.addEventListener('click', this.joinTournament.bind(this));
-		// document.getElementById('modal-cancel-btn')?.addEventListener('click', this.closeJoinModal.bind(this));
+		document.getElementById('join-tournament-btn')?.addEventListener('click', () => {
+			this.joinTournament();
+			this.closeJoinModal();
+		});
+		document.getElementById('modal-cancel-btn')?.addEventListener('click', this.closeJoinModal.bind(this));
 		State.setState("tournament", {
 			isPlaying: false,
+			targetId: null,
 			id: null,
 		});
 		this.socket = new WebSocket(`${wsConfig.scheme}://${wsConfig.host}/api/tournament/ws`);
@@ -37,23 +50,63 @@ export class TournamentManager {
 		this.socket.addEventListener('error', err => {
 			console.error('WebSocket error:', err);
 		});
-		this.myId = userId;
+		this.user = user; //TODO: if user is allowed to edit their profile during tournaments, this should be fetched every time
 		this.fetchTournamentList();
+	}
+
+	private handleJoined(data: {tournamentId: number, playerId: number}): void {
+		const tournament = this.tournaments.get(data.tournamentId);
+		if (tournament) {
+			fetch(`/api/user/profile/${data.playerId}`, {
+				method: 'GET',
+				credentials: 'include',
+			})
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
+					}
+					return response.json();
+				}
+				).then(data => {
+					console.log('Fetched player data:', data);
+					const player = data.user as Profile;
+					tournament.players.push(player);
+					this.renderTournaments();
+				})
+				.catch(error => {
+					console.error('There was a problem with the fetch operation:', error);
+					showToast('Error', 'Failed to fetch player data', 'error');
+				});
+		}
+		else {
+			console.error('Tournament not found:', data.tournamentId);
+		}
+	}
+
+	private handleLeft(data: {tournamentId: number, playerId: number}): void {
+		const tournament = this.tournaments.get(data.tournamentId);
+		if (tournament) {
+			tournament.players = tournament.players.filter((player: Profile) => player.id !== data.playerId);
+			this.renderTournaments();
+		}
+		else {
+			console.error('Tournament not found:', data.tournamentId);
+		}
 	}
 
 	private processMsg(msg: TournamentMsgIn): void {
 		switch (msg.type) {
 			case 'joined':
-				this.handleJoined(msg);
+				this.handleJoined(msg.data);
 				break;
 			case 'left':
-				this.handleLeft(msg);
+				this.handleLeft(msg.data);
 				break;
 			case 'bracket_update':
-				this.handleBracketUpdate(msg);
+				this.handleBracketUpdate(msg.data);
 				break;
 			case 'setup_match':
-				this.handleSetupMatch(msg);
+				this.handleSetupMatch(msg.data);
 				break;
 			default:
 				console.error('Unknown message type:', msg.type);
@@ -64,7 +117,7 @@ export class TournamentManager {
 		const modal = document.getElementById('join-modal');
 		const modalAvatar = document.getElementById('modal-avatar') as HTMLImageElement | null;
 		const modalUsername = document.getElementById('modal-username');
-		const modalLevel = document.getElementById('modal-level');
+		//const modalLevel = document.getElementById('modal-level');
 		const modalWins = document.getElementById('modal-wins');
 		const modalLosses = document.getElementById('modal-losses');
 
@@ -72,17 +125,17 @@ export class TournamentManager {
 		if (modal) {
 			modal.classList.remove('hidden');
 		}
-		if (modalAvatar && user.avatar_url) {
-			modalAvatar.src = user.avatar_url;
+		if (modalAvatar && this.user.avatar_url) {
+			modalAvatar.src = this.user.avatar_url;
 		}
 		if (modalUsername) {
-			modalUsername.textContent = user.username;
+			modalUsername.textContent = this.user.username;
 		}
 		if (modalWins) {
-			modalWins.textContent = user.wins?.toString() || '0';
+			modalWins.textContent = this.user.wins?.toString() || '0';
 		}
 		if (modalLosses) {
-			modalLosses.textContent = user.losses?.toString() || '0';
+			modalLosses.textContent = this.user.losses?.toString() || '0';
 		}
 	}
 
@@ -93,13 +146,34 @@ export class TournamentManager {
 		}
 	}
 
-	// --- Tournament Logic ---
-	private joinTournament(tournament: Tournament): void {
-		//TODO send message to backend
+	private joinTournament(): void {
+		const state = State.getState("tournament");
+		if (!state) {
+			console.error('Tournament state not found');
+			showToast('Error', 'Tournament state not found', 'error');
+			return;
+		}
+		else if (!state.targetId) {
+			console.error('Target ID not found');
+			showToast('Error', 'Target ID not found', 'error');
+			return;
+		}
+		console.log('Joining tournament with ID:', state.targetId);
+		this.socket.send(JSON.stringify({
+			type: 'join',
+			data: {
+				tournamentId: state.targetId
+			}
+		} as TournamentMsgOut));
 	}
 
 	private leaveTournament(tournament: Tournament): void {
-		//TODO send message to backend
+		this.socket.send(JSON.stringify({
+			type: 'leave',
+			data: {
+				tournamentId: tournament.id
+			}
+		} as TournamentMsgOut));
 	}
 
 	private createHeaderEl(tournament: Tournament): HTMLDivElement {
@@ -110,23 +184,36 @@ export class TournamentManager {
 		title.textContent = 'Tournament';
 		const subtitle = document.createElement('p');
 		subtitle.className = 'text-gray-500';
-		subtitle.textContent = 'Compete in 6-player tournaments';
+		subtitle.textContent = `Compete in ${tournament.maxPlayers}-player tournament`;
 		const headerInfo = document.createElement('div');
 		headerInfo.appendChild(title);
 		headerInfo.appendChild(subtitle);
 		const headerActions = document.createElement('div');
-		if (tournament.status === 'pending' && !tournament.players.some((p: Profile) => p.id === this.myId)) {
+		if (tournament.status === 'pending' && !tournament.players.some((p: Profile) => p.id === this.user.id)) {
 			const joinButton = document.createElement('button');
 			joinButton.id = 'join-button';
 			joinButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mr-2';
 			joinButton.innerHTML = `Join Tournament`;
-			joinButton.addEventListener('click', this.openJoinModal.bind(this));
+			joinButton.addEventListener('click', () => {
+				const state = State.getState("tournament");
+				if (!state) {
+					console.error('Tournament state not found');
+					showToast('Error', 'Tournament state not found', 'error');
+					return;
+				}
+				state.targetId = tournament.id;
+				State.setState("tournament", state);
+				console.log('setting targetId to', tournament.id);
+				this.openJoinModal();
+			});
 			headerActions.appendChild(joinButton);
-		} else if (tournament.status === 'pending' && tournament.players.some((p: Profile) => p.id === this.myId)) {
+		} else if (tournament.status === 'pending' && tournament.players.some((p: Profile) => p.id === this.user.id)) {
 			const leaveButton = document.createElement('button');
 			leaveButton.className = 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mr-2';
 			leaveButton.textContent = 'Leave Queue';
-			leaveButton.addEventListener('click', this.leaveTournament.bind(this));
+			leaveButton.addEventListener('click', () => {
+				this.leaveTournament(tournament);
+			});
 			headerActions.appendChild(leaveButton);
 		}
 		headerEl.className = 'mb-8 flex justify-between items-center';
@@ -267,6 +354,7 @@ export class TournamentManager {
 	}
 
 	private createTournamentElement(tournament: Tournament): HTMLDivElement {
+		console.log('Creating tournament element:', tournament);
 		const tournamentEl = document.createElement('div');
 		tournamentEl.id = `tournament-${tournament.id}`;
 		tournamentEl.className = 'bg-white shadow-md rounded-lg p-4 mb-4';

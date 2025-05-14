@@ -30,27 +30,27 @@ export type TournamentMsgIn = {
 
 export type TournamentMsgOut = {
     type: 'setup_match',
-    tournamentId: number,
     data: {
+        tournamentId: number,
         p1: number,
         p2: number,
     }
 } | {
     type: 'joined',
-    tournamentId: number,
     data: {
+        tournamentId: number,
         playerId: number,
     }
 } | {
     type: 'left',
-    tournamentId: number,
     data: {
+        tournamentId: number,
         playerId: number,
     }
 } | {
     type: 'bracket_update',
-    tournamentId: number,
     data: {
+        tournamentId: number,
         bracket: Bracket,
     }
 } | {

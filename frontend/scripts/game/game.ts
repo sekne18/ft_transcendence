@@ -34,7 +34,7 @@ export function initGame(): void {
             };
 
             const tournament = State.getState("tournament");
-            const isTournament = tournament && tournament.isPlaying;
+            const isTournament = tournament ? true : false;
 
             const wsParams = {
                 url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? `tournament/${tournament.id}` : "game"}/ws`,

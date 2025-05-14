@@ -121,6 +121,9 @@ export class GameEngine {
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('hidden');
 				break;
+			case 'idle-tournament':
+				this.UIManager.toggleOverlayVisibility('hidden');
+				break;
 			default:
 				break;
 		}
@@ -155,6 +158,10 @@ export class GameEngine {
 				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			case 'countdown':
+				this.UIManager.toggleOverlayVisibility('visible');
+				break;
+			case 'idle-tournament':
+				this.UIManager.setCountdownOverlay('Waiting for your match to begin...');
 				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			default:

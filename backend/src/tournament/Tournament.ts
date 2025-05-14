@@ -62,6 +62,7 @@ export class Tournament {
 	}
 
 	public addPlayer(player: TournamentConnection): void {
+		console.log("Adding player to tournament", player.id);
 		if (this.players.length >= this.maxPlayers || this.status !== 'pending') {
 			throw new Error("Tournament is full");
 		}
@@ -82,13 +83,17 @@ export class Tournament {
 	}
 
 	public subscribe(callback: (event: TournamentEvent) => void): () => void {
+		console.log("Subscribing to tournament events", this.id);
 		this.callbacks.push(callback);
+		console.log("callbacks", this.callbacks);
 		return () => {
 			this.callbacks = this.callbacks.filter((cb) => cb !== callback);
 		};
 	}
 
 	private notify(event: TournamentEvent): void {
+		console.log("Notifying event", event);
+		console.log("callbacks", this.callbacks);
 		this.callbacks.forEach((callback) => callback(event));
 	}
 

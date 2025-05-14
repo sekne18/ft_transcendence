@@ -18,6 +18,9 @@ export class TournamentManager {
 		const tournaments = getLiveTournaments() as { id: number, max_players: number, created_at: number }[];
 		tournaments.forEach((tournament) => {
 			const newTournament = new Tournament(tournament.id, tournament.max_players, tournament.created_at, this.gameStore, this.removeTournament.bind(this));
+			this.tournamentUnsubscribers.set(tournament.id, newTournament.subscribe((event: TournamentEvent) => {
+				this.forwardTournamentEvent(tournament.id, event);
+			}));
 			this.tournaments.set(tournament.id, newTournament);
 		});
 	}
@@ -38,7 +41,6 @@ export class TournamentManager {
 
 	public getCurrentTournaments(): TournamentView[] {
 		const tournaments = Array.from(this.tournaments.values());
-		console.log("Current tournaments: ", tournaments);
 		return tournaments.map((tournament) => {
 			return {
 				id: tournament.getId(),
@@ -52,6 +54,7 @@ export class TournamentManager {
 	}
 
 	public removeTournament(tournamentId: number): void {
+		console.log("Removing tournament", tournamentId);
 		const tournament = this.tournaments.get(tournamentId);
 		if (!tournament) {
 			throw new Error("Tournament not found");
@@ -112,34 +115,43 @@ export class TournamentManager {
 	}
 
 	private forwardTournamentEvent(tId: number, event: TournamentEvent): void {
+		console.log("Forwarding tournament event", event);
 		let message: TournamentMsgOut;
 		switch (event.type) {
 			case "setup_match":
 				message = {
 					type: "setup_match",
-					tournamentId: tId,
-					data: event.data,
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
 				};
 				break;
 			case "joined":
 				message = {
 					type: "joined",
-					tournamentId: tId,
-					data: event.data,
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
 				};
 				break;
 			case "left":
 				message = {
 					type: "left",
-					tournamentId: tId,
-					data: event.data,
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
 				};
 				break;
 			case "bracket_update":
 				message = {
 					type: "bracket_update",
-					tournamentId: tId,
-					data: event.data,
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
 				};
 				break;
 			default:

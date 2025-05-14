@@ -32,12 +32,12 @@ export class GameSession {
 				const parsedMsg = JSON.parse(msg);
 				this.processMsg(parsedMsg);
 			});
-			this.broadcastMsg({
+			player.socket.send(JSON.stringify({
 				type: "game_state",
 				data: this.game.getState(),
 				timestamp: Date.now()
-			});
-			this.broadcastMsg({
+			}));
+			player.socket.send(JSON.stringify({
 				type: "game_event",
 				data: {
 					event: "game_found",
@@ -45,7 +45,12 @@ export class GameSession {
 					enemy_id: i === 0 ? this.players[1].id : this.players[0].id
 				},
 				timestamp: Date.now()
-			});
+			}));
+		});
+		this.broadcastMsg({
+			type: "game_state",
+			data: this.game.getState(),
+			timestamp: Date.now()
 		});
 	}
 

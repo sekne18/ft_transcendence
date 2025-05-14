@@ -90,8 +90,6 @@ export class GameRenderer {
 		const maxHeight = gameContainer.clientHeight - this.renderDetails.canvas_margin * 2;
 		const aspect = this.GameParams.arena_w / this.GameParams.arena_h;
 
-		console.log(`maxWidth: ${maxWidth}, maxHeight: ${maxHeight}, aspect: ${aspect}`);
-
 		let cssWidth = maxWidth;
 		let cssHeight = cssWidth / aspect;
 
