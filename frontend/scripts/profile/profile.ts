@@ -154,7 +154,6 @@ function renderMatchHistory(userId?: number) {
 
   const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
 
-  console.log(apiUrl);
 
   fetch(apiUrl, {
     method: 'GET',
@@ -167,7 +166,6 @@ function renderMatchHistory(userId?: number) {
     return res.json();
   }).then((res) => {
     const matchHistory = res.matchHistory as Match[];
-    console.log(matchHistory);
     if (!matchHistory) {
       return;
     }
