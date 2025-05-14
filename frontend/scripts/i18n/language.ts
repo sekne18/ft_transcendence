@@ -29,6 +29,13 @@ export const languageService = {
         el.innerText = texts[key];
       }
     });
+
+    document.querySelectorAll<HTMLInputElement>('[data-i18nplaceholder]').forEach((el) => {
+      const key = el.dataset.i18nplaceholder!;
+      if (texts[key]) {
+        el.placeholder = texts[key];
+      }
+    });
     
     localStorage.setItem('lang', lang);
   },

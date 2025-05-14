@@ -28,8 +28,11 @@ import { PlayerQueue } from './tournament/PlayerQueue.js';
 import { ChatMsg, User } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
+import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers } from './db/queries/friends.js';
+import { parseArgs } from 'util';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { Match } from './tournament/Types.js';
+
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -926,6 +929,66 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	return reply.send({ success: true });
 });
 
+fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '' || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}	
+	const friendsList: FriendListPlayer[] = await getAllFriends(id, searchVal);
+	let users: FriendListPlayer[] | undefined = undefined;
+	if (friendsList.length == 0) 
+		users = await getAllUsers(id, searchVal); 
+	if (friendsList.length !== 0)
+		return reply.send({ success: true, friendsList: friendsList, isFriends: true });
+	else
+	return reply.send({ success: true, friendsList: users, isFriends: false });
+});
+
+fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getOnlineFriends(id, searchVal);
+	let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true });
+});
+
+fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getPendingFriends(id, searchVal);
+	let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true });
+});
+
+fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getBlockedFriends(id, searchVal);
+	let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true });
+});
 
 const tournamentState = new TournamentSession(1);
 const playerQueue = new PlayerQueue(tournamentState);
