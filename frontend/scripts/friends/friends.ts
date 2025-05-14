@@ -89,6 +89,7 @@ async function getData(where: string): Promise<void> {
         renderFriendslist(response.friendsList, response.isFriends);
       }
   });
+}
 // import { loadContent } from "../router/router";
 // import { getElement } from "../utils";
 
