@@ -1,14 +1,31 @@
-import { FriendListPlayer, renderFriendslist } from "./friendsList";
+import { renderFriendslist } from "./friendsList";
 
 export function initFriends() {
     console.log("Friends page initialized");
-    getData();
+    getData('/api/friends/all');
     setupTabs();
 }
 
 function setupTabs(): void{
 
     const friendslist_nav_buttons = document.querySelectorAll<HTMLButtonElement>('#tabs button');
+    const friendslist_search_bar = document.querySelector<HTMLInputElement>('#friends_search');
+
+    let activeTab: string = 'all_friends';
+
+    friendslist_search_bar?.addEventListener('input', () => {
+      const searchVal = encodeURIComponent(friendslist_search_bar.value);
+
+      if (activeTab === 'all_friends') {
+        getData('/api/friends/all?name=' + searchVal);
+      } else if (activeTab === 'online') {
+        getData('/api/friends/online?name=' + searchVal);
+      } else if (activeTab === 'pending') {
+        getData('/api/friends/pending?name=' + searchVal);
+      } else if (activeTab === 'blocked') {
+        getData('/api/friends/blocked?name=' + searchVal);
+      }    })
+
 
     friendslist_nav_buttons.forEach((button) => {
         
@@ -23,13 +40,21 @@ function setupTabs(): void{
       
           // Apply active styles to the clicked button
           const tab = button.getAttribute('data-tab');
+          if (!tab)
+            return;
+          activeTab = tab;
+          
           if (tab === 'all_friends') {
+            getData("/api/friends/all?name=");
             button.classList.add('bg-gray-600');
           } else if (tab === 'online') {
+            getData('/api/friends/online?name=');
             button.classList.add('bg-green-600');
           } else if (tab === 'pending') {
+            getData('/api/friends/pending?name=');
             button.classList.add('bg-yellow-600');
           } else if (tab === 'blocked') {
+            getData('/api/friends/blocked?name=');
             button.classList.add('bg-red-600');
           }
       
@@ -43,26 +68,25 @@ function setupTabs(): void{
 
 
 
-async function getData(): Promise<void> {
-  try {
-      const response = await fetch('/api/friends', {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-              // Add authorization headers if needed (e.g., for JWT tokens)
-              //'Authorization': `Bearer ${yourToken}`
-          },
-      });
-
-      if (!response.ok) {
-          throw new Error('Failed to fetch friends data');
+async function getData(where: string): Promise<void> {
+  fetch(where, {
+    method: 'GET',
+    credentials: 'include',
+  }).then(res => {
+    if (res.status === 401) {
+      window.location.href = '/auth';
+      return null;
+    }
+    return res.json();
+  }).then((response) => {
+    console.log(response);
+    if (!response || !response.success) {
+      console.log("response failed");
+    }
+    else
+      {
+        console.log(response.friendsList);
+        renderFriendslist(response.friendsList, response.isFriends);
       }
-
-      const friendsListData: FriendListPlayer[] = await response.json();
-      console.log(friendsListData);
-
-      renderFriendslist(friendsListData); // Call the render function with the fetched data
-  } catch (error) {
-      console.error('Error fetching friends list:', error);
-  }
+  });
 }

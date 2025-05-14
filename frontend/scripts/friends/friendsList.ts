@@ -15,6 +15,9 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
         : friend.online == false
           ? 'border-[#F4407F]'
           : 'border-gray-500';
+    const status = friend.online == false
+      ? 'Offline'
+      : 'Online';
   
     return `
       <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">
@@ -26,7 +29,7 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
         <!-- Username and Status -->
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-white truncate">${friend.username}</p>
-          <p class="text-xs text-gray-400 truncate">${friend.state}</p>
+          <p class="text-xs text-gray-400 truncate">${status}</p>
         </div>
   
         <!-- Action Buttons -->
@@ -59,11 +62,10 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
     `;
 }
 
-function renderFriendsRows(players: FriendListPlayer[]) {
+export function renderFriendslist(players: FriendListPlayer[], isFriends: boolean) {
   const leaderboardBody = document.getElementById('friendslist-body') as HTMLElement;
-  leaderboardBody.innerHTML = players.map(createAllFriendsRow).join('');
-}
-
-export function renderFriendslist(players: FriendListPlayer[]) {
-    renderFriendsRows(players);
+  if (isFriends)
+    leaderboardBody.innerHTML = players.map(createAllFriendsRow).join(''); // display friends
+  else
+    leaderboardBody.innerHTML = players.map(createAllFriendsRow).join(''); // Display users, use different function
 }

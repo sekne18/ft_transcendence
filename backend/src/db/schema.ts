@@ -29,6 +29,7 @@ export function initializeDatabase() {
         CREATE TABLE friends (
           user1_id INTEGER,
           user2_id INTEGER,
+          sender_id INTEGER,
           status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'blocked'
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           PRIMARY KEY (user1_id, user2_id),

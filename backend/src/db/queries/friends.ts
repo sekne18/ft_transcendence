@@ -8,7 +8,36 @@ export interface FriendListPlayer {
   avatarUrl: string;
 }
 
-export function getAllFriends(userId: number, limit: number = 10): FriendListPlayer[] {
+export function getAllUsers(userId: number, name:string,  limit: number = 10): FriendListPlayer[] {
+  const rows = db.prepare(`
+    SELECT 
+      u.id, 
+      u.username, 
+      u.online, 
+      u.avatar_url AS avatarUrl
+    FROM users u
+    WHERE u.display_name LIKE ?
+    AND u.id NOT LIKE ?
+    LIMIT ?
+  `).all(name + '%', userId, limit) as {
+    id: number;
+    username: string;
+    state: string;
+    online: number;
+    avatarUrl: string;
+  }[];
+
+  return rows.map(row => ({
+    id: row.id,
+    username: row.username,
+    state: 'Not Friends Yet',
+    online: !!row.online,
+    avatarUrl: row.avatarUrl,
+  }));
+}
+
+export function getAllFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
+  console.log(userId, name);
   const rows = db.prepare(`
     SELECT 
       u.id, 
@@ -23,16 +52,17 @@ export function getAllFriends(userId: number, limit: number = 10): FriendListPla
     END
     WHERE (f.user1_id = ? OR f.user2_id = ?)
       AND f.status = 'accepted'
+      AND u.display_name LIKE ?
     ORDER BY u.display_name ASC
     LIMIT ?
-  `).all(userId, userId, userId, userId, limit) as {
+  `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
     username: string;
     state: string;
     online: number;
     avatarUrl: string;
   }[];
-
+  console.log("after rows");
   return rows.map(row => ({
     id: row.id,
     username: row.username,
@@ -42,7 +72,7 @@ export function getAllFriends(userId: number, limit: number = 10): FriendListPla
   }));
 }
 
-export function getBlockedFriends(userId: number, limit: number = 10): FriendListPlayer[] {
+export function getBlockedFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
     const rows = db.prepare(`
       SELECT 
         u.id, 
@@ -57,9 +87,10 @@ export function getBlockedFriends(userId: number, limit: number = 10): FriendLis
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'blocked'
+        AND u.display_name LIKE ?
       ORDER BY u.display_name ASC
       LIMIT ?
-    `).all(userId, userId, userId, userId, limit) as {
+  `).all(userId, userId, userId, userId, name + '%', limit) as {
       id: number;
       username: string;
       state: string;
@@ -76,7 +107,7 @@ export function getBlockedFriends(userId: number, limit: number = 10): FriendLis
     }));
   }
 
-  export function getPendingFriends(userId: number, limit: number = 10): FriendListPlayer[] {
+  export function getPendingFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
     const rows = db.prepare(`
       SELECT 
         u.id, 
@@ -91,9 +122,10 @@ export function getBlockedFriends(userId: number, limit: number = 10): FriendLis
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'pending'
+        AND u.display_name LIKE ?
       ORDER BY u.display_name ASC
       LIMIT ?
-    `).all(userId, userId, userId, userId, limit) as {
+  `).all(userId, userId, userId, userId, name + '%', limit) as {
       id: number;
       username: string;
       state: string;
@@ -110,7 +142,7 @@ export function getBlockedFriends(userId: number, limit: number = 10): FriendLis
     }));
   }
 
-  export function getOnlineFriends(userId: number, limit: number = 10): FriendListPlayer[] {
+  export function getOnlineFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
     const rows = db.prepare(`
       SELECT 
         u.id, 
@@ -126,9 +158,10 @@ export function getBlockedFriends(userId: number, limit: number = 10): FriendLis
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'accepted'
         AND u.online = true
+        AND u.display_name LIKE ?
       ORDER BY u.display_name ASC
       LIMIT ?
-    `).all(userId, userId, userId, userId, limit) as {
+  `).all(userId, userId, userId, userId, name + '%', limit) as {
       id: number;
       username: string;
       state: string;
