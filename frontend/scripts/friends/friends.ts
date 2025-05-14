@@ -3,8 +3,6 @@ import { getElement } from "../utils";
 
 export function initFriends() {
     onProfileClick();
-
-
 }
 
 function onProfileClick() {

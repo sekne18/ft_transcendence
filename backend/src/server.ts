@@ -25,7 +25,7 @@ import dotenv from 'dotenv';
 import { TournamentManager } from './tournament/TournamentManager.js';
 import { TournamentSession } from './tournament/TournamentSession.js';
 import { PlayerQueue } from './tournament/PlayerQueue.js';
-import { ChatMsg } from './types.js';
+import { ChatMsg, User } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
@@ -134,22 +134,22 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		const googleUser = await userRes.json() as { email: string; id: string; name: string; picture: string };
 
 		// Step 3: Get or create user in your DB
-		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; // Same as your login
+		let user = await getUserByEmail(googleUser.email) as User; // Same as your login
+		let userId;
 
 		if (!user) {
 			// If user doesn't exist, create them
-			const userId = await createUser({
+			userId = createUser({
 				email: googleUser.email,
 				hash: "",
 				username: googleUser.name,
 				display_name: googleUser.name,
 				avatarUrl: googleUser.picture,
 			});
-			user = await getUserById(userId) as { id: number; email: string; hash: string; name: string; picture: string; };
 		}
 
 		// Step 4: Issue token pair
-		const { token, refreshToken } = generateTokenPair(user.id);
+		const { token, refreshToken } = generateTokenPair(userId || user.id);
 
 		// Step 5: Set same cookies as in password login
 		reply
@@ -820,6 +820,17 @@ fastify.post('/api/chat/register', { onRequest: [fastify.authenticate] }, async 
 			message: 'Invalid user ID'
 		});
 	}
+
+	// First check if the chat already exists
+	const existingChat = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
+	if (existingChat && existingChat.length > 0) {
+		for (const chat of existingChat) {
+			if (chat.user_id === otherId) {
+				return reply.send({ success: true });
+			}
+		}
+	}
+
 	const chatId = createChat(id, otherId);
 	if (!chatId) {
 		return reply.code(500).send({
@@ -914,6 +925,7 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	await markMessagesAsRead(chatId, id);
 	return reply.send({ success: true });
 });
+
 
 const tournamentState = new TournamentSession(1);
 const playerQueue = new PlayerQueue(tournamentState);

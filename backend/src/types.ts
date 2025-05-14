@@ -23,3 +23,17 @@ export type ChatConnection = {
 	id: number,
 	socket: fastifyWebsocket.WebSocket,
 };
+
+export type User = {
+	id: number;
+	username: string;
+	display_name: string;
+	email: string;
+	password: string;
+	has2fa: boolean;
+	online: boolean;
+	last_login: Date;
+	totp_secret: string;
+	avatar_url: string;
+	created_at: Date;
+};
