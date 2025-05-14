@@ -124,6 +124,7 @@ function handleLogin(event: Event) {
                 if (!data.twoFA) {
                     const newPath = '/';
                     history.pushState(null, '', newPath);
+                    document.dispatchEvent(new Event('auth-ready'));
                     loadContent(newPath);
                 }
                 else {
@@ -210,6 +211,7 @@ function set2FaValidationEvents() {
 
                         const newPath = '/';
                         history.pushState(null, '', newPath);
+                        document.dispatchEvent(new Event('auth-ready'));
                         loadContent(newPath);
                     } else {
                         const errMsg = document.getElementById("error-login-message");

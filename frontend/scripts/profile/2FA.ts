@@ -1,4 +1,4 @@
-import { getElement } from "../utils";
+import { getElement, showToast } from "../utils";
 
 export function init2FA() {
     const toggle2FA = document.getElementById('toggle-2fa') as HTMLInputElement;
@@ -34,7 +34,7 @@ export function init2FA() {
                     secretCode.textContent = res.secret;
                 }
                 else {
-                    alert('Failed to set up 2FA. Please try again.');
+                    showToast('Failed to set up 2FA. Please try again.', '', 'error');
                     ignoreToggleEvent = true;
                     toggle2FA.checked = false;
                 }
@@ -55,10 +55,10 @@ export function init2FA() {
                 return res.json();
             }).then((res) => {
                 if (res.success) {
-                    alert('2FA disabled successfully!');
+                    showToast('2FA disabled successfully!', '', 'success');
                     toggle2FA.checked = false;
                 } else {
-                    alert('Failed to disable 2FA');
+                    showToast('Failed to disable 2FA', '', 'error');
                     ignoreToggleEvent = true;
                     toggle2FA.checked = true;
                 }
@@ -96,17 +96,17 @@ export function init2FA() {
                 return res.json();
             }).then((res) => {
                 if (res.success) {
-                    alert('2FA enabled successfully!');
+                    showToast('2FA enabled successfully!', '', 'success');
                     ignoreToggleEvent = true;
                     toggle2FA.checked = true;
                     modal2FA.classList.add('hidden');
                 } else {
-                    alert('Failed to enable 2FA. Please try again.');
+                    showToast('Failed to enable 2FA. Please try again.', '' , 'error');
                     closeModal();
                 }
             });
         } else {
-            alert('Please enter a valid 6-digit code.');
+            showToast('Please enter a valid 6-digit code.', '', 'error');
         }
     });
 }
