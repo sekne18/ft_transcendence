@@ -7,8 +7,11 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
+let otherId: number | undefined = undefined;
+
 export function initProfile(userId?: number): void {
   if (userId && userId > 0) {
+    otherId = userId;
     fetchUserProfile(userId).then((userProfile) => {
       renderUserProfile(userProfile);
       renderMatchHistory(userId);
@@ -36,22 +39,67 @@ function setProfileButtons(isFriend: boolean) {
   const friendDiv = getElement('friend-div') as HTMLDivElement;
   const addFriendBtn = getElement('add-friend-btn') as HTMLButtonElement;
   const blockBtn = getElement('block-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
   if (isFriend) {
     editProfileBtn.classList.add('hidden');
     friendDiv.classList.remove('hidden');
 
     addFriendBtn.addEventListener('click', () => {
-      console.log('Add friend button clicked');
+      // addFriendBtn();
     });
 
     blockBtn.addEventListener('click', () => {
-      console.log('Block button clicked');
+      // blockUser();
     });
+
+    chatBtn.addEventListener('click', () => {
+      startChat();
+    });
+
   } else {
     editProfileBtn.classList.remove('hidden');
     friendDiv.classList.add('hidden');
   }
+}
+
+function startChat() {
+  if (!otherId) {
+    console.error('User ID is not defined.');
+    return;
+  }
+
+  fetch('/api/chat/register', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      otherId: otherId,
+    }),
+})
+    .then(res => {
+        if (res.status === 401) {
+            window.location.href = '/auth';
+            return null;
+        }
+        return res.json();
+    })
+    .then(data => {
+      console.log(data);
+        if (data.success) {
+          // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
+          // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
+          // chatWindow.classList.add("w-0", "h-0", "scale-0");
+        
+        } else {
+            console.error('Chat failed:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error during login:', error);
+    });
 }
 
 async function fetchUserProfile(userId: number): Promise<Profile | undefined> {
@@ -223,7 +271,7 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
-  fetch(avatarUrl) // fetch the blob from the blob URL
+  fetch(avatarUrl) 
     .then(res => res.blob())
     .then(blob => {
       const reader = new FileReader();

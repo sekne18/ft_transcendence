@@ -820,6 +820,17 @@ fastify.post('/api/chat/register', { onRequest: [fastify.authenticate] }, async 
 			message: 'Invalid user ID'
 		});
 	}
+
+	// First check if the chat already exists
+	const existingChat = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
+	if (existingChat && existingChat.length > 0) {
+		for (const chat of existingChat) {
+			if (chat.user_id === otherId) {
+				return reply.send({ success: true });
+			}
+		}
+	}
+
 	const chatId = createChat(id, otherId);
 	if (!chatId) {
 		return reply.code(500).send({
@@ -914,6 +925,8 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	await markMessagesAsRead(chatId, id);
 	return reply.send({ success: true });
 });
+
+
 
 const tournamentState = new TournamentSession(1);
 const playerQueue = new PlayerQueue(tournamentState);
