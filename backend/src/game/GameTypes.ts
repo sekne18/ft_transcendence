@@ -87,3 +87,9 @@ export type wsMsg = {
 	data: string,
 	timestamp: number,
 };
+
+
+export type MatchParams = {
+	tournamentId: number | null,
+	round: number | null
+};

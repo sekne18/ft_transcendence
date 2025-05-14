@@ -33,10 +33,11 @@ export function initGame(): void {
                 canvas_margin: 32
             };
 
-            const isTournament = State.getState("tournament") === true;
+            const tournament = State.getState("tournament");
+            const isTournament = tournament && tournament.isPlaying;
 
             const wsParams = {
-                url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? "tournament" : ""}game/ws`,
+                url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? `tournament/${tournament.id}` : "game"}/ws`,
             };
 
             const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, isTournament);

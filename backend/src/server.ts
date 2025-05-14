@@ -26,6 +26,9 @@ import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { defaultAvatarPath } from './Config.js';
 import { GameStore } from './game/GameStore.js';
+import { TournamentManager } from './tournament/TournamentManager.js';
+import { getLiveTournaments } from './db/queries/tournament.js';
+import { Bracket } from './tournament/Types.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -38,6 +41,7 @@ const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
 const gameStore = new GameStore();
 const matchmaker = new MatchmakingManager(gameStore);
+const tournamentManager = new TournamentManager(gameStore);
 const chatManager = new ChatManager();
 
 const fastify: FastifyInstance = Fastify({
@@ -695,23 +699,29 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 });
 
 fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
-	
+	const user = getUserProfileById((req.user as { id: number }).id) as { id: number; };
+	if (!user) {
+		console.error('User not found');
+		conn.close(1008, 'User not found');
+		return;
+	}
+	tournamentManager.connectPlayer({ id: user.id, socket: conn });
 });
 
-fastify.get('/api/tournament/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
+fastify.get('/api/tournament/:tId/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
 	if (!user) {
 		console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
-	const tournamentId = parseInt((req.query as any).tournament_id);
+	const tournamentId = parseInt((req.params as any).tId);
 	if (!tournamentId) {
 		console.error('Tournament ID not found');
 		conn.close(1008, 'Tournament ID not found');
 		return;
 	}
-	
+	tournamentManager.setPlayerReady(tournamentId, { id: user.id, socket: conn });
 });
 
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
@@ -726,6 +736,18 @@ fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true
 		online: true
 	});
 	chatManager.addConnection({ id: user.id, socket: conn });
+});
+
+fastify.get('/api/tournament', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const tournaments = tournamentManager.getCurrentTournaments();
+	return reply.send({ success: true, tournaments });
 });
 
 fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -863,6 +885,7 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 try {
 	initializeDatabase();
 	matchmaker.start();
+	tournamentManager.init();
 	await fastify.listen({ port: 3000, host: '0.0.0.0' });
 } catch (err) {
 	fastify.log.error(err)

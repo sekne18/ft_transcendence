@@ -68,7 +68,7 @@ export class MatchmakingManager {
 				if (ratingDiff <= maxAllowedDiff) {
 					// Found match
 					console.log(`Matched players ${p1.conn.id} and ${p2.conn.id} with rating difference ${ratingDiff}`);
-					this.gameStore.addGame(p1.conn, p2.conn);
+					this.gameStore.addGame(p1.conn, p2.conn, { tournamentId: null, round: null });
 
 					this.queue.splice(j, 1);
 					this.queue.splice(i, 1);
@@ -78,7 +78,7 @@ export class MatchmakingManager {
 			if (Date.now() - p1.joinedAt > matchmakerParams.timeUntilAI * 1000) {
 				// If player has been waiting too long, assign AI
 				const aiPlayer = new AIPlayer(gameParams, aiParams);
-				this.gameStore.addGame(p1.conn, {id: 1, socket: aiPlayer});
+				this.gameStore.addGame(p1.conn, { id: 1, socket: aiPlayer }, { tournamentId: null, round: null });
 				this.queue.splice(i, 1);
 				return;
 			}

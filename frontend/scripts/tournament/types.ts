@@ -1,5 +1,14 @@
 import { Profile } from "../profile/Types";
 
+export type TournamentView = {
+	id: number,
+	status: 'pending' | 'ongoing' | 'finished',
+	maxPlayers: number,
+	createdAt: number,
+	players: number[],
+	bracket: Bracket | null,
+}
+
 export interface TournamentMatch {
 	id: number;
 	round: number;
@@ -12,18 +21,55 @@ export interface TournamentMatch {
 }
 
 export interface Tournament {
-	id: string;
-	status: 'queuing' | 'in_progress' | 'completed';
-	players: Profile[];
-	matches: TournamentMatch[];
+	id: number;
+	status: 'pending' | 'ongoing' | 'finished';
 	maxPlayers: number;
+	createdAt: number;
+	bracket: Bracket | null;
+	players: Profile[];
+	//matches: TournamentMatch[];
 }
 
-export type TournamentMsg = {
-	type: 'tournament_event',
+export type RoundMatch = {
+	matchId: number | null;
+	winnerId: number | null;
+	playerIds: { p1: number, p2: number };
+};
+
+export type Bracket = {
+	rounds: RoundMatch[][];
+};
+
+export type TournamentMsgOut = {
+	type: 'join' | 'leave',
 	data: {
-		type: 'join',
-	} | {
-		type: 'leave',
+		tournamentId: number
 	}
 };
+
+export type TournamentMsgIn = {
+	type: 'setup_match',
+	tournamentId: number,
+	data: {
+		p1: number,
+		p2: number,
+	}
+} | {
+	type: 'joined',
+	tournamentId: number,
+	data: {
+		playerId: number,
+	}
+} | {
+	type: 'left',
+	tournamentId: number,
+	data: {
+		playerId: number,
+	}
+} | {
+	type: 'bracket_update',
+	tournamentId: number,
+	data: {
+		bracket: Bracket,
+	}
+}

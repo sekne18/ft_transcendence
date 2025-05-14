@@ -1,5 +1,5 @@
 import { GameInstance } from "./GameInstance.js";
-import { GameParams, UserInput, wsMsg } from "./GameTypes.js";
+import { GameParams, MatchParams, UserInput, wsMsg } from "./GameTypes.js";
 import { PlayerConnection } from "./GameTypes.js";
 import { createMatch, updateMatch } from "../db/queries/match.js";
 
@@ -11,12 +11,14 @@ export class GameSession {
 	private startTime: number | null = null;
 	private params: GameParams;
 	private matchId: number;
+	private onEnd: ((id: number) => void) | null = null;
 
-	constructor(Player1: PlayerConnection, Player2: PlayerConnection, params: GameParams, private onEnd: (id: number) => void) {
-		this.params = params;
-		this.game = new GameInstance(params, this.onGoal.bind(this), this.onGameOver.bind(this));
+	constructor(Player1: PlayerConnection, Player2: PlayerConnection, gameParams: GameParams, matchParams: MatchParams, onEnd?: (id: number) => void) {
+		this.onEnd = onEnd || null;
+		this.params = gameParams;
+		this.game = new GameInstance(gameParams, this.onGoal.bind(this), this.onGameOver.bind(this));
 		this.players.push(Player1, Player2);
-		this.matchId = createMatch(Player1.id, Player2.id);
+		this.matchId = createMatch(Player1.id, Player2.id, Date.now(), matchParams.tournamentId, matchParams.round);
 		this.players.forEach((player, i) => {
 			player.socket.on("close", () => {
 				this.onDisconnect(player);
@@ -106,7 +108,7 @@ export class GameSession {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
-		this.onEnd(this.matchId);
+		if (this.onEnd) this.onEnd(this.matchId);
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {

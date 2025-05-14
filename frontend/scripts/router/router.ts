@@ -13,7 +13,7 @@ const routes: Record<string, { file: string; init?: () => void }> = {
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
     '/tournament': { file: 'pages/tournament.html', init: initTournament },
     '/auth': { file: 'pages/auth.html', init: initAuth },
-    '/friends': { file: 'pages/friends.html', init: initFriends},
+    '/friends': { file: 'pages/friends.html', init: initFriends },
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
 
@@ -28,6 +28,8 @@ export async function initRouter() {
         if (!isAuthed) {
             path = '/auth';
             history.replaceState(null, '', path);
+        } else {
+            document.dispatchEvent(new Event('auth-ready'));
         }
     }
 
@@ -48,6 +50,7 @@ export async function initRouter() {
                 return;
             }
             history.pushState(null, '', url);
+            document.dispatchEvent(new Event('auth-ready'));
             loadContent(url);
             updateActiveLink(url);
         }

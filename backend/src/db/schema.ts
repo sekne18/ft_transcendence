@@ -51,7 +51,8 @@ export function initializeDatabase() {
 				start_at DATETIME DEFAULT NULL,
 				end_at DATETIME DEFAULT NULL,
 				status TEXT DEFAULT 'pending', -- 'pending', 'ongoing', 'finished'
-				FOREIGN KEY (winner_id) REFERENCES users(id),
+				bracket TEXT DEFAULT NULL,
+				FOREIGN KEY (winner_id) REFERENCES users(id)
 			);
 		`).run();
 
@@ -70,7 +71,7 @@ export function initializeDatabase() {
 				player1_score INTEGER DEFAULT 0,
 				player2_score INTEGER DEFAULT 0,
 
-				started_at DATETIME DEFAULT NOT NULL,
+				started_at DATETIME NOT NULL,
 				ended_at DATETIME DEFAULT NULL,
 
 				status TEXT DEFAULT 'pending', -- 'pending', 'finished', 'disconnected'
@@ -129,8 +130,8 @@ export function initializeDatabase() {
 
 		db.prepare(`
 			INSERT INTO users (username, display_name, email, password, avatar_url, role)
-			VALUES ('${botData.username}', '${botData.display_name}', '${botData.email}', '', '${botData.avatarPath}', 'bot');
-		`).run();
+			VALUES (?, ?, ?, ?, ?, ?);
+		`).run(botData.username, botData.display_name, botData.email, '', botData.avatarPath, 'bot');
 
 		db.prepare(`
 			INSERT INTO stats (user_id, wins, losses, games_played)

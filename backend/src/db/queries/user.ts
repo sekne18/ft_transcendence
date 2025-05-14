@@ -1,3 +1,4 @@
+import { defaultAvatarPath } from "../../Config.js";
 import db from "../connection.js";
 
 
@@ -17,6 +18,9 @@ export function createUser({ username, display_name, email, hash, avatarUrl }: {
     INSERT INTO users (username, display_name, email, password, avatar_url)
     VALUES (?, ?, ?, ?, ?)
   `);
+  if (!avatarUrl) {
+    avatarUrl = defaultAvatarPath;
+  }
   const result = insertUser.run(username, display_name, email, hash, avatarUrl);
   const userId = result.lastInsertRowid as number;
 

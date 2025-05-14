@@ -3,7 +3,7 @@ import { GameParams, wsMsg, WsParams } from "../game/GameTypes";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { showToast } from "../utils";
-import TournamentConnection from "./tournamentConnection";
+import { TournamentManager } from "./TournamentManager";
 import { Tournament, TournamentMatch } from "./types";
 
 
@@ -18,9 +18,6 @@ let tournament: Tournament = {
     matches: [],
     maxPlayers: 2
 };
-
-// Tournament WebSocket connection instance
-let tournamentConnection: TournamentConnection;
 
 // --- Modal Logic ---
 function openJoinModal(): void {
@@ -105,7 +102,7 @@ const handleServerUpdate = (data: any): void => {
                 showToast("Match Found!", `You are playing against ${opponentDetails?.username || 'Opponent'} for match ${matchIdNum}`, "success");
 
                 // Navigate to the game page/view
-                loadContent('/game', true); 
+                loadContent('/game', true);
 
                 // Wait for canvas, then create GameEngine
                 ensureCanvasAndInitGameEngine(matchIdNum, gameFoundData);
@@ -322,10 +319,9 @@ function renderQueueingState(): HTMLDivElement {
     return queueingDiv;
 }
 
-function renderHeader(): void {
-    const headerEl = document.getElementById('tournament-header');
-    if (!headerEl) return;
-    headerEl.innerHTML = '';
+function renderHeader(): HTMLDivElement {
+    const headerEl = document.createElement('div');
+    headerEl.id = 'tournament-header';
     const title = document.createElement('h1');
     title.className = 'text-2xl font-bold';
     title.textContent = 'Tournament';
@@ -370,6 +366,7 @@ function renderHeader(): void {
                     'Completed';
         statusBadgeContainer.appendChild(statusBadge);
     }
+    return headerEl;
 }
 
 function renderTournament(): void {
@@ -388,24 +385,19 @@ function renderTournament(): void {
 // --- Initialization ---
 export function initTournament(): void {
     // Establish WebSocket connection
-    tournamentConnection = new TournamentConnection("ws://localhost:8080/api/tournament/ws", handleServerUpdate); //
 
-    // Fetch user profile
-    fetch('/api/user/profile', {
-        method: 'GET',
-        credentials: 'include',
-    }).then(res => res.json())
-        .then((profileRes) => {
-            user = profileRes.user as Profile;
-            renderTournament();
-        })
-        .catch(error => {
-            console.error("Initialization error:", error);
-            showToast("Error", "Could not initialize tournament data.", "error");
-        });
+
+    fetch('/api/user').then(res => res.json()).then(data => {
+        const tournamentConnection = new TournamentManager(data.user.id);
+    }
+    ).catch(err => {
+        console.error('Error fetching user data:', err);
+        showToast("Error", "Could not initialize tournament data.", "error");
+    });
 
     // Add event listeners for modal
-    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal); //
-    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament); //
-    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal); //
+    document.getElementById('modal-close-btn')?.addEventListener('click', closeJoinModal);
+    document.getElementById('join-tournament-btn')?.addEventListener('click', joinTournament);
+    document.getElementById('modal-cancel-btn')?.addEventListener('click', closeJoinModal);
 }
+
