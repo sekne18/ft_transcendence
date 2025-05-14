@@ -1,5 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { getDataFromForm, getElement } from "../utils";
+import { getDataFromForm, getElement, showToast } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
 
@@ -92,7 +92,7 @@ function startChat() {
           // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
           // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
           // chatWindow.classList.add("w-0", "h-0", "scale-0");
-        
+          showToast('Chat started successfully!', '', 'success');
         } else {
             console.error('Chat failed:', data.message);
         }

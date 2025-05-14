@@ -927,7 +927,6 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 });
 
 
-
 const tournamentState = new TournamentSession(1);
 const playerQueue = new PlayerQueue(tournamentState);
 const tournamentManager = new TournamentManager(tournamentState, playerQueue);
