@@ -20,7 +20,6 @@ function setProfileEvents() {
         if (response.ok) {
             response.json().then((data) => {
                 const user = data.user;
-                console.log("User data:", user);
                 avatar.src = user.avatar_url;
                 avatar.alt = user.display_name;
             });

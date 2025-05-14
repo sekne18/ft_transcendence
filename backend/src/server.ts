@@ -21,14 +21,12 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-
+import { TournamentManager } from './tournament/TournamentManager.js';
+import { User } from './types.js';
 import { ChatManager } from './chat/ChatManager.js';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { defaultAvatarPath } from './Config.js';
 import { GameStore } from './game/GameStore.js';
-import { TournamentManager } from './tournament/TournamentManager.js';
-import { getLiveTournaments } from './db/queries/tournament.js';
-import { Bracket } from './tournament/Types.js';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -135,22 +133,22 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		const googleUser = await userRes.json() as { email: string; id: string; name: string; picture: string };
 
 		// Step 3: Get or create user in your DB
-		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; // Same as your login
+		let user = await getUserByEmail(googleUser.email) as User; // Same as your login
+		let userId;
 
 		if (!user) {
 			// If user doesn't exist, create them
-			const userId = await createUser({
+			userId = createUser({
 				email: googleUser.email,
 				hash: "",
 				username: googleUser.name,
 				display_name: googleUser.name,
 				avatarUrl: googleUser.picture,
 			});
-			user = await getUserById(userId) as { id: number; email: string; hash: string; name: string; picture: string; };
 		}
 
 		// Step 4: Issue token pair
-		const { token, refreshToken } = generateTokenPair(user.id);
+		const { token, refreshToken } = generateTokenPair(userId || user.id);
 
 		// Step 5: Set same cookies as in password login
 		reply
@@ -622,6 +620,26 @@ fastify.get('/api/user/profile',
 		return reply.send({ success: true, user });
 	});
 
+fastify.get('/api/user/profile/:id',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const id = parseInt((req.params as any).id);
+		if (!id) {
+			return reply.code(400).send({
+				success: false,
+				message: 'Invalid user ID'
+			});
+		}
+
+		const user = await getUserProfileById(id);
+
+		if (!user) {
+			return reply.code(404).send({ success: false, message: 'User not found' });
+		}
+
+		return reply.send({ success: true, user });
+	});
+
 fastify.get('/api/user/stats',
 	{ onRequest: [fastify.authenticate] },
 	async (req, reply) => {
@@ -657,9 +675,51 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 			message: 'Invalid user ID'
 		});
 	}
-	const matches = getMatchesByUserId(id);
 
-	return reply.send({ success: true, matches });
+	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
+
+	const matchHistory = matches.map(match => {
+		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
+		const opponent = getUserById(opponentId) as { id: number; display_name: string; }
+		return {
+			id: match.id,
+			opponent: opponent ? opponent.display_name : 'Unknown',
+			result: match.winner_id === Number(id) ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
+			score: `${match.player1_score}-${match.player2_score}`,
+			date: match.played_at
+		};
+	});
+
+
+	return reply.send({ success: true, matchHistory });
+});
+
+fastify.get('/api/user/recent-matches/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = parseInt((req.params as any).id);
+	if (!id) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid match ID'
+		});
+	}
+	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
+
+	const matchHistory = matches.map(match => {
+		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
+		console.log('opponentId', opponentId);
+		// get the oponnent display name
+		const opponent = getUserById(opponentId) as { id: number; display_name: string; }
+		console.log('match', match.winner_id, id, typeof match.winner_id, typeof id);
+		return {
+			id: match.id,
+			opponent: opponent ? opponent.display_name : 'Unknown',
+			result: match.winner_id === Number(id) ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
+			score: `${match.player1_score}-${match.player2_score}`,
+			date: match.played_at
+		};
+	});
+
+	return reply.send({ success: true, matchHistory });
 });
 
 fastify.get('/api/leaderboard', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -746,8 +806,9 @@ fastify.get('/api/tournament', { onRequest: [fastify.authenticate] }, async (req
 			message: 'Invalid user ID'
 		});
 	}
+	console.log('Fetching tournaments for user:', id);
 	const tournaments = tournamentManager.getCurrentTournaments();
-	return reply.send({ success: true, tournaments });
+	return reply.send({ success: true, tournaments: tournaments });
 });
 
 fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -787,6 +848,17 @@ fastify.post('/api/chat/register', { onRequest: [fastify.authenticate] }, async 
 			message: 'Invalid user ID'
 		});
 	}
+
+	// First check if the chat already exists
+	const existingChat = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
+	if (existingChat && existingChat.length > 0) {
+		for (const chat of existingChat) {
+			if (chat.user_id === otherId) {
+				return reply.send({ success: true });
+			}
+		}
+	}
+
 	const chatId = createChat(id, otherId);
 	if (!chatId) {
 		return reply.code(500).send({

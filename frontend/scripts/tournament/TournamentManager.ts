@@ -301,6 +301,7 @@ export class TournamentManager {
 				return response.json();
 			})
 			.then(data => {
+				console.log('Fetched tournaments:', data);
 				this.tournaments = new Map(data.tournaments.map((t: TournamentView) => {
 					const tournament: Tournament = {
 						id: t.id,

@@ -73,7 +73,8 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
         return;
     }
 
-    if (routes[url]) {
+    const staticRoute = routes[url];
+    if (staticRoute) {
         fetch(routes[url].file)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -95,6 +96,21 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
             .catch(err => {
                 if (appElement) {
                     appElement.innerHTML = '<h2>Error Loading Page</h2><p><a href="/">Return to Home</a></p>';
+                }
+            });
+    } else if (url.startsWith('/profile/')) {
+        history.pushState(null, '', '/profile');
+        fetch(routes['/profile'].file)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.text();
+            })
+            .then(html => {
+                if (appElement) {
+                    appElement.innerHTML = html;
+                    const userId : number = Number(url.split('/')[2]);
+                    (routes['/profile'].init as (userId?: number) => void)?.(userId);
+                    languageService.init();
                 }
             });
     } else {

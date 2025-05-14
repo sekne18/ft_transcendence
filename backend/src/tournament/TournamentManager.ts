@@ -38,6 +38,7 @@ export class TournamentManager {
 
 	public getCurrentTournaments(): TournamentView[] {
 		const tournaments = Array.from(this.tournaments.values());
+		console.log("Current tournaments: ", tournaments);
 		return tournaments.map((tournament) => {
 			return {
 				id: tournament.getId(),

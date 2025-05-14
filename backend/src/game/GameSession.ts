@@ -2,6 +2,7 @@ import { GameInstance } from "./GameInstance.js";
 import { GameParams, MatchParams, UserInput, wsMsg } from "./GameTypes.js";
 import { PlayerConnection } from "./GameTypes.js";
 import { createMatch, updateMatch } from "../db/queries/match.js";
+import { updateUserStats } from "../db/queries/stats.js";
 
 export class GameSession {
 	private game: GameInstance;
@@ -77,6 +78,7 @@ export class GameSession {
 		if (this.players.length < 2) {
 			throw new Error("Not enough players");
 		}
+		this.matchId = createMatch(this.players[0].id, this.players[1].id, 0, 0);
 		this.intervalId = setInterval(() => {
 			this.game.updateState(1000 / this.params.FPS);
 			this.broadcastMsg({
@@ -156,6 +158,13 @@ export class GameSession {
 			data: { event: "game_over" },
 			timestamp: Date.now()
 		});
+		if (this.game.getState().left_score > this.game.getState().right_score) {
+			updateUserStats(this.players[0].id, 1, 0, 1);
+			updateUserStats(this.players[1].id, 0, 1, 1);
+		} else {
+			updateUserStats(this.players[0].id, 0, 1, 1);
+			updateUserStats(this.players[1].id, 1, 0, 1);
+		}
 		this.stopGame();
 	};
 
