@@ -38,7 +38,8 @@ export const translations: Record<string, LanguageMap> = {
     friendslist_blocked: 'Blocked',
     friendslist_search: 'Search friends...',
     friendslist_no_friends: 'No friends found',
-    friendslist_no_users: 'No users found'
+    friendslist_no_users: 'No users found',
+    friendslist_showing_users: 'Showing all users'
   },
   nl: {
     // Navbar items

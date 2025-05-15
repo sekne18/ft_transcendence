@@ -1,3 +1,5 @@
+import { languageService } from "../i18n";
+
 export interface FriendListPlayer
 {
     id: number;
@@ -16,22 +18,26 @@ function noUserFound(isFriends: boolean): string {
       <div class="flex items-center justify-center p-8 bg-[#1E1E2A] text-white">
         <h1 class="text-xl font-semibold text-center" data-i18n="${msg}"></h1>
       </div>
-    `; //change the msg
+    `;
 }
 
-function createAllUsersow(friend: FriendListPlayer): string {
+function createAllUsersRow(friend: FriendListPlayer): string {
   const borderColor = friend.online == true
       ? 'border-[#45D483]'
       : friend.online == false
         ? 'border-[#F4407F]'
         : 'border-gray-500';
+  
   const status = friend.online == false
     ? 'Offline'
     : 'Online';
-
+  
   return `
-        <div class="flex items-center justify-center p-8 bg-[#1E1E2A] text-white">
+      <div class="flex items-center justify-center pt-8 bg-[#1E1E2A] text-white border-0">
         <h1 class="text-xl font-semibold text-center" data-i18n="friendslist_no_friends"></h1>
+      </div>
+      <div class="flex items-center justify-center pb-8 bg-[#1E1E2A] text-white">
+        <p class="text-gray-500" text-center" data-i18n="friendslist_showing_users"></p>
       </div>
     <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">
       <!-- Avatar -->
@@ -56,7 +62,7 @@ function createAllUsersow(friend: FriendListPlayer): string {
         </button>
       </div>
     </div>
-  `; //change the msg
+  `;
 }
 
 function createAllFriendsRow(friend: FriendListPlayer): string {
@@ -119,5 +125,6 @@ export function renderFriendslist(players: FriendListPlayer[], isFriends: boolea
   else if (isFriends)
     friendslistBody.innerHTML = players.map(createAllFriendsRow).join(''); // display friends
   else
-    friendslistBody.innerHTML = players.map(createAllUsersow).join(''); // Display users, use different function
+    friendslistBody.innerHTML = players.map(createAllUsersRow).join(''); // Display users
+  languageService.init();
 }
