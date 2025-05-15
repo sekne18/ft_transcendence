@@ -13,7 +13,7 @@ const routes: Record<string, { file: string; init?: () => void }> = {
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
     '/tournament': { file: 'pages/tournament.html', init: initTournament },
     '/auth': { file: 'pages/auth.html', init: initAuth },
-    '/friends': { file: 'pages/friends.html', init: initFriends},
+    '/friends': { file: 'pages/friends.html', init: initFriends },
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
 
@@ -71,7 +71,8 @@ export function loadContent(url: string) {
         return;
     }
 
-    if (routes[url]) {
+    const staticRoute = routes[url];
+    if (staticRoute) {
         fetch(routes[url].file)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -94,6 +95,21 @@ export function loadContent(url: string) {
                     appElement.innerHTML = '<h2>Error Loading Page</h2><p><a href="/">Return to Home</a></p>';
                 }
             });
+    } else if (url.startsWith('/profile/')) {
+        history.pushState(null, '', '/profile');
+        fetch(routes['/profile'].file)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.text();
+            })
+            .then(html => {
+                if (appElement) {
+                    appElement.innerHTML = html;
+                    const userId : number = Number(url.split('/')[2]);
+                    (routes['/profile'].init as (userId?: number) => void)?.(userId);
+                    languageService.init();
+                }
+            });
     } else {
         if (appElement) {
             appElement.innerHTML = '<h2>Page Not Found</h2><p><a href="/">Return to Home</a></p>';
@@ -111,6 +127,7 @@ export async function checkAuth(): Promise<boolean> {
         );
         if (!res.ok) throw new Error('Access token expired');
         const data = await res.json();
+        if (data.success) document.dispatchEvent(new Event('auth-ready'));
         return data.success;
     } catch (err) {
         const refreshRes = await fetch('/api/token/refresh', {
@@ -124,6 +141,7 @@ export async function checkAuth(): Promise<boolean> {
         }
 
         const res = await fetch('/api/auth/status', { credentials: 'include' });
+        if (res.ok) document.dispatchEvent(new Event('auth-ready'));
         return res.ok;
     }
 }

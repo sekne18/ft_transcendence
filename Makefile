@@ -67,3 +67,12 @@ backend-shell:
 nginx-shell:
 	@echo "Entering the nginx container..."
 	$(EXEC) nginx sh
+
+.PHONY: clean
+clean:
+	@echo "Cleaning up..."
+	$(DOWN) --rmi all
+
+.PHONY: prune-all
+prune-all:
+	docker system prune -a --volumes -f

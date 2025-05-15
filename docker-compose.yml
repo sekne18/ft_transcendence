@@ -4,7 +4,7 @@ services:
       context: ./backend
     container_name: backend
     volumes:
-      - backend_db:/app/db
+      - backend_db:/app/db_data
     expose:
       - "3000"
     networks:
@@ -16,8 +16,8 @@ services:
       context: ./nginx
     container_name: nginx
     ports:
-      - "8081:80"
-      - "8443:443"
+      - "0.0.0.0:8081:80"
+      - "0.0.0.0:8443:443"
     volumes:
       - ./frontend/dist:/usr/share/nginx/html:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
@@ -32,7 +32,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ./backend/db
+      device: ./backend/db_data
       o: bind
 
 networks:

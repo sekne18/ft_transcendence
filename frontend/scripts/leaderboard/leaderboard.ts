@@ -1,4 +1,5 @@
 import { LeaderboardPlayer, renderLeaderboard } from "./userList";
+import { leaderboardEntry } from "./types";
 
 /* 
     Run any logic from this function. 
@@ -9,8 +10,36 @@ export function initLeaderboard(): void {
     getData();
 }
 
-function getData(): void {
+function getData(offset = 0): void {
+    fetch(`/api/leaderboard?limit=10&offset=${offset}`, {
+        method: 'GET',
+        credentials: 'include',
+    }).then((response) => {
+        if (!response.ok) {
+            console.error('Failed to fetch leaderboard data');
+            return;
+        }
+        response.json().then((data: any) => {
+            const leaderboard: leaderboardEntry[] = data.leaderboard;
+            console.log('Leaderboard data:', leaderboard);
+            const leaderboardData: LeaderboardPlayer[] = leaderboard.map((entry, i) => ({
+                id: entry.user_id.toString(),
+                rank: i + 1 + offset,
+                username: entry.display_name,
+                avatarUrl: entry.avatar_url,
+                wins: entry.wins,
+                losses: entry.losses,
+                winRate: entry.wins / (entry.wins + entry.losses) * 100,
+                level: Math.floor(entry.games_played / 100) // Example calculation for level
+            }));
+            renderLeaderboard(leaderboardData);
+        });
+    }).catch((error) => {
+        console.error('Error fetching leaderboard data:', error);
+    });
+
     // Mock data
+    /*
     const leaderboardData: LeaderboardPlayer[] = [
         {
             id: '1',
@@ -63,6 +92,6 @@ function getData(): void {
             level: 29
         }
     ];
-
     renderLeaderboard(leaderboardData);
+    */
 }

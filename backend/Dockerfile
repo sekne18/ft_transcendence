@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY ./dist .
+COPY dist/ /app/
 
 COPY jwtRS256.key* .
 

@@ -6,10 +6,6 @@ export function setEventHandlers() {
 }
 
 function setProfileEvents() {
-    const user = {
-        username: "JohnDoe",
-        avatarUrl: "/uploads/avatars/default.png"
-    };
 
     const avatar = getElement("user-avatar") as HTMLImageElement;
     const dropdown = getElement("dropdown-menu") as HTMLDivElement;
@@ -17,8 +13,20 @@ function setProfileEvents() {
     const logoutBtn = getElement("logout-btn");
 
     // Set avatar
-    avatar.src = user.avatarUrl;
-    avatar.alt = user.username;
+    fetch("/api/user", {
+        method: "GET",
+        credentials: "include"
+    }).then((response) => {
+        if (response.ok) {
+            response.json().then((data) => {
+                const user = data.user;
+                avatar.src = user.avatar_url;
+                avatar.alt = user.display_name;
+            });
+        } else {
+            console.error("Failed to fetch user data");
+        }
+    });
 
     // Toggle dropdown
     avatar.addEventListener("click", () => {
@@ -27,9 +35,9 @@ function setProfileEvents() {
 
     // Hide dropdown on outside click
     document.addEventListener("click", (e) => {
-      if (!dropdownWrapper.contains(e.target as Node)) {
-        dropdown.classList.add("hidden");
-      }
+        if (!dropdownWrapper.contains(e.target as Node)) {
+            dropdown.classList.add("hidden");
+        }
     });
 
     logoutBtn?.addEventListener("click", () => {

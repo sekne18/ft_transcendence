@@ -26,6 +26,11 @@ export function initializeDatabase() {
       `).run();
 
       db.prepare(`
+        INSERT INTO users (username, display_name, email, password, avatar_url)
+        VALUES ('ai_bot', 'AI BOT', 'ai@ai.com', 'ai', '/uploads/avatars/default.png');
+      `).run();
+
+      db.prepare(`
         CREATE TABLE friends (
           user1_id INTEGER,
           user2_id INTEGER,

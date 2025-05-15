@@ -1,5 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { getDataFromForm, getElement } from "../utils";
+import { getDataFromForm, getElement, showToast } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
 
@@ -7,9 +7,23 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-export function initProfile(): void {
-  renderUserProfile();
-  renderMatchHistory()
+let otherId: number | undefined = undefined;
+
+export function initProfile(userId?: number): void {
+  if (userId && userId > 0) {
+    otherId = userId;
+    fetchUserProfile(userId).then((userProfile) => {
+      renderUserProfile(userProfile);
+      renderMatchHistory(userId);
+    });
+    setProfileButtons(true);
+
+  } else {
+    setProfileButtons(false);
+    
+    renderUserProfile();
+    renderMatchHistory();
+  }
 
   const modalManager = new ModalManager("edit-profile-modal");
 
@@ -18,6 +32,94 @@ export function initProfile(): void {
     resetEditProfileForm,
     onAvatarChange
   );
+}
+
+function setProfileButtons(isFriend: boolean) {
+  const editProfileBtn = getElement('edit-profile-btn') as HTMLButtonElement;
+  const friendDiv = getElement('friend-div') as HTMLDivElement;
+  const addFriendBtn = getElement('add-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('block-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
+
+  if (isFriend) {
+    editProfileBtn.classList.add('hidden');
+    friendDiv.classList.remove('hidden');
+
+    addFriendBtn.addEventListener('click', () => {
+      // addFriendBtn();
+    });
+
+    blockBtn.addEventListener('click', () => {
+      // blockUser();
+    });
+
+    chatBtn.addEventListener('click', () => {
+      startChat();
+    });
+
+  } else {
+    editProfileBtn.classList.remove('hidden');
+    friendDiv.classList.add('hidden');
+  }
+}
+
+function startChat() {
+  if (!otherId) {
+    console.error('User ID is not defined.');
+    return;
+  }
+
+  fetch('/api/chat/register', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      otherId: otherId,
+    }),
+})
+    .then(res => {
+        if (res.status === 401) {
+            window.location.href = '/auth';
+            return null;
+        }
+        return res.json();
+    })
+    .then(data => {
+      console.log(data);
+        if (data.success) {
+          // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
+          // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
+          // chatWindow.classList.add("w-0", "h-0", "scale-0");
+          showToast('Chat started successfully!', '', 'success');
+        } else {
+            console.error('Chat failed:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error during login:', error);
+    });
+}
+
+async function fetchUserProfile(userId: number): Promise<Profile | undefined> {
+  try {
+    const response = await fetch(`/api/user/profile/${userId}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error:', errorData.message || response.statusText);
+      return undefined;
+    }
+    const data = await response.json();
+    return data.user as Profile;
+  } catch (error) {
+    console.error('Network error:', error);
+    return undefined;
+  }
 }
 
 function onAvatarChange() {
@@ -36,9 +138,72 @@ function onAvatarChange() {
 }
 
 // Render user profile
-export function renderUserProfile() {
-  // Fill user details
-  fetch('/api/user/profile', {
+function renderUserProfile(profile: Profile | undefined = undefined) {
+
+  if (profile)
+    fillProfileData(profile);
+  else {
+    fetch('/api/user/profile', {
+      method: 'GET',
+      credentials: 'include',
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((response) => {
+      if (!response || !response.success) {
+        window.location.href = '/auth';
+        return;
+      }
+      profile = response.user as Profile;
+      fillProfileData(profile);
+    })
+      .catch(() => {
+        window.location.href = '/auth';
+      });
+  }
+}
+
+function fillProfileData(profile: Profile) {
+  // Set user details
+  (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
+  getElement('display_name').textContent = profile.display_name;
+  getElement('username').textContent = profile.username;
+  getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
+
+  // Set user stats
+  getElement('games-played').textContent = profile.games_played.toString();
+  getElement('wins').textContent = profile.wins.toString();
+  getElement('losses').textContent = profile.losses.toString();
+  // Calculate win rate
+  const winRate = profile.games_played > 0
+    ? Math.round((profile.wins / profile.games_played) * 100)
+    : 0;
+  getElement('win-rate').textContent = `${winRate}%`;
+  getElement('win-rate-bar').style.width = `${winRate}%`;
+
+  // Set modal details
+  (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
+  (getElement('username-input') as HTMLInputElement).value = profile.username;
+  (getElement('email-input') as HTMLInputElement).value = profile.email;
+  (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
+  (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
+}
+
+// Render match history
+function renderMatchHistory(userId?: number) {
+  const matchHistoryContainer = getElement('match-history');
+  const recentActivityContainer = getElement('recent-activity');
+  // Clear containers
+  matchHistoryContainer.innerHTML = '';
+  recentActivityContainer.innerHTML = '';
+
+  const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
+
+
+  fetch(apiUrl, {
     method: 'GET',
     credentials: 'include',
   }).then(res => {
@@ -47,94 +212,20 @@ export function renderUserProfile() {
       return null;
     }
     return res.json();
-  }).then((response) => {
-    if (!response || !response.success) {
-      window.location.href = '/auth';
+  }).then((res) => {
+    const matchHistory = res.matchHistory as Match[];
+    if (!matchHistory) {
       return;
     }
-
-    const profile = response.user as Profile;
-
-    // Set user details
-    (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
-    getElement('display_name').textContent = profile.display_name;
-    getElement('username').textContent = profile.username;
-    getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
-
-    // Set user stats
-    getElement('games-played').textContent = profile.games_played.toString();
-    getElement('wins').textContent = profile.wins.toString();
-    getElement('losses').textContent = profile.losses.toString();
-    // Calculate win rate
-    const winRate = profile.games_played > 0
-      ? Math.round((profile.wins / profile.games_played) * 100)
-      : 0;
-    getElement('win-rate').textContent = `${winRate}%`;
-    getElement('win-rate-bar').style.width = `${winRate}%`;
-
-    // Set modal details
-    (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
-    (getElement('username-input') as HTMLInputElement).value = profile.username;
-    (getElement('email-input') as HTMLInputElement).value = profile.email;
-    (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
-    (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
-  })
-    .catch(() => {
-      window.location.href = '/auth';
+    matchHistory.forEach(match => {
+      const matchElement = createMatchElement(match);
+      matchHistoryContainer.appendChild(matchElement);
+      if (matchHistory.indexOf(match) < 5) {
+        const recentMatchElement = createMatchElement(match, false);
+        recentActivityContainer.appendChild(recentMatchElement);
+      }
     });
-}
-
-// Render match history
-function renderMatchHistory() {
-  const matchHistoryContainer = getElement('match-history');
-  const recentActivityContainer = getElement('recent-activity');
-  // Clear containers
-  matchHistoryContainer.innerHTML = '';
-  recentActivityContainer.innerHTML = '';
-
-
-  const matchHistory = [
-    { id: 1, opponent: "Felix Daems", result: "ongoing", score: "1-1", date: "2025-05-05" },
-    { id: 2, opponent: "Flynn Mol", result: "win", score: "5-3", date: "2023-06-15" },
-    { id: 3, opponent: "Felix Daems", result: "loss", score: "2-5", date: "2023-06-14" },
-    { id: 4, opponent: "Yannick", result: "win", score: "5-1", date: "2023-06-12" },
-    { id: 5, opponent: "Basil", result: "win", score: "5-4", date: "2023-06-10" },
-    { id: 6, opponent: "Bastian", result: "win", score: "4-1", date: "2023-05-10" }
-  ] as Match[];
-
-  matchHistory.forEach(match => {
-    const matchElement = createMatchElement(match);
-    matchHistoryContainer.appendChild(matchElement);
-    // Add only the first 3 matches to recent activity
-    if (matchHistory.indexOf(match) < 5) {
-      const recentMatchElement = createMatchElement(match, false);
-      recentActivityContainer.appendChild(recentMatchElement);
-    }
   });
-
-  // fetch('/api/user/match-history', {
-  //   method: 'GET',
-  //   credentials: 'include',
-  // }).then(res => {
-  //   if (res.status === 401) {
-  //     window.location.href = '/auth';
-  //     return null;
-  //   }
-  //   return res.json();
-  // }).then((res) => {
-  //   const matchHistory = res.match_history as Match[];
-  //   // console.log(matchHistory);
-  //   // Create match history items
-  //   matchHistory.forEach(match => {
-  //     const matchElement = createMatchElement(match);
-  //     matchHistoryContainer.appendChild(matchElement);
-  //     // Add only the first 3 matches to recent activity
-  //     if (matchHistory.indexOf(match) < 5) {
-  //       const recentMatchElement = createMatchElement(match, false);
-  //       recentActivityContainer.appendChild(recentMatchElement);
-  //     }
-  //   });
-  // });
 
 }
 // Create match element
@@ -144,6 +235,8 @@ function createMatchElement(match: Match, showDetailsButton = false) {
   const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
   const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
   const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
+  const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDay();
+
   matchElement.innerHTML = `
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1">
@@ -152,7 +245,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
         </div>
         <div>
           <p class="font-semibold">Match vs ${match.opponent}</p>
-          <p class="text-gray-400 text-sm">${match.date}</p>
+          <p class="text-gray-400 text-sm">${date}</p>
         </div>
       </div>
       <div class="text-right">
@@ -178,7 +271,7 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
-  fetch(avatarUrl) // fetch the blob from the blob URL
+  fetch(avatarUrl) 
     .then(res => res.blob())
     .then(blob => {
       const reader = new FileReader();

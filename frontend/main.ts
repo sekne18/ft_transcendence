@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
   //     initChat();
   //   }
   // }, 1000);
+  document.addEventListener('auth-ready', async () => {
+    initChat();
+  });
   initRouter();
   setEventHandlers();
 });
