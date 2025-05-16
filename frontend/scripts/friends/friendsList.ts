@@ -16,7 +16,7 @@ function noUserFound(isFriends: boolean): string {
 
       return `
       <div class="flex items-center justify-center p-8 bg-[#1E1E2A] text-white">
-        <h1 class="text-xl font-semibold text-center" data-i18n="${msg}"></h1>
+        <h1 class="text-2xl font-bold text-center" data-i18n="${msg}"></h1>
       </div>
     `;
 }
@@ -34,7 +34,7 @@ function createAllUsersRow(friend: FriendListPlayer): string {
   
   return `
       <div class="flex items-center justify-center pt-8 bg-[#1E1E2A] text-white border-0">
-        <h1 class="text-xl font-semibold text-center" data-i18n="friendslist_no_friends"></h1>
+        <h1 class="text-2xl font-bold text-center" data-i18n="friendslist_no_friends"></h1>
       </div>
       <div class="flex items-center justify-center pb-8 bg-[#1E1E2A] text-white">
         <p class="text-gray-500" text-center" data-i18n="friendslist_showing_users"></p>
