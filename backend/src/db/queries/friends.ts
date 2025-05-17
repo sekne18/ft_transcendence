@@ -17,7 +17,7 @@ export function getAllUsers(userId: number, name:string,  limit: number = 10): F
       u.avatar_url AS avatarUrl
     FROM users u
     WHERE u.display_name LIKE ?
-    AND u.id NOT LIKE ?
+    AND u.id != ?
     LIMIT ?
   `).all(name + '%', userId, limit) as {
     id: number;
@@ -37,7 +37,6 @@ export function getAllUsers(userId: number, name:string,  limit: number = 10): F
 }
 
 export function getAllFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
-  console.log(userId, name);
   const rows = db.prepare(`
     SELECT 
       u.id, 
@@ -62,7 +61,6 @@ export function getAllFriends(userId: number, name:string, limit: number = 10): 
     online: number;
     avatarUrl: string;
   }[];
-  console.log("after rows");
   return rows.map(row => ({
     id: row.id,
     username: row.username,

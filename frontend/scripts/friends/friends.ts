@@ -79,17 +79,16 @@ async function getData(where: string): Promise<void> {
     }
     return res.json();
   }).then((response) => {
-    console.log(response);
     if (!response || !response.success) {
       console.log("response failed");
     }
     else
       {
-        console.log(response.friendsList);
         renderFriendslist(response.friendsList, response.isFriends);
       }
   });
 }
+
 // import { loadContent } from "../router/router";
 // import { getElement } from "../utils";
 
@@ -104,4 +103,4 @@ async function getData(where: string): Promise<void> {
 //     button.addEventListener('click', () => {
 //         loadContent(`/profile/${user}`);
 //     });
-// }
+// ?
