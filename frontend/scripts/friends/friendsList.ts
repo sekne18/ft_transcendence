@@ -35,7 +35,7 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
         <!-- Action Buttons -->
         <div class="flex items-center gap-2 ml-auto">
           <!-- Profile Button -->
-          <button class="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded" title="View Profile">
+          <button id="user-profile-btn" class="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded" title="View Profile">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M5.121 17.804A6.001 6.001 0 0112 15a6.001 6.001 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />

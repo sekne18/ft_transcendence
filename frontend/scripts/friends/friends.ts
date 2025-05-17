@@ -1,13 +1,24 @@
+import { loadContent } from "../router/router";
+import { getElement } from "../utils";
 import { renderFriendslist } from "./friendsList";
 
+
+let userId: number;
 export function initFriends() {
-    console.log("Friends page initialized");
     getData('/api/friends/all');
     setupTabs();
+    onProfileClick();
 }
 
-function setupTabs(): void{
+function onProfileClick() {
+    const button = getElement('user-profile-btn') as HTMLButtonElement;
 
+    button.addEventListener('click', () => {
+        loadContent(`/profile/${userId}`);
+    });
+  }
+
+function setupTabs(): void{
     const friendslist_nav_buttons = document.querySelectorAll<HTMLButtonElement>('#tabs button');
     const friendslist_search_bar = document.querySelector<HTMLInputElement>('#friends_search');
 
@@ -65,9 +76,6 @@ function setupTabs(): void{
     document.querySelector<HTMLButtonElement>('#tabs button[data-tab="all_friends"]')?.click();
 }
 
-
-
-
 async function getData(where: string): Promise<void> {
   fetch(where, {
     method: 'GET',
@@ -90,18 +98,3 @@ async function getData(where: string): Promise<void> {
       }
   });
 }
-// import { loadContent } from "../router/router";
-// import { getElement } from "../utils";
-
-// export function initFriends() {
-//     onProfileClick();
-// }
-
-// function onProfileClick() {
-//     const user = 1; // BOT ID
-//     const button = getElement('friend_btn') as HTMLButtonElement;
-//     // add event listener
-//     button.addEventListener('click', () => {
-//         loadContent(`/profile/${user}`);
-//     });
-// }
