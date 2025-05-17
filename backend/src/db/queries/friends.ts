@@ -175,3 +175,44 @@ export function getBlockedFriends(userId: number, name:string, limit: number = 1
       avatarUrl: row.avatarUrl,
     }));
   }
+
+  export function blockFriend(userId: number, friendId: number): void {
+    db.prepare(`
+      INSERT OR REPLACE INTO friends (user1_id, user2_id, sender_id, status)
+      VALUES (?, ?, ?, 'blocked')
+    `).run(userId, friendId, userId);
+  }
+
+  export function unblockFriend(userId: number, friendId: number): void {
+    db.prepare(`
+      DELETE FROM friends
+      WHERE (user1_id = ? AND user2_id = ?)
+         OR (user1_id = ? AND user2_id = ?)
+    `).run(userId, friendId, friendId, userId);
+  }
+
+  export function acceptFriendRequest(userId: number, friendId: number): void {
+    db.prepare(`
+      UPDATE friends
+      SET status = 'accepted'
+      WHERE (user1_id = ? AND user2_id = ?)
+         OR (user1_id = ? AND user2_id = ?)
+    `).run(userId, friendId, friendId, userId);
+  }
+
+  export function declineFriendRequest(userId: number, friendId: number): void {
+    db.prepare(`
+      DELETE FROM friends
+      WHERE (user1_id = ? AND user2_id = ?)
+         OR (user1_id = ? AND user2_id = ?)
+    `).run(userId, friendId, friendId, userId);
+  }
+
+  export function sendFriendRequest(userId: number, friendId: number): void {
+    db.prepare(`
+      INSERT OR REPLACE INTO friends (user1_id, user2_id, sender_id, status)
+      VALUES (?, ?, ?, 'pending')
+    `).run(userId, friendId, userId);
+  }
+
+  
