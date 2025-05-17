@@ -945,7 +945,7 @@ fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (re
 	if (friendsList.length !== 0)
 		return reply.send({ success: true, friendsList: friendsList, isFriends: true });
 	else
-	return reply.send({ success: true, friendsList: users, isFriends: false });
+		return reply.send({ success: true, friendsList: users, isFriends: false });
 });
 
 fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) =>{

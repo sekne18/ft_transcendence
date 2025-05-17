@@ -87,13 +87,11 @@ async function getData(where: string): Promise<void> {
     }
     return res.json();
   }).then((response) => {
-    console.log(response);
     if (!response || !response.success) {
       console.log("response failed");
     }
     else
       {
-        console.log(response.friendsList);
         renderFriendslist(response.friendsList, response.isFriends);
       }
   });
