@@ -1,26 +1,9 @@
-import { loadContent } from "../router/router";
-import { getElement } from "../utils";
 import { renderFriendslist } from "./friendsList";
-
-
-let userId: number;
 
 export function initFriends() {
     getData('/api/friends/all');
     setupTabs();
 }
-
-export function onProfileClick() {
-    // get user-profile-btn buttons
-    const buttons = document.querySelectorAll<HTMLButtonElement>('.user-profile-btn');
-    console.log("buttons: ", buttons);
-  
-    Array.from(buttons).forEach(button => {
-        button.addEventListener('click', () => {
-        loadContent(`/profile/${userId}`);
-      });
-    });
-  }
 
 function setupTabs(): void {
     const friendslist_nav_buttons = document.querySelectorAll<HTMLButtonElement>('#tabs button');
@@ -46,15 +29,11 @@ function setupTabs(): void {
     friendslist_nav_buttons.forEach((button) => {
 
         button.addEventListener('click', () => {
-            // Remove active styles from all buttons
             friendslist_nav_buttons.forEach((btn) => {
                 btn.classList.remove('bg-gray-600', 'bg-green-600', 'bg-yellow-600', 'bg-red-600', 'text-white');
-
-                // Reset to default text color
                 btn.classList.add('text-gray-500', 'dark:text-gray-300');
             });
 
-            // Apply active styles to the clicked button
             const tab = button.getAttribute('data-tab');
             if (!tab)
                 return;

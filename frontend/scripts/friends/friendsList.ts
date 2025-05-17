@@ -1,6 +1,5 @@
 import { languageService } from "../i18n";
 import { loadContent } from "../router/router";
-import { onProfileClick } from "./friends";
 
 export interface FriendListPlayer {
   id: number;
@@ -49,7 +48,7 @@ function createAllUsersRow(friend: FriendListPlayer): string {
       <!-- Action Buttons -->
       <div class="flex items-center gap-2 ml-auto">
         <!-- Profile Button -->
-        <button class="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded" title="View Profile">
+        <button class="user-profile-btn p-2 text-white bg-blue-600 hover:bg-blue-700 rounded" data-user-id="${friend.id}" title="View Profile">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M5.121 17.804A6.001 6.001 0 0112 15a6.001 6.001 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -86,7 +85,7 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
         <!-- Action Buttons -->
         <div class="flex items-center gap-2 ml-auto">
           <!-- Profile Button -->
-          <button class="user-profile-btn p-2 text-white bg-blue-600 hover:bg-blue-700 rounded" title="View Profile">
+          <button class="user-profile-btn p-2 text-white bg-blue-600 hover:bg-blue-700 rounded" data-user-id="${friend.id}" title="View Profile">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M5.121 17.804A6.001 6.001 0 0112 15a6.001 6.001 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -122,12 +121,26 @@ export function renderFriendslist(players: FriendListPlayer[], isFriends: boolea
     friendslistBody.innerHTML = players.map(createAllFriendsRow).join(''); // display friends
   else
     friendslistBody.innerHTML = addTitleAndDescription() + players.map(createAllUsersRow).join(''); // Display users
-  onProfileClick();
   languageService.init();
+  onProfileClick();
+}
+
+function onProfileClick() {
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.user-profile-btn');
+  console.log("buttons: ", buttons);
+
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const userId = button.dataset.userId;
+      if (userId) {
+        loadContent(`/profile/${userId}`);
+      }
+    });
+  });
 }
 
 function addTitleAndDescription() {
-    return `
+  return `
     <div class="flex items-center justify-center pt-8 bg-[#1E1E2A] text-white border-0">
         <h1 class="text-2xl font-bold text-center" data-i18n="friendslist_no_friends"></h1>
       </div>
