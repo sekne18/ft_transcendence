@@ -4,6 +4,7 @@ import { GameStore } from "../game/GameStore.js";
 import { Bracket, RoundMatch, TournamentConnection, TournamentEvent } from "./Types.js";
 import { getMatchById } from "../db/queries/match.js";
 import { PlayerConnection } from "../game/GameTypes.js";
+import { ProxyPlayer } from "../game/ProxyPlayer.js";
 
 
 export class Tournament {
@@ -11,6 +12,7 @@ export class Tournament {
 	private maxPlayers: number;
 	private createdAt: number;
 	private players: TournamentConnection[];
+	private spectators: ProxyPlayer[] = [];
 	private nextPlayers: {
 		p1: PlayerConnection | null;
 		p2: PlayerConnection | null;
@@ -20,6 +22,20 @@ export class Tournament {
 	private status: 'pending' | 'ongoing' | 'finished';
 	private gameStore: GameStore;
 	private callbacks: ((event: TournamentEvent) => void)[];
+	private readonly tournamentTabFilter: Map<string, boolean> = new Map([
+		['game_state', true],
+		['set_side', true],
+		['goal', false],
+		['error', false],
+		['game_event', false]
+	]);
+	private readonly spectatorTabFilter: Map<string, boolean> = new Map([
+		['game_state', false],
+		['set_side', false],
+		['goal', false],
+		['error', false],
+		['game_event', false]
+	]);
 
 	constructor(id: number, maxPlayers: number, createdAt: number, gameStore: GameStore, private onEnd?: (id: number) => void) {
 		this.id = id;
@@ -70,6 +86,7 @@ export class Tournament {
 			throw new Error("Player already in tournament");
 		}
 		this.players.push(player);
+		this.spectators.push(new ProxyPlayer(this.tournamentTabFilter, player));
 		player.enteredTournament = this.id;
 		this.notify({
 			type: 'joined',
@@ -80,6 +97,7 @@ export class Tournament {
 		if (this.players.length === this.maxPlayers) {
 			this.setupNextMatch();
 		}
+		console.log("Player added to tournament: this.players", this.players);
 	}
 
 	public subscribe(callback: (event: TournamentEvent) => void): () => void {
@@ -99,8 +117,10 @@ export class Tournament {
 
 	// requires this.winners to be set
 	private setupNextMatch(): void {
+		console.log("Setting up next match");
 		//if no match played yet: generate first round
 		if (this.bracket === null) {
+			console.log("Generating first round");
 			this.status = 'ongoing';
 			this.bracket = { rounds: [] };
 			this.bracket.rounds.push(this.generateBracketRound());
@@ -109,6 +129,7 @@ export class Tournament {
 				startTime: Date.now(),
 				bracket: this.bracket,
 			});
+			console.log("Bracket generated", this.bracket);
 			this.notify({
 				type: 'bracket_update',
 				data: {
@@ -116,12 +137,12 @@ export class Tournament {
 				}
 			});
 		}
-		const currentRound = this.bracket.rounds[this.bracket.rounds.length - 1];
-		const nextMatch = currentRound.find((match) => match.matchId === null);
+		let currentRound = this.bracket.rounds[this.bracket.rounds.length - 1];
+		let nextMatch = currentRound.find((match) => match.matchId === null);
 		//check if there is still a match to play in this round
 		if (!nextMatch) {
 			//check if there are still rounds to play
-			if (this.bracket.rounds.length === 1) {
+			if (currentRound.length === 1) {
 				this.status = 'finished';
 				updateTournament(this.id, {
 					status: this.status,
@@ -143,6 +164,11 @@ export class Tournament {
 					bracket: this.bracket,
 				}
 			});
+			currentRound = this.bracket.rounds[this.bracket.rounds.length - 1];
+			nextMatch = currentRound.find((match) => match.matchId === null);
+			if (!nextMatch) {
+				throw new Error("No match to start");
+			}
 		}
 		this.notify({
 			type: 'setup_match',
@@ -154,30 +180,32 @@ export class Tournament {
 	}
 
 	private startMatch(p1: PlayerConnection, p2: PlayerConnection): void {
-		const currentRound = this.bracket!.rounds[this.bracket!.rounds.length - 1];
-		const nextMatch = currentRound.find((match) => match.matchId === null);
-		if (!nextMatch) {
-			throw new Error("No match to start");
-		}
-		const matchId = this.gameStore.addGame(
-			p1,
-			p2,
-			{
-				tournamentId: this.id,
-				round: this.bracket!.rounds.length - 1,
-			},
-			this.onMatchEnd.bind(this)
-		);
-		nextMatch.matchId = matchId;
-		updateTournament(this.id, {
-			bracket: this.bracket!,
-		});
-		this.notify({
-			type: 'bracket_update',
-			data: {
-				bracket: this.bracket!,
+		setTimeout(() => {
+			const currentRound = this.bracket!.rounds[this.bracket!.rounds.length - 1];
+			const nextMatch = currentRound.find((match) => match.matchId === null);
+			if (!nextMatch) {
+				throw new Error("No match to start");
 			}
-		});
+			const matchId = this.gameStore.addGame(
+				p1,
+				p2,
+				{
+					tournamentId: this.id,
+					round: this.bracket!.rounds.length - 1,
+				},
+				this.onMatchEnd.bind(this)
+			);
+			nextMatch.matchId = matchId;
+			updateTournament(this.id, {
+				bracket: this.bracket!,
+			});
+			this.notify({
+				type: 'bracket_update',
+				data: {
+					bracket: this.bracket!,
+				}
+			});
+		}, 2000); //TODO: move hardcoded value
 	}
 
 	private onMatchEnd(matchId: number): void {
@@ -197,7 +225,9 @@ export class Tournament {
 		}
 		this.winners.push(winnerId);
 		match.winnerId = winnerId;
-		this.setupNextMatch();
+		setTimeout(() => {
+			this.setupNextMatch();
+		}, 2000); //TODO: move hardcoded value
 	}
 
 	public setPlayerReady(player: PlayerConnection): void {
@@ -223,6 +253,7 @@ export class Tournament {
 	}
 
 	public removePlayer(playerId: number): void {
+		console.log("Removing player from tournament", playerId);
 		if (this.status !== 'pending') {
 			throw new Error("Tournament is not pending");
 		}
@@ -230,13 +261,17 @@ export class Tournament {
 		if (playerIndex === -1) {
 			throw new Error("Player not found");
 		}
+		const player = this.players[playerIndex];
+		player.enteredTournament = null;
 		this.players.splice(playerIndex, 1);
+		this.spectators = this.spectators.filter((s) => s.id !== playerId);
 		this.notify({
 			type: 'left',
 			data: {
 				playerId,
 			}
 		});
+		console.log("Player removed from tournament: this.players", this.players);
 	}
 
 	public hasPlayer(playerId: number): boolean {
@@ -244,6 +279,7 @@ export class Tournament {
 	}
 
 	private generateBracketRound(): RoundMatch[] {
+		console.log("Generating bracket round");
 		const playerOrder: number[] = [];
 		if (this.winners.length === 0) {
 			this.winners = this.players.map((player) => player.id);
@@ -269,6 +305,7 @@ export class Tournament {
 				playerIds: { p1: playerOrder[i], p2: playerOrder[i + 1] },
 			});
 		}
+		this.winners = [];
 		return round;
 	}
 }

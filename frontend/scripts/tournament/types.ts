@@ -1,3 +1,4 @@
+import { GameParams, GameState } from "../game/GameTypes";
 import { Profile } from "../profile/Types";
 
 export type TournamentView = {
@@ -5,6 +6,7 @@ export type TournamentView = {
 	status: 'pending' | 'ongoing' | 'finished',
 	maxPlayers: number,
 	createdAt: number,
+	endedAt: number | null,
 	players: number[],
 	bracket: Bracket | null,
 }
@@ -29,7 +31,7 @@ export type Bracket = {
 };
 
 export type TournamentMsgOut = {
-	type: 'join' | 'leave',
+	type: 'join' | 'leave' | 'spectate',
 	data: {
 		tournamentId: number
 	}
@@ -60,4 +62,14 @@ export type TournamentMsgIn = {
 		tournamentId: number,
 		bracket: Bracket,
 	}
-}
+} | {
+	type: 'start_spectate',
+	data: {
+		gameParams: GameParams,
+		
+	}
+} | {
+	type: 'game_state',
+		data: GameState,
+		timestamp: number,
+};

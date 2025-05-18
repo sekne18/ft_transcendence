@@ -40,7 +40,7 @@ export function initGame(): void {
                 url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? `tournament/${tournament.id}` : "game"}/ws`,
             };
 
-            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, isTournament);
+            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, isTournament ? tournament : null);
             gameEngine.start();
         })
         .catch(error => {

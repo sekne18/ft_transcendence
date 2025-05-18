@@ -59,6 +59,12 @@ export class TournamentManager {
 		if (!tournament) {
 			throw new Error("Tournament not found");
 		}
+		tournament.getPlayerIds().forEach((playerId) => {
+			const player = this.connectedPlayers.get(playerId);
+			if (player) {
+				player.enteredTournament = null;
+			}
+		});
 		const unsubscribe = this.tournamentUnsubscribers.get(tournamentId);
 		if (unsubscribe) {
 			unsubscribe();
@@ -181,6 +187,8 @@ export class TournamentManager {
 			player.socket?.close();
 			player.socket = null;
 		}
+		console.log("Player disconnected", playerId);
+		console.log("Connected players", this.connectedPlayers);
 	}
 
 	private addPlayerToTournamentQueue(tournamentId: number, player: TournamentConnection): void {
@@ -199,8 +207,8 @@ export class TournamentManager {
 		if (!tournament) {
 			throw new Error("Tournament not found");
 		}
-		if (tournament.getStatus() !== 'pending') {
-			throw new Error("Tournament is not pending");
+		if (tournament.getStatus() !== 'ongoing') {
+			throw new Error("Tournament is not ongoing");
 		}
 		tournament.setPlayerReady(player);
 	}
@@ -211,6 +219,8 @@ export class TournamentManager {
 			throw new Error("Tournament not found");
 		}
 		if (tournament.getStatus() !== 'pending') return;
+		if (!tournament.hasPlayer(playerId))
+			throw new Error("Player not in tournament");
 		tournament.removePlayer(playerId);
 	}
 }

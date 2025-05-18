@@ -1,8 +1,11 @@
+import { GameRenderer } from "../game/GameRenderer";
+import { GameState } from "../game/GameTypes";
 import { Profile } from "../profile/Types";
+import { loadContent } from "../router/router";
 import { State } from "../state/State";
 import { showToast } from "../utils";
 import { wsConfig } from "../wsConfig";
-import { Bracket, Tournament, TournamentMatch, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
+import { Bracket, RoundMatch, Tournament, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
 export class TournamentManager {
 	private socket: WebSocket;
@@ -18,8 +21,25 @@ export class TournamentManager {
 	};
 	private tournaments: Map<number, Tournament> = new Map();
 	private tournamentContainer: HTMLDivElement;
+	private tournamentCanvas: HTMLCanvasElement;
+	private lastTournamentTime: number | null = null;
+	private gameRenderer: GameRenderer | null = null;
+	private gameState: GameState | null = null;
 
 	constructor(user: Profile) {
+		this.tournamentCanvas = document.getElementById("tournament-canvas") as HTMLCanvasElement;
+		this.tournamentCanvas.classList.add('hidden');
+		const closeBtn = document.getElementById('tournament-canvas-close-btn');
+		if (closeBtn) {
+			closeBtn.addEventListener('click', () => {
+				const tournamentId = State.getState("tournament")?.targetId;
+				if (!tournamentId) {
+					console.error('Tournament ID not found');
+					return;
+				}
+				this.toggleSpectate(tournamentId);
+			});
+		}
 		this.tournamentContainer = document.getElementById("tournament-container") as HTMLDivElement;
 		this.tournamentContainer.innerHTML = "";
 		// document.getElementById('modal-close-btn')?.addEventListener('click', this.closeJoinModal.bind(this));
@@ -28,27 +48,34 @@ export class TournamentManager {
 			this.closeJoinModal();
 		});
 		document.getElementById('modal-cancel-btn')?.addEventListener('click', this.closeJoinModal.bind(this));
+		const state = State.getState("tournament");
+		if (state && state.socket) {
+			this.socket = state.socket;
+		} else {
+			this.socket = new WebSocket(`${wsConfig.scheme}://${wsConfig.host}/api/tournament/ws`);
+			this.socket.addEventListener('open', () => {
+				console.log('Connected to tournament server');
+			}
+			);
+			this.socket.addEventListener('message', event => {
+				const msg = JSON.parse(event.data);
+				console.log('Received message:', msg);
+				this.processMsg(msg);
+			});
+			this.socket.addEventListener('close', () => {
+				console.log('Disconnected from tournament server');
+
+			});
+			this.socket.addEventListener('error', err => {
+				console.error('WebSocket error:', err);
+			});
+		}
 		State.setState("tournament", {
 			isPlaying: false,
 			targetId: null,
 			id: null,
-		});
-		this.socket = new WebSocket(`${wsConfig.scheme}://${wsConfig.host}/api/tournament/ws`);
-		this.socket.addEventListener('open', () => {
-			console.log('Connected to tournament server');
-		}
-		);
-		this.socket.addEventListener('message', event => {
-			const msg = JSON.parse(event.data);
-			console.log('Received message:', msg);
-			this.processMsg(msg);
-		});
-		this.socket.addEventListener('close', () => {
-			console.log('Disconnected from tournament server');
-
-		});
-		this.socket.addEventListener('error', err => {
-			console.error('WebSocket error:', err);
+			socket: this.socket,
+			watch: false
 		});
 		this.user = user; //TODO: if user is allowed to edit their profile during tournaments, this should be fetched every time
 		this.fetchTournamentList();
@@ -68,7 +95,6 @@ export class TournamentManager {
 					return response.json();
 				}
 				).then(data => {
-					console.log('Fetched player data:', data);
 					const player = data.user as Profile;
 					tournament.players.push(player);
 					this.renderTournaments();
@@ -98,6 +124,7 @@ export class TournamentManager {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
 			tournament.bracket = data.bracket;
+			console.log('Bracket updated:', tournament.bracket);
 			this.renderTournaments();
 		}
 		else {
@@ -108,10 +135,36 @@ export class TournamentManager {
 	private handleSetupMatch(data: {tournamentId: number, p1: number, p2: number}): void {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
+			if (data.p1 === this.user.id || data.p2 === this.user.id) {
+				const state = State.getState("tournament");
+				if (!state) {
+					console.error('Tournament state not found');
+					showToast('Error', 'Tournament state not found', 'error');
+					return;
+				}
+				state.isPlaying = true;
+				state.targetId = state.targetId;
+				state.id = tournament.id;
+				State.setState("tournament", state);
+				loadContent('/game');
+			} else {
+				tournament.status = 'ongoing';
+				const player1 = tournament.players.find(p => p.id === data.p1);
+				const player2 = tournament.players.find(p => p.id === data.p2);
+				if (player1 && player2) {
+					showToast('Match Setup', `Match setup between ${player1.username} and ${player2.username}`, 'info');
+				}
+				else {
+					console.error('Player not found:', data.p1, data.p2);
+				}
+				this.renderTournaments();
+			}
+		}
 			
 	}
 
 	private processMsg(msg: TournamentMsgIn): void {
+		console.log('Processing message:', msg);
 		switch (msg.type) {
 			case 'joined':
 				this.handleJoined(msg.data);
@@ -125,8 +178,18 @@ export class TournamentManager {
 			case 'setup_match':
 				this.handleSetupMatch(msg.data);
 				break;
+			// case 'start_spectate':
+			// 	this.gameRenderer = new GameRenderer(this.tournamentCanvas, msg.data.matchId, this.socket);
+			// 	this.tournamentCanvas.classList.remove('hidden');
+			// 	break;
+			// case 'game_state':
+			// 	if (this.gameRenderer) {
+			// 		this.gameState = msg.data;
+			// 		this.gameRenderer.updateGameState(this.gameState);
+			// 	}
+			// 	break;
 			default:
-				console.error('Unknown message type:', msg.type);
+				//console.error('Unknown message type:', msg.type);
 		}
 	}
 
@@ -175,7 +238,6 @@ export class TournamentManager {
 			showToast('Error', 'Target ID not found', 'error');
 			return;
 		}
-		console.log('Joining tournament with ID:', state.targetId);
 		this.socket.send(JSON.stringify({
 			type: 'join',
 			data: {
@@ -220,7 +282,6 @@ export class TournamentManager {
 				}
 				state.targetId = tournament.id;
 				State.setState("tournament", state);
-				console.log('setting targetId to', tournament.id);
 				this.openJoinModal();
 			});
 			headerActions.appendChild(joinButton);
@@ -268,50 +329,136 @@ export class TournamentManager {
 		`;
 	}
 
-	private renderMatchCardTree(tournament: Tournament, match: TournamentMatch): string {
-		console.log('Rendering match card:', match);
-		// const winnerClass = match.winner ? 'bg-green-900 border-green-500' : 'bg-[#272735] border-[#3A3A49]';
-		return `
-			<div class="rounded-md border bg-[#ffc038] border-[#d49204] p-2 w-52 text-white flex flex-col justify-between h-32">
-				<div>
-					<div class="flex justify-between items-center">
-						<span>${this.renderPlayerInfo(match.player1)} <span class="text-xs">${match.score?.split('-')[0] || ''}</span></span>
-					</div>
-					<div class="flex justify-between items-center">
-						<span>${this.renderPlayerInfo(match.player2)} <span class="text-xs">${match.score?.split('-')[1] || ''}</span></span>
-					</div>
-				</div>
-				<div class="flex justify-between items-center">
-					<span class="text-right text-xs text-gray-400">${match.status.replace('_', ' ')}</span>
-					${match.status === 'pending' && match.player1 && match.player2 && !tournament.players.some(p => p.id === this.user.id) ?
-				`<button class="text-indigo-500 hover:text-indigo-400 text-xs" onclick="requestSpectate('${match.id}')">Spectate</button>` : ''
+	private toggleSpectate(tournamentId: number): void {
+		const state = State.getState("tournament");
+		if (!state) {
+			console.error('Tournament state not found');
+			showToast('Error', 'Tournament state not found', 'error');
+			return;
+		}
+		let watch = false;
+		if (state.watch) {
+			watch = false;
+			this.gameRenderer = null;
+		} else {
+			watch = true;
+		}
+		state.watch = watch;
+		state.targetId = tournamentId;
+		State.setState("tournament", state);
+		this.socket.send(JSON.stringify({
+			type: 'spectate',
+			data: {
+				watch: watch,
+				tournamentId: tournamentId
 			}
-				</div>
-			</div>
-		`;
+		} as TournamentMsgOut));
+		this.tournamentCanvas.classList.toggle('hidden');
 	}
 
-	private renderRoundTree(tournament: Tournament, matches: TournamentMatch[], roundNumber: number): string {
-		const justifyContentClass = matches.length === 1 ? 'justify-center' : 'justify-around';
-		return `
-			<div class="flex flex-col items-center ${justifyContentClass} gap-y-4">
-				<h4 class="text-lg font-semibold mb-2">Round ${roundNumber}</h4>
-				<div class="flex ${justifyContentClass} gap-x-8">
-					${matches.map(match => this.renderMatchCardTree(tournament, match)).join('')}
+	private async renderMatchCardTree(tournament: Tournament, match: RoundMatch): Promise<string> {
+		console.log('Rendering match card:', match);
+		// const winnerClass = match.winner ? 'bg-green-900 border-green-500' : 'bg-[#272735] border-[#3A3A49]';
+		const player1: Profile = tournament.players.find(p => p.id === match.playerIds.p1)!;
+		const player2: Profile = tournament.players.find(p => p.id === match.playerIds.p2)!;
+		let matchDetails = null; 
+		if (match.matchId) {
+			const player1: Profile = tournament.players.find(p => p.id === match.playerIds.p1)!;
+			const player2: Profile = tournament.players.find(p => p.id === match.playerIds.p2)!;
+			const res = await fetch(`/api/match/${match.matchId}`, {
+				method: 'GET',
+				credentials: 'include'
+			
+			});
+			if (!res.ok) {
+				console.error('Failed to fetch match details:', res.statusText);
+				return `<div class="text-gray-500">Match details not available</div>`;
+			}
+			const data = await res.json();
+			if (!data) {
+				console.error('Match details not found');
+				return `<div class="text-gray-500">Match details not found</div>`;
+			}
+			matchDetails = data.match;
+		}
+		console.log('Match details:', matchDetails);
+		const containerDiv = document.createElement('div');
+		containerDiv.className = 'rounded-md border bg-[#ffc038] border-[#d49204] p-2 w-52 text-white flex flex-col justify-between h-32';
+		containerDiv.innerHTML = `
+			<div>
+				<div class="flex justify-between items-center">
+					<span>${this.renderPlayerInfo(player1)} <span class="text-xs">${matchDetails ? matchDetails?.player1_score : '0'}</span></span>
+				</div>
+				<div class="flex justify-between items-center">
+					<span>${this.renderPlayerInfo(player2)} <span class="text-xs">${matchDetails ? matchDetails?.player2_score : '0'}</span></span>
 				</div>
 			</div>
 		`;
+		const subContainerDiv = document.createElement('div');
+		subContainerDiv.className = 'flex justify-between items-center';
+		subContainerDiv.innerHTML = `
+			<span class="text-right text-xs text-gray-400">${matchDetails ? matchDetails?.status : 'pending'}</span>
+		`;
+		if (matchDetails && matchDetails.status !== 'finished') {
+			const spectateBtn = document.createElement('button');
+			spectateBtn.className = 'text-indigo-500 hover:text-indigo-400 text-xs';
+			spectateBtn.textContent = 'Spectate';
+			spectateBtn.addEventListener('click', () => {
+				this.toggleSpectate(tournament.id);
+			});
+			subContainerDiv.appendChild(spectateBtn);
+		}
+		containerDiv.appendChild(subContainerDiv);
+		return containerDiv.outerHTML;
+	}
+
+	private async renderRoundTree(tournament: Tournament, matches: RoundMatch[], roundNumber: number): Promise<string> {
+		console.log('Rendering round:', roundNumber, 'Matches:', matches);
+		const justifyContentClass = matches.length === 1 ? 'justify-center' : 'justify-around';
+		const containerDiv = document.createElement('div');
+		containerDiv.className = `flex flex-col items-center ${justifyContentClass} gap-y-4`;
+		const roundTitle = document.createElement('h4');
+		roundTitle.className = 'text-lg font-semibold mb-2';
+		roundTitle.textContent = `Round ${roundNumber}`;
+		containerDiv.appendChild(roundTitle);
+		const matchesDiv = document.createElement('div');
+		matchesDiv.className = `flex ${justifyContentClass} gap-x-8`;
+		for (const match of matches) {
+			const matchCard = await this.renderMatchCardTree(tournament, match);
+			matchesDiv.innerHTML += matchCard;
+		}
+		containerDiv.appendChild(matchesDiv);
+		return containerDiv.outerHTML;
+		// return `
+		// 	<div class="flex flex-col items-center ${justifyContentClass} gap-y-4">
+		// 		<h4 class="text-lg font-semibold mb-2">Round ${roundNumber}</h4>
+		// 		<div class="flex ${justifyContentClass} gap-x-8">
+		// 			${matches.map(async match => await this.renderMatchCardTree(tournament, match)).join('')}
+		// 		</div>
+		// 	</div>
+		// `;
 	}
 
 	private renderBracketTree(tournament: Tournament): HTMLDivElement {
 		const bracketDiv = document.createElement('div');
 		bracketDiv.className = 'flex flex-col items-center gap-y-12';
-		const rounds = Array.from(new Set(tournament.matches.map(m => m.round))).sort((a, b) => a - b);
 
+		if (!tournament.bracket) {
+			bracketDiv.innerHTML = '<p class="text-gray-500">No matches available</p>';
+			return bracketDiv;
+		}
+		const rounds = tournament.bracket.rounds.map((_, index) => index + 1);
 		rounds.forEach(roundNumber => {
-			const matchesInRound = tournament.matches.filter(match => match.round === roundNumber);
+			const matchesInRound = tournament.bracket?.rounds[roundNumber - 1] || [];
 			if (matchesInRound.length > 0) {
-				bracketDiv.innerHTML += this.renderRoundTree(matchesInRound, roundNumber);
+				this.renderRoundTree(tournament, matchesInRound, roundNumber)
+					.then(roundHtml => {
+						bracketDiv.innerHTML += roundHtml;
+					})
+					.catch(error => {
+						console.error('Error rendering round:', error);
+					}
+					);
 			}
 		});
 
@@ -371,7 +518,6 @@ export class TournamentManager {
 	}
 
 	private createTournamentElement(tournament: Tournament): HTMLDivElement {
-		console.log('Creating tournament element:', tournament);
 		const tournamentEl = document.createElement('div');
 		tournamentEl.id = `tournament-${tournament.id}`;
 		tournamentEl.className = 'bg-white shadow-md rounded-lg p-4 mb-4';
@@ -385,13 +531,77 @@ export class TournamentManager {
 		return tournamentEl;
 	}
 
+	private addFinishedTournaments(): void {
+		const before = this.lastTournamentTime ? this.lastTournamentTime : Date.now();
+		fetch(`/api/tournament/finished?limit=5&before=${before}`, {
+			method: 'GET',
+			credentials: 'include',
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			})
+			.then(async data => {
+				console.log('Finished tournaments data:', data);
+				const finishedTournaments = data.tournaments as TournamentView[];
+				console.log('Finished tournaments:', finishedTournaments);
+				if (finishedTournaments.length === 0) {
+					showToast('Info', 'No more tournaments available', 'info');
+					return;
+				}
+				this.lastTournamentTime = finishedTournaments[finishedTournaments.length - 1].endedAt;
+				for (const tournamentView of finishedTournaments) {
+					const tournament: Tournament = {
+						id: tournamentView.id,
+						maxPlayers: tournamentView.maxPlayers,
+						createdAt: tournamentView.createdAt,
+						status: tournamentView.status,
+						bracket: tournamentView.bracket,
+						players: []
+					};
+					for (const playerId of tournamentView.players) {
+							const res = await fetch(`/api/user/profile/${playerId}`, {
+								method: 'GET',
+								credentials: 'include',
+							});
+							if (!res.ok) {
+								showToast('Error', 'Failed to fetch player data', 'error');
+								throw new Error('Network response was not ok');
+							}
+							const data = await res.json();
+							tournament.players.push(data.user as Profile);
+						}
+					this.tournaments.set(tournament.id, tournament);
+				}
+				this.renderTournaments();
+			})
+			.catch(error => {
+				console.error('There was a problem with the fetch operation:', error);
+				showToast('Error', 'Failed to fetch finished tournaments', 'error');
+			}
+			);
+	}
+
+	private createFetchFinishedElement(): HTMLDivElement {
+		const fetchFinishedEl = document.createElement('div');
+		fetchFinishedEl.className = 'text-gray-500 text-center mt-4';
+		const fetchFinishedBtn = document.createElement('button');
+		fetchFinishedBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg';
+		fetchFinishedBtn.textContent = 'Fetch Finished Tournaments';
+		fetchFinishedBtn.addEventListener('click', this.addFinishedTournaments.bind(this));
+		fetchFinishedEl.appendChild(fetchFinishedBtn);
+		return fetchFinishedEl;
+	}
+
 	private renderTournaments(): void {
 		this.tournamentContainer.innerHTML = '';
 		this.tournaments.forEach(tournament => {
-			console.log('Rendering tournament:', tournament);
 			const tournamentEl = this.createTournamentElement(tournament);
 			this.tournamentContainer.appendChild(tournamentEl);
 		});
+		this.tournamentContainer.appendChild(this.createFetchFinishedElement());
 	}
 
 	private fetchTournamentList(): void {
@@ -405,8 +615,7 @@ export class TournamentManager {
 				}
 				return response.json();
 			})
-			.then(data => {
-				console.log('Fetched tournaments:', data);
+			.then(async data => {
 				this.tournaments = new Map(data.tournaments.map((t: TournamentView) => {
 					const tournament: Tournament = {
 						id: t.id,
@@ -416,29 +625,25 @@ export class TournamentManager {
 						bracket: t.bracket,
 						players: []
 					};
-					for (const playerId of t.players) {
-						fetch(`/api/user/profile/${playerId}`, {
-							method: 'GET',
-							credentials: 'include',
-						})
-							.then(response => {
-								if (!response.ok) {
-									throw new Error('Network response was not ok');
-								}
-								return response.json();
-							}
-							).then(data => {
-								data = data.user as Profile;
-								tournament.players.push(data);
-							})
-							.catch(error => {
-								console.error('There was a problem with the fetch operation:', error);
-								showToast('Error', 'Failed to fetch player data', 'error');
-							});
-					}
 					return [tournament.id, tournament];
 				}));
-				console.log('Tournaments:', this.tournaments);
+				for (const tournamentView of data.tournaments) {
+					const tournament = this.tournaments.get(tournamentView.id);
+					if (tournament) {
+						for (const playerId of tournamentView.players) {
+							const res = await fetch(`/api/user/profile/${playerId}`, {
+								method: 'GET',
+								credentials: 'include',
+							});
+							if (!res.ok) {
+								showToast('Error', 'Failed to fetch player data', 'error');
+								throw new Error('Network response was not ok');
+							}
+							const data = await res.json();
+							tournament.players.push(data.user as Profile);
+						}
+					}
+				}
 				this.renderTournaments();
 			})
 			.catch(error => {

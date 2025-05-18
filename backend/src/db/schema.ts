@@ -49,7 +49,7 @@ export function initializeDatabase() {
 				max_players INTEGER NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				start_at DATETIME DEFAULT NULL,
-				end_at DATETIME DEFAULT NULL,
+				ended_at DATETIME DEFAULT NULL,
 				status TEXT DEFAULT 'pending', -- 'pending', 'ongoing', 'finished'
 				bracket TEXT DEFAULT NULL,
 				FOREIGN KEY (winner_id) REFERENCES users(id)
@@ -74,7 +74,7 @@ export function initializeDatabase() {
 				started_at DATETIME NOT NULL,
 				ended_at DATETIME DEFAULT NULL,
 
-				status TEXT DEFAULT 'pending', -- 'pending', 'finished', 'disconnected'
+				status TEXT DEFAULT 'ongoing', -- 'ongoing', 'finished', 'disconnected'
 
 				FOREIGN KEY (player1_id) REFERENCES users(id),
 				FOREIGN KEY (player2_id) REFERENCES users(id),

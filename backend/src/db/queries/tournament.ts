@@ -9,7 +9,7 @@ export function getAllTournaments() {
 			tournaments.max_players,
 			tournaments.created_at,
 			tournaments.start_at,
-			tournaments.end_at,
+			tournaments.ended_at,
 			tournaments.status,
 			tournaments.bracket
 		FROM tournaments
@@ -17,7 +17,7 @@ export function getAllTournaments() {
 	return stmt.all();
 }
 
-export function getCompletedTournaments() {
+export function getCompletedTournaments(limit: number = 10, before: number) {
 	const stmt = db.prepare(`
 		SELECT
 			tournaments.id,
@@ -25,13 +25,16 @@ export function getCompletedTournaments() {
 			tournaments.max_players,
 			tournaments.created_at,
 			tournaments.start_at,
-			tournaments.end_at,
+			tournaments.ended_at,
 			tournaments.status,
 			tournaments.bracket
 		FROM tournaments
 		WHERE status = 'finished'
+		AND ended_at < ?
+		ORDER BY ended_at DESC
+		LIMIT ?
 	`);
-	return stmt.all();
+	return stmt.all(before, limit);
 }
 
 export function getTournamentById(tournamentId: number) {
@@ -42,7 +45,7 @@ export function getTournamentById(tournamentId: number) {
 			tournaments.max_players,
 			tournaments.created_at,
 			tournaments.start_at,
-			tournaments.end_at,
+			tournaments.ended_at,
 			tournaments.status,
 			tournaments.bracket
 		FROM tournaments
@@ -59,7 +62,7 @@ export function getLiveTournaments() {
 			tournaments.max_players,
 			tournaments.created_at,
 			tournaments.start_at,
-			tournaments.end_at,
+			tournaments.ended_at,
 			tournaments.status,
 			tournaments.bracket
 		FROM tournaments
@@ -107,7 +110,7 @@ export function updateTournament(
 		values.push(data.startTime);
 	}
 	if (data.endTime !== undefined) {
-		fields.push("end_at = ?");
+		fields.push("ended_at = ?");
 		values.push(data.endTime);
 	}
 	if (data.status !== undefined) {

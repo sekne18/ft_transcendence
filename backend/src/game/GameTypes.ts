@@ -1,5 +1,6 @@
 import fastifyWebsocket from "@fastify/websocket";
 import { AIPlayer } from "./AIPlayer.js";
+import { ProxyPlayer } from "./ProxyPlayer.js";
 
 export type MatchMakerParams = {
 	ratingWindowMin: number,
@@ -39,9 +40,17 @@ export type AIPlayerParams = {
 	skill_deviation: number, // [0, ...[ 0 = smartest
 }
 
+export interface PlayerSocket {
+	on(event: string, callback: (data: any) => void): void;
+	send(msg: string): void;
+	close(): void;
+	close(code: number): void;
+	close(code: number, reason: string): void;
+}
+
 export type PlayerConnection = {
 	id: number,
-	socket: fastifyWebsocket.WebSocket | AIPlayer,
+	socket: PlayerSocket, //fastifyWebsocket.WebSocket | AIPlayer | ProxyPlayer,
 };
 
 export type QueuedPlayer = {

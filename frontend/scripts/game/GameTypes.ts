@@ -3,6 +3,15 @@ export type vec2d = {
 	y: number,
 };
 
+export type TournamentParams = {
+	tournamentId: number,
+	isPlaying: boolean,
+}
+
+export type WsParams = {
+	url: string,
+}
+
 export type GameParams = {
 	paddle_offset: number, //!! arena_w > (paddle_offset + paddle_w) * 2 + ball_r !!
 	paddle_gap: number, //!! arena_h > paddle_gap * 2 + paddle_h !!
@@ -29,10 +38,6 @@ export type RenderDetails = {
 	max_canvas_width: number,
 	canvas_margin: number,
 };
-
-export type WsParams = {
-	url: string,
-}
 
 export type GameStatus = 'idle' | 'idle-tournament' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'gameover-tournament' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
 

@@ -31,7 +31,7 @@ export class GameStore {
 		session.spectate(spectator);
 	}
 
-	public removeGame(sessionId: number): void {
+	private removeGame(sessionId: number): void {
 		this.gameSessions.delete(sessionId);
 	}
 }

@@ -12,6 +12,7 @@ export class GameSession {
 	private startTime: number | null = null;
 	private params: GameParams;
 	private matchId: number;
+	private status: 'ongoing' | 'finished' | 'disconnected' = 'ongoing';
 	private onEnd: ((id: number) => void) | null = null;
 
 	constructor(Player1: PlayerConnection, Player2: PlayerConnection, gameParams: GameParams, matchParams: MatchParams, onEnd?: (id: number) => void) {
@@ -83,7 +84,6 @@ export class GameSession {
 		if (this.players.length < 2) {
 			throw new Error("Not enough players");
 		}
-		this.matchId = createMatch(this.players[0].id, this.players[1].id, 0, 0);
 		this.intervalId = setInterval(() => {
 			this.game.updateState(1000 / this.params.FPS);
 			this.broadcastMsg({
@@ -105,6 +105,7 @@ export class GameSession {
 	}
 
 	public stopGame(): void {
+		console.log("Stopping game");
 		this.players.forEach((player) => {
 			player.socket.close(1000, "Game Over");
 		});
@@ -115,7 +116,10 @@ export class GameSession {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
-		if (this.onEnd) this.onEnd(this.matchId);
+		if (this.onEnd) {
+			this.onEnd(this.matchId);
+			this.onEnd = null;
+		}
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {
@@ -151,12 +155,14 @@ export class GameSession {
 	};
 
 	private onGameOver(): void {
+		this.status = 'finished';
 		const gameState = this.game.getState();
 		updateMatch(this.matchId, {
 			winnerId: gameState.left_score > gameState.right_score ? this.players[0].id : this.players[1].id,
 			endTime: Date.now(),
 			score1: gameState.left_score,
-			score2: gameState.right_score
+			score2: gameState.right_score,
+			status: 'finished'
 		});
 		this.broadcastMsg({
 			type: "game_event",
@@ -174,6 +180,10 @@ export class GameSession {
 	};
 
 	private onDisconnect(player: PlayerConnection): void {
+		if (this.status === 'disconnected' || this.status === 'finished') {
+			return;
+		}
+		this.status = 'disconnected';
 		this.players = this.players.filter((p) => p.id !== player.id);
 		const gameState = this.game.getState();
 		updateMatch(this.matchId, {
