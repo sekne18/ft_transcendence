@@ -1,4 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
+import { languageService } from "../i18n";
 import { getDataFromForm, getElement, showToast } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
@@ -7,17 +8,17 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-let otherId: number | undefined = undefined;
+let otherId: number;
 
 export function initProfile(userId?: number): void {
   if (userId && userId > 0) {
     otherId = userId;
-    fetchUserProfile(userId).then((userProfile) => {
+    fetchUserProfile(otherId).then((userProfile) => {
       renderUserProfile(userProfile);
-      renderMatchHistory(userId);
+      renderMatchHistory(otherId);
     });
+    setClickEvents();
     setProfileButtons(true);
-
   } else {
     setProfileButtons(false);
 
@@ -34,33 +35,188 @@ export function initProfile(userId?: number): void {
   );
 }
 
-function setProfileButtons(isFriend: boolean) {
+function setProfileButtons(isOther: boolean) {
   const editProfileBtn = getElement('edit-profile-btn') as HTMLButtonElement;
   const friendDiv = getElement('friend-div') as HTMLDivElement;
-  const addFriendBtn = getElement('add-friend-btn') as HTMLButtonElement;
-  const blockBtn = getElement('block-btn') as HTMLButtonElement;
-  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
+  const addFriendBtn = getElement('profile-add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
 
-  if (isFriend) {
+  if (isOther) {
+    // fetch friend status to determine which buttons to show
     editProfileBtn.classList.add('hidden');
     friendDiv.classList.remove('hidden');
 
-    addFriendBtn.addEventListener('click', () => {
-      // addFriendBtn();
-    });
-
-    blockBtn.addEventListener('click', () => {
-      // blockUser();
-    });
-
-    chatBtn.addEventListener('click', () => {
-      startChat();
+    fetch(`/api/friends/status/${otherId}`, {
+      method: 'GET',
+      credentials: 'include'
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      console.log(res);
+      if (res.success) {
+        const status = res.status;
+        if (status === 'accepted') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.remove('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        } else if (status === 'pending') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.remove('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        } else if (status === 'blocked') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.add('hidden');
+          blockBtn.classList.add('hidden');
+          unblockBtn.classList.remove('hidden');
+        } else {
+          addFriendBtn.classList.remove('hidden');
+          removeFriendBtn.classList.add('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        }
+      }
     });
 
   } else {
     editProfileBtn.classList.remove('hidden');
     friendDiv.classList.add('hidden');
   }
+}
+
+function setClickEvents() {
+  const addFriendBtn = getElement('profile-add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
+
+  removeFriendBtn.addEventListener('click', () => {
+    fetch('/api/friends/decline-friend-request', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('Friend removed successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to remove friend.', '', 'error');
+      }
+    });
+  });
+
+  unblockBtn.addEventListener('click', () => {
+    fetch('/api/friends/unblock', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('User unblocked successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to unblock user.', '', 'error');
+      }
+    });
+  });
+
+  addFriendBtn.addEventListener('click', () => {
+    fetch('/api/friends/send-friend-request', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('Friend request sent successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to send friend request.', '', 'error');
+      }
+    });
+  });
+
+  blockBtn.addEventListener('click', () => {
+    fetch('/api/friends/block', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('User blocked successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to block user.', '', 'error');
+      }
+    });
+  });
+
+  chatBtn.addEventListener('click', () => {
+    startChat();
+  });
 }
 
 function startChat() {
@@ -196,14 +352,10 @@ function fillProfileData(profile: Profile) {
 
 // Render match history
 function renderMatchHistory(userId?: number) {
-  const matchHistoryContainer = getElement('match-history');
   const recentActivityContainer = getElement('recent-activity');
-  // Clear containers
-  matchHistoryContainer.innerHTML = '';
   recentActivityContainer.innerHTML = '';
 
   const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
-
 
   fetch(apiUrl, {
     method: 'GET',
@@ -220,13 +372,12 @@ function renderMatchHistory(userId?: number) {
       return;
     }
     matchHistory.forEach(match => {
-      const matchElement = createMatchElement(match);
-      matchHistoryContainer.appendChild(matchElement);
       if (matchHistory.indexOf(match) < 5) {
         const recentMatchElement = createMatchElement(match, false);
         recentActivityContainer.appendChild(recentMatchElement);
       }
     });
+    languageService.init();
   });
 
 }
@@ -246,7 +397,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
           ${icon}
         </div>
         <div>
-          <p class="font-semibold">Match vs ${match.opponent}</p>
+          <p class="font-semibold"><span data-i18n="profile_versus"></span> ${match.opponent}</p>
           <p class="text-gray-400 text-sm">${date}</p>
         </div>
       </div>

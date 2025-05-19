@@ -24,11 +24,14 @@ import dotenv from 'dotenv';
 import { TournamentManager } from './tournament/TournamentManager.js';
 import { User } from './types.js';
 import { ChatManager } from './chat/ChatManager.js';
+import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers, blockFriend, sendFriendRequest, acceptFriendRequest, declineFriendRequest, unblockFriend, getFriendshipStatus } from './db/queries/friends.js';
+import { parseArgs } from 'util';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { defaultAvatarPath } from './Config.js';
 import { GameStore } from './game/GameStore.js';
 import { getCompletedTournaments } from './db/queries/tournament.js';
 import { Bracket } from './tournament/Types.js';
+
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -1008,6 +1011,183 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	}
 	await markMessagesAsRead(chatId, id);
 	return reply.send({ success: true });
+});
+
+fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '' || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getAllFriends(id, searchVal);
+	let users: FriendListPlayer[] | undefined = undefined;
+	if (friendsList.length == 0)
+		users = await getAllUsers(id, searchVal);
+	if (friendsList.length !== 0)
+		return reply.send({ success: true, friendsList: friendsList, isFriends: true, type: 'all' });
+	else
+		return reply.send({ success: true, friendsList: users, isFriends: false, type: 'all' });
+});
+
+fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getOnlineFriends(id, searchVal);
+	// let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'online' });
+});
+
+fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getPendingFriends(id, searchVal);
+	// let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'pending' });
+});
+
+fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getBlockedFriends(id, searchVal);
+	// let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'blocked' });
+});
+
+fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await sendFriendRequest(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/accept-request', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await acceptFriendRequest(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/decline-request', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await declineFriendRequest(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/block', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await blockFriend(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await unblockFriend(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.get('/api/friends/status/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	// Get the status of the friendship between two users
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.params as any).id);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+
+	const status = await getFriendshipStatus(id, otherId);
+	return reply.send({ success: true, status });
 });
 
 try {

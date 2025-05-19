@@ -32,24 +32,23 @@
                     <div class="grid grid-cols-3 w-full gap-4 mt-4">
                         <div class="flex flex-col items-center">
                             <span id="games-played" class="text-2xl font-bold">0</span>
-                            <span class="text-gray-500 text-sm">Games</span>
+                            <span class="text-gray-500 text-sm" data-i18n="user_games"></span>
                         </div>
                         <div class="flex flex-col items-center">
                             <span id="wins" class="text-2xl font-bold text-green-500">0</span>
-                            <span class="text-gray-500 text-sm">Wins</span>
+                            <span class="text-gray-500 text-sm" data-i18n="user_wins"></span>
                         </div>
                         <div class="flex flex-col items-center">
                             <span id="losses" class="text-2xl font-bold text-red-500">0</span>
-                            <span class="text-gray-500 text-sm">Losses</span>
+                            <span class="text-gray-500 text-sm" data-i18n="user_losses"></span>
                         </div>
                     </div>
 
-                    <button id="edit-profile-btn"
+                    <button id="edit-profile-btn" data-i18n="edit_profile_btn"
                         class="mt-4 w-full bg-[#262649] hover:bg-[#232344] text-white font-semibold py-2 px-4 rounded transition">
-                        Edit Profile
                     </button>
                     <div id="friend-div" class="w-full">
-                        <div id="add-friend-btn"
+                        <div id="profile-add-friend-btn"
                             class="cursor-pointer flex justify-center mt-4 w-full bg-[#1D4036] hover:bg-[#18362e] text-[#18B75E] font-semibold py-2 px-4 rounded-xl transition">
                             <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em"
                                 style="align-self:center; margin-right: 10px" viewBox="0 0 640 512">
@@ -58,11 +57,22 @@
                                         d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
                                 </g>
                             </svg>
-                            <p>
-                                Add Friend
+                            <p data-i18n="add_friend_btn">
                             </p>
                         </div>
-                        <div id="block-btn"
+                        <div id="profile-remove-friend-btn"
+                            class="cursor-pointer flex justify-center mt-4 w-full bg-[#401d1d] hover:bg-[#361818] text-[#F54180] font-semibold py-2 px-4 rounded-xl transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em"
+                                style="align-self:center; margin-right: 10px" viewBox="0 0 640 512">
+                                <g fill="#F54180">
+                                    <path
+                                        d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
+                                </g>
+                            </svg>
+                            <p data-i18n="remove_friend_btn">
+                            </p>
+                        </div>
+                        <div id="profile-block-btn"
                             class="cursor-pointer flex justify-center mt-4 w-full hover:bg-[#381528] text-[#F54180] font-semibold py-2 px-4 rounded-xl transition">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1em" height="1em"
                                 style="align-self:center; margin-right: 10px">
@@ -71,8 +81,19 @@
                                         d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z" />
                                 </g>
                             </svg>
-                            <p>
-                                Block
+                            <p data-i18n="block_btn">
+                            </p>
+                        </div>
+                        <div id="profile-unblock-btn"
+                            class="cursor-pointer flex justify-center mt-4 w-full hover:bg-[#381528] text-[#F54180] font-semibold py-2 px-4 rounded-xl transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1em" height="1em"
+                                style="align-self:center; margin-right: 10px">
+                                <g fill="#F54180">
+                                    <path
+                                        d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z" />
+                                </g>
+                            </svg>
+                            <p data-i18n="unblock_btn">
                             </p>
                         </div>
                         <div id="chat-btn"
@@ -84,8 +105,7 @@
                                         d="M160 368c26.5 0 48 21.5 48 48l0 16 72.5-54.4c8.3-6.2 18.4-9.6 28.8-9.6L448 368c8.8 0 16-7.2 16-16l0-288c0-8.8-7.2-16-16-16L64 48c-8.8 0-16 7.2-16 16l0 288c0 8.8 7.2 16 16 16l96 0zm48 124l-.2 .2-5.1 3.8-17.1 12.8c-4.8 3.6-11.3 4.2-16.8 1.5s-8.8-8.2-8.8-14.3l0-21.3 0-6.4 0-.3 0-4 0-48-48 0-48 0c-35.3 0-64-28.7-64-64L0 64C0 28.7 28.7 0 64 0L448 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64l-138.7 0L208 492z" />
                                 </g>
                             </svg>
-                            <p>
-                                Chat
+                            <p data-i18n="chat_btn">
                             </p>
                         </div>
                         </button>
@@ -102,11 +122,11 @@
                         <ul class="flex flex-wrap mb-4 rounded-lg bg-[#27272A]" id="tabs-list">
                             <li class="bg-[#3F3F46] m-1 rounded-lg">
                                 <button class="p-2 border-b-2 border-transparent tab-button active"
-                                    data-tab="stats">Statistics</button>
+                                    data-tab="stats" data-i18n="statistics_tab" ></button>
                             </li>
-                            <li class="m-1">
+                            <li id="pending-requests-tab" class="m-1 hidden">
                                 <button class="p-2 border-b-2 border-transparent hover:text-gray-300 tab-button"
-                                    data-tab="history">Match History</button>
+                                    data-tab="requests">Pending requests</button>
                             </li>
                         </ul>
                     </div>
@@ -116,11 +136,11 @@
                     <div id="stats-content" class="tab-content active">
                         <div class="space-y-6">
                             <div class="bg-[#1E1E2A] rounded-lg p-4">
-                                <h3 class="text-lg font-semibold mb-4">Performance</h3>
+                                <h3 class="text-lg font-semibold mb-4" data-i18n="performance"></h3>
                                 <div class="space-y-4">
                                     <div>
                                         <div class="flex justify-between mb-1">
-                                            <span class="text-gray-500">Win Rate</span>
+                                            <span class="text-gray-500" data-i18n="win_rate"></span>
                                             <span id="win-rate" class="font-semibold">0%</span>
                                         </div>
                                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -131,7 +151,7 @@
 
                                     <div>
                                         <div class="flex justify-between mb-1">
-                                            <span class="text-gray-500">Average Score</span>
+                                            <span class="text-gray-500" data-i18n="avg_score"></span>
                                             <span class="font-semibold">4.2 - 2.8</span>
                                         </div>
                                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -141,7 +161,7 @@
 
                                     <div>
                                         <div class="flex justify-between mb-1">
-                                            <span class="text-gray-500">Longest Win Streak</span>
+                                            <span class="text-gray-500" data-i18n="longest_streak"></span>
                                             <span class="font-semibold">4 games</span>
                                         </div>
                                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -151,20 +171,21 @@
                                 </div>
                             </div>
                             <div class="bg-[#1E1E2A] rounded-lg p-4">
-                                <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+                                <h3 class="text-lg font-semibold mb-4" data-i18n="recent_matches"></h3>
                                 <div id="recent-activity" class="space-y-3">
                                     <!-- Recent match history items will be populated here -->
+                                </div>
+                            </div>
+                            <!-- Match History Tab Content -->
+                            <div id="requests-content" class="tab-content hidden">
+                                <h3 class="text-lg font-semibold mb-4" >Pending Requests</h3>
+                                <div id="pending-requests" class="space-y-4">
+                                    
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Match History Tab Content -->
-                    <div id="history-content" class="tab-content hidden">
-                        <div id="match-history" class="space-y-4">
-                            <!-- Match history items will be populated here -->
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -176,7 +197,7 @@
     class="fixed inset-0 bg-[#000000ca] bg-opacity-50 z-50 flex items-center justify-center hidden">
     <div class="bg-[#15151E] rounded-lg shadow-lg max-w-2xl w-full mx-4">
         <div class="flex justify-between items-center p-4 border-b border-[#43454b]">
-            <h2 class="text-xl font-bold">Edit Profile</h2>
+            <h2 class="text-xl font-bold" data-i18n="edit_profile_btn"></h2>
             <button id="close-modal" class="text-gray-400 hover:text-white">
                 <i class="fas fa-times"></i>
             </button>
@@ -187,47 +208,42 @@
                     <div class="flex flex-col items-center gap-4 md:w-1/3">
                         <img id="avatar-input" src="/uploads/avatars/default.png" alt="Avatar"
                             class="w-32 h-32 rounded-full object-cover border-4 border-blue-500" />
-                        <label for="change-avatar-btn"
+                        <label for="change-avatar-btn" data-i18n="change_avatar_btn"
                             class="cursor-pointer bg-[#262649] hover:bg-[#232344] w-full text-white px-4 py-2 rounded-lg flex items-center gap-2 justify-center">
-                            Change Avatar
                         </label>
                         <input type="file" id="change-avatar-btn" class="hidden" name="file" />
-                        <!-- <button type="button" id="change-avatar-btn"
-                            class="bg-[#262649] hover:bg-[#232344] text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                            Change Avatar
-                        </button> -->
                     </div>
 
                     <div class="flex-1 space-y-4">
                         <div class="space-y-4">
-                            <h4 class="text-lg font-semibold">Basic Information</h4>
+                            <h4 class="text-lg font-semibold" data-i18n="edit_basic_section"></h4>
                             <div>
                                 <label for="display-name-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1">Display Name</label>
+                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_display_name"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
 
                                     </div>
                                     <input type="text" id="display-name-input" name="display_name"
                                         class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
-                                        placeholder="Enter your username">
+                                        placeholder="Enter your display name">
                                 </div>
                             </div>
                             <div>
                                 <label for="username-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_username"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
 
                                     </div>
                                     <input disabled type="username" id="username-input" name="username"
                                         class="bg-[#1E1E2A] opacity-40 text-white rounded-lg block w-full pl-10 p-2.5"
-                                        placeholder="Enter your email">
+                                        placeholder="Enter your username">
                                 </div>
                             </div>
                             <div>
                                 <label for="email-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_email">Email</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
 
@@ -240,10 +256,10 @@
                         </div>
 
                         <div class="border-t border-[#43454b] my-4 pt-4">
-                            <h4 class="text-lg font-semibold">Change Password</h4>
+                            <h4 class="text-lg font-semibold" data-i18n="edit_change_pass"></h4>
                             <div class="mt-4">
                                 <label for="current-password-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1">Current Password</label>
+                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_current_pass"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <i class="fas fa-lock text-gray-400"></i>
@@ -254,8 +270,7 @@
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <label for="new-password-input" class="block text-sm font-medium text-gray-400 mb-1">New
-                                    Password</label>
+                                <label for="new-password-input" class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_new_pass"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <i class="fas fa-key text-gray-400"></i>
@@ -267,7 +282,7 @@
                             </div>
                             <div class="mt-4">
                                 <label for="confirm-password-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1">Confirm New Password</label>
+                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_conf_new_pass"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <i class="fas fa-check-circle text-gray-400"></i>
@@ -279,12 +294,11 @@
                             </div>
                         </div>
                         <div class="space-y-4 mt-8">
-                            <h4 class="text-lg font-semibold">Security</h4>
+                            <h4 class="text-lg font-semibold" data-i18n="edit_security">Security</h4>
                             <div class="flex justify-between items-center p-4 bg-[#1E1E2A] rounded-lg">
                                 <div>
-                                    <p class="font-semibold">Two-Factor Authentication</p>
-                                    <p class="text-gray-500 text-sm">
-                                        Add an extra layer of security to your account
+                                    <p class="font-semibold" data-i18n="edit_2fa"></p>
+                                    <p class="text-gray-500 text-sm" data-i18n="edit_2fa_desc">
                                     </p>
                                 </div>
                                 <label class="inline-flex relative items-center cursor-pointer" for="toggle-2fa">
@@ -299,11 +313,9 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 p-4 border-t border-[#43454b]">
-                <button type="button" id="cancel-edit" class="text-red-500 hover:font-bold px-4 py-2 rounded-lg">
-                    Cancel
+                <button data-i18n="edit_cancel_btn" type="button" id="cancel-edit" class="text-red-500 hover:font-bold px-4 py-2 rounded-lg">
                 </button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                    Save Changes
+                <button data-i18n="edit_save_btn" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                 </button>
             </div>
         </form>
@@ -315,15 +327,14 @@
         <div class="flex justify-between items-center p-4 border-b border-[#43454b]">
             <div class="flex items-center gap-2">
                 <i class="fas fa-shield-alt text-blue-500"></i>
-                <h2 class="text-xl font-bold">Set Up Two-Factor Authentication</h2>
+                <h2 class="text-xl font-bold" data-i18n="twoFA_title"></h2>
             </div>
             <button id="close-2fa-modal" class="text-gray-400 hover:text-white">&times;</button>
         </div>
 
         <div class="p-6 space-y-6">
             <div class="text-center">
-                <p class="text-gray-400 mb-4">
-                    Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                <p class="text-gray-400 mb-4" data-i18n="twoFA_desc">
                 </p>
                 <div class="flex justify-center">
                     <div class="bg-white p-4 rounded-lg">
@@ -339,14 +350,14 @@
             </div>
 
             <div class="space-y-2">
-                <p class="text-sm text-gray-400">Enter this code manually in your authenticator app:</p>
+                <p class="text-sm text-gray-400" data-i18n="twoFA_enter_code"></p>
                 <div class="bg-[#1E1E2A] rounded-lg p-2">
                     <code id="2fa-secret" class="text-lg font-mono tracking-wider text-white"></code>
                 </div>
             </div>
 
             <div class="space-y-2">
-                <p class="text-sm text-gray-400">Enter the verification code from your authenticator app:</p>
+                <p class="text-sm text-gray-400" data-i18n="twoFA_verif_code"></p>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-key text-gray-400"></i>
                     <input type="text" id="2fa-code" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]*"
@@ -357,10 +368,9 @@
         </div>
 
         <div class="flex justify-end gap-2 px-6 pb-6">
-            <button id="cancel-2fa" class="text-red-500 p-2 hover:underline">Cancel</button>
-            <button id="confirm-2fa"
+            <button id="cancel-2fa" class="text-red-500 p-2 hover:underline" data-i18n="edit_cancel_btn"></button>
+            <button id="confirm-2fa" data-i18n="twoFA_enable_btn" type="button"
                 class="bg-blue-600 text-white font-semibold px-4 py-2 rounded hover:bg-blue-700 transition">
-                Verify & Enable
             </button>
         </div>
     </div>

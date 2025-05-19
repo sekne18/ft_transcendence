@@ -13,7 +13,7 @@ export function createUser({ username, display_name, email, hash, avatarUrl }: {
   // Check if the username or email already exists and return null if it does
   const existingUser = getUserByEmail(email) || getUserByUsername(username) as User;
   if (existingUser) {
-    return existingUser.id;
+  return existingUser.id;
   }
   const insertUser = db.prepare(`
     INSERT INTO users (username, display_name, email, password, avatar_url)
