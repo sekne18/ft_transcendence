@@ -1,15 +1,31 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
-import { getDataFromForm, getElement } from "../utils";
+import { languageService } from "../i18n";
+import { getDataFromForm, getElement, showToast } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
+import { translations } from "../i18n/translations";
+
 
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-export function initProfile(): void {
-  renderUserProfile();
-  renderMatchHistory()
+let otherId: number;
+
+export function initProfile(userId?: number): void {
+  if (userId && userId > 0) {
+    otherId = userId;
+    fetchUserProfile(otherId).then((userProfile) => {
+      renderUserProfile(userProfile);
+      renderMatchHistory(otherId);
+    });
+    setClickEvents();
+    setProfileButtons(true);
+  } else {
+    setProfileButtons(false);
+    renderUserProfile();
+    renderMatchHistory();
+  }
 
   const modalManager = new ModalManager("edit-profile-modal");
 
@@ -18,6 +34,249 @@ export function initProfile(): void {
     resetEditProfileForm,
     onAvatarChange
   );
+}
+
+function setProfileButtons(isOther: boolean) {
+  const editProfileBtn = getElement('edit-profile-btn') as HTMLButtonElement;
+  const friendDiv = getElement('friend-div') as HTMLDivElement;
+  const addFriendBtn = getElement('profile-add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
+
+  if (isOther) {
+    // fetch friend status to determine which buttons to show
+    editProfileBtn.classList.add('hidden');
+    friendDiv.classList.remove('hidden');
+
+    fetch(`/api/friends/status/${otherId}`, {
+      method: 'GET',
+      credentials: 'include'
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      console.log(res);
+      if (res.success) {
+        const status = res.status;
+        if (status === 'accepted') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.remove('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        } else if (status === 'pending') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.remove('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        } else if (status === 'blocked') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.add('hidden');
+          blockBtn.classList.add('hidden');
+          unblockBtn.classList.remove('hidden');
+        } else {
+          addFriendBtn.classList.remove('hidden');
+          removeFriendBtn.classList.add('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        }
+      }
+    });
+
+  } else {
+    editProfileBtn.classList.remove('hidden');
+    friendDiv.classList.add('hidden');
+  }
+}
+
+function setClickEvents() {
+  const addFriendBtn = getElement('profile-add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
+
+  removeFriendBtn.addEventListener('click', () => {
+    fetch('/api/friends/decline-friend-request', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('Friend removed successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to remove friend.', '', 'error');
+      }
+    });
+  });
+
+  unblockBtn.addEventListener('click', () => {
+    fetch('/api/friends/unblock', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('User unblocked successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to unblock user.', '', 'error');
+      }
+    });
+  });
+
+  addFriendBtn.addEventListener('click', () => {
+    fetch('/api/friends/send-friend-request', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('Friend request sent successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to send friend request.', '', 'error');
+      }
+    });
+  });
+
+  blockBtn.addEventListener('click', () => {
+    fetch('/api/friends/block', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('User blocked successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to block user.', '', 'error');
+      }
+    });
+  });
+
+  chatBtn.addEventListener('click', () => {
+    startChat();
+  });
+}
+
+function startChat() {
+  if (!otherId) {
+    console.error('User ID is not defined.');
+    return;
+  }
+
+  fetch('/api/chat/register', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      otherId: otherId,
+    }),
+})
+    .then(res => {
+        if (res.status === 401) {
+            window.location.href = '/auth';
+            return null;
+        }
+        return res.json();
+    })
+    .then(data => {
+      console.log(data);
+        if (data.success) {
+          // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
+          // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
+          // chatWindow.classList.add("w-0", "h-0", "scale-0");
+          showToast('Chat started successfully!', '', 'success');
+        } else {
+            console.error('Chat failed:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error during login:', error);
+    });
+}
+
+async function fetchUserProfile(userId: number): Promise<Profile | undefined> {
+  try {
+    const response = await fetch(`/api/user/profile/${userId}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error:', errorData.message || response.statusText);
+      return undefined;
+    }
+    const data = await response.json();
+    return data.user as Profile;
+  } catch (error) {
+    console.error('Network error:', error);
+    return undefined;
+  }
 }
 
 function onAvatarChange() {
@@ -36,63 +295,68 @@ function onAvatarChange() {
 }
 
 // Render user profile
-export function renderUserProfile() {
-  // Fill user details
-  fetch('/api/user/profile', {
-    method: 'GET',
-    credentials: 'include',
-  }).then(res => {
-    if (res.status === 401) {
-      window.location.href = '/auth';
-      return null;
-    }
-    return res.json();
-  }).then((response) => {
-    if (!response || !response.success) {
-      window.location.href = '/auth';
-      return;
-    }
+function renderUserProfile(profile: Profile | undefined = undefined) {
 
-    const profile = response.user as Profile;
+  if (profile)
+    fillProfileData(profile);
+  else {
+    fetch('/api/user/profile', {
+      method: 'GET',
+      credentials: 'include',
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((response) => {
+      if (!response || !response.success) {
+        window.location.href = '/auth';
+        return;
+      }
+      profile = response.user as Profile;
+      fillProfileData(profile);
+    })
+      .catch(() => {
+        window.location.href = '/auth';
+      });
+  }
+}
 
-    // Set user details
-    (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
-    getElement('display_name').textContent = profile.display_name;
-    getElement('username').textContent = profile.username;
-    getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
+function fillProfileData(profile: Profile) {
+  // Set user details
+  (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
+  getElement('display_name').textContent = profile.display_name;
+  getElement('username').textContent = profile.username;
+  getElement('rank').textContent = 'rookie'; 
 
-    // Set user stats
-    getElement('games-played').textContent = profile.games_played.toString();
-    getElement('wins').textContent = profile.wins.toString();
-    getElement('losses').textContent = profile.losses.toString();
-    // Calculate win rate
-    const winRate = profile.games_played > 0
-      ? Math.round((profile.wins / profile.games_played) * 100)
-      : 0;
-    getElement('win-rate').textContent = `${winRate}%`;
-    getElement('win-rate-bar').style.width = `${winRate}%`;
+  // Set user stats
+  getElement('games-played').textContent = profile.games_played.toString();
+  getElement('wins').textContent = profile.wins.toString();
+  getElement('losses').textContent = profile.losses.toString();
+  // Calculate win rate
+  const winRate = profile.games_played > 0
+    ? Math.round((profile.wins / profile.games_played) * 100)
+    : 0;
+  getElement('win-rate').textContent = `${winRate}%`;
+  getElement('win-rate-bar').style.width = `${winRate}%`;
 
-    // Set modal details
-    (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
-    (getElement('username-input') as HTMLInputElement).value = profile.username;
-    (getElement('email-input') as HTMLInputElement).value = profile.email;
-    (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
-    (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
-  })
-    .catch(() => {
-      window.location.href = '/auth';
-    });
+  // Set modal details
+  (getElement('avatar-input') as HTMLImageElement).src = profile.avatar_url;
+  (getElement('username-input') as HTMLInputElement).value = profile.username;
+  (getElement('email-input') as HTMLInputElement).value = profile.email;
+  (getElement('display-name-input') as HTMLInputElement).value = profile.display_name;
+  (getElement('toggle-2fa') as HTMLInputElement).checked = profile.has2fa;
 }
 
 // Render match history
-function renderMatchHistory() {
-  const matchHistoryContainer = getElement('match-history');
+function renderMatchHistory(userId?: number) {
   const recentActivityContainer = getElement('recent-activity');
-  // Clear containers
-  matchHistoryContainer.innerHTML = '';
   recentActivityContainer.innerHTML = '';
+  
+  const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
 
-  fetch('/api/user/recent-matches', {
+  fetch(apiUrl, {
     method: 'GET',
     credentials: 'include',
   }).then(res => {
@@ -107,24 +371,33 @@ function renderMatchHistory() {
       return;
     }
     matchHistory.forEach(match => {
-      const matchElement = createMatchElement(match);
-      matchHistoryContainer.appendChild(matchElement);
       if (matchHistory.indexOf(match) < 5) {
         const recentMatchElement = createMatchElement(match, false);
         recentActivityContainer.appendChild(recentMatchElement);
       }
     });
+    languageService.init();
   });
 
 }
+
 // Create match element
 function createMatchElement(match: Match, showDetailsButton = false) {
+
+  const lang = localStorage.getItem('lang') || 'en';
   const matchElement = document.createElement('div');
   matchElement.className = 'rounded-lg p-2';
   const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
   const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
   const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
   const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDay();
+
+  const victoryText = translations[lang]['match_victory'] || 'Victory';
+  const ongoingText = translations[lang]['match_ongoing'] || 'Ongoing';
+  const defeatText = translations[lang]['match_defeat'] || 'Defeat';
+
+  
+  const matchResult = match.result === 'win' ? victoryText : match.result === 'ongoing' ? ongoingText : defeatText;
 
   matchElement.innerHTML = `
     <div class="flex items-center justify-between">
@@ -133,13 +406,14 @@ function createMatchElement(match: Match, showDetailsButton = false) {
           ${icon}
         </div>
         <div>
-          <p class="font-semibold">Match vs ${match.opponent}</p>
+          <p class="font-semibold"><span data-i18n="profile_versus"></span> ${match.opponent}</p>
           <p class="text-gray-400 text-sm">${date}</p>
         </div>
       </div>
       <div class="text-right">
         <p class="font-semibold ${resultColor}">
-          ${match.result === 'win' ? 'Victory' : match.result === 'ongoing' ? 'Ongoing' : 'Defeat'}
+          ${matchResult}
+
         </p>
         <p class="text-gray-500 text-sm">${match.score}</p>
       </div>
@@ -160,7 +434,7 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
-  fetch(avatarUrl) // fetch the blob from the blob URL
+  fetch(avatarUrl) 
     .then(res => res.blob())
     .then(blob => {
       const reader = new FileReader();

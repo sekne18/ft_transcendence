@@ -1,3 +1,6 @@
+import { getElement } from "../utils";
+import { translations } from "../i18n/translations";	
+
 export class UIManager {
 	private overlay: HTMLDivElement;
 	private matchmakeButton: HTMLButtonElement;
@@ -6,6 +9,8 @@ export class UIManager {
 	private scoreRight: HTMLDivElement;
 	private userInfo: HTMLDivElement;
 	private enemyInfo: HTMLDivElement;
+	private matchmakeTitle: HTMLDivElement;
+	private lang: string;
 
 	constructor(MatchmakeHandler: () => void) {
 		this.overlay = document.getElementById('game-overlay') as HTMLDivElement;
@@ -13,11 +18,13 @@ export class UIManager {
 		this.scoreRight = document.getElementById('score-right') as HTMLDivElement;
 		this.userInfo = document.getElementById('game-user-info') as HTMLDivElement;
 		this.enemyInfo = document.getElementById('game-enemy-info') as HTMLDivElement;
+		this.matchmakeTitle = getElement('game-result-text') as HTMLDivElement;
 		this.matchmakeButton = document.getElementById('game-matchmake-button') as HTMLButtonElement;
 		this.matchmakeButton.addEventListener('click', () => {
 			this.setMatchmakingOverlay('loading');
 			MatchmakeHandler();
 		});
+		this.lang = localStorage.getItem('lang') || 'en';
 		this.setMatchmakingOverlay('button');
 		this.toggleOverlayVisibility('visible');
 	}
@@ -36,35 +43,47 @@ export class UIManager {
 	}
 
 	public setCountdownOverlay(str: string): void {
-		this.overlay.innerText = str;
+		this.matchmakeTitle.textContent = str;
 	}
 
 	public setGameOverOverlay(winner: true | false): void {
-		this.overlay.innerText = winner ? "You Win!" : "You Lose!";
+		const winMsg = translations[this.lang]['game_win'];
+		const loseMsg = translations[this.lang]['game_lose'];
+		this.matchmakeTitle.textContent = winner ? winMsg : loseMsg;
+		setTimeout(() => {
+			this.matchmakeTitle.classList.add('hidden');
+			this.matchmakeButton.classList.remove('hidden');
+		}, 2000);
 	}
 
 	public setGoalOverlay(username: string): void {
-		this.overlay.innerText = `${username} Scored!`;
+		const goalMsg = translations[this.lang]['game_goal'];
+		this.matchmakeTitle.textContent = `${username} ${goalMsg}`;
 	}
 
 	// when called with 'loading' must call 'found' when opponent is found to clear interval
 	public setMatchmakingOverlay(state: 'button' | 'loading' | 'found'): void {
+		const searchingMsg = translations[this.lang]['game_searching'];
+		const foundMsg = translations[this.lang]['game_found'];
 		if (state === 'loading') {
-			this.overlay.innerText = "Searching for opponent";
+			this.matchmakeButton.classList.add('hidden');
+			this.matchmakeTitle.classList.remove('hidden');
+			this.matchmakeTitle.textContent = searchingMsg;
 			this.matchmakeButton.style.visibility = 'hidden';
 			if (this.matchmakingIntervalId) {
 				clearInterval(this.matchmakingIntervalId);
 			}
+
 			this.matchmakingIntervalId = setInterval(() => {
-				this.overlay.innerText += '.';
-				if (this.overlay.innerText.length > 25) {
-					this.overlay.innerText = "Searching for opponent";
+				this.matchmakeTitle.textContent += '.';
+				if (this.matchmakeTitle?.textContent && this.matchmakeTitle.textContent.length > 25) {
+					this.matchmakeTitle.textContent = searchingMsg;
 				}
 			}
 			, 1000);
 		}
 		else if (state === 'found') {
-			this.overlay.innerText = "Opponent Found!";
+			this.matchmakeTitle.textContent = foundMsg;
 			if (this.matchmakingIntervalId) {
 				clearInterval(this.matchmakingIntervalId);
 			}
@@ -87,6 +106,7 @@ export class UIManager {
 	}
 
 	public updateEnemyInfo(): void {
-		this.enemyInfo.innerText = "Enemy Info";
+		const enemyInfoMsg = translations[this.lang]['game_enemy_info'];
+		this.enemyInfo.innerText = enemyInfoMsg;
 	}
 };

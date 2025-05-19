@@ -3,6 +3,26 @@ import { showToast } from "../utils";
 import { wsConfig } from "../wsConfig";
 import TournamentConnection from "./tournamentConnection";
 import { Tournament, TournamentMatch } from "./types";
+import { translations } from "../i18n/translations";
+
+function updateTournamentText(): void {
+    const lang = localStorage.getItem('lang') || 'en';
+
+    const elements = [
+        { id: 'tournament-header-title', key: 'tournament_title', defaultText: 'Tournament' },
+        { id: 'tournament-header-subtitle', key: 'tournament_description', defaultText: 'Compete in 6-player tournaments' },
+        { id: 'join-button', key: 'tournament_join', defaultText: 'Join Tournament' },
+    ];
+
+    elements.forEach(({ id, key, defaultText }) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = translations[lang][key] || defaultText;
+        } else {
+            console.warn(`Element with ID ${id} not found.`);
+        }
+    });
+}
 
 // --- Initialization ---
 export function initTournament(): void {
@@ -222,16 +242,20 @@ function renderBracketTree(): HTMLDivElement {
 }
 
 function renderQueueingState(): HTMLDivElement {
+    const lang = localStorage.getItem('lang') || 'en';
     const queueingDiv = document.createElement('div');
     queueingDiv.className = 'space-y-6';
 
     const progressDiv = document.createElement('div');
     const progressText = document.createElement('div');
     progressText.className = 'flex justify-between mb-2';
+    const playersJoined  = translations[lang]['tournament_players_joined'];
+    const waitingText = translations[lang]['tournament_waiting'];
     progressText.innerHTML = `
-        <span class="text-gray-500">Players Joined</span>
+        <span class="text-gray-500">${playersJoined}</span>
         <span class="font-semibold">${tournament.players.length}/${tournament.maxPlayers}</span>
     `;
+
     const progressBarBg = document.createElement('div');
     progressBarBg.className = 'relative h-2 bg-gray-200 rounded-full overflow-hidden';
     const progressBarFill = document.createElement('div');
@@ -262,7 +286,7 @@ function renderQueueingState(): HTMLDivElement {
         } else {
             playerCard.innerHTML = `
                 <div class="flex items-center justify-center h-16 text-gray-500">
-                    Waiting for player...
+                    <p>${waitingText}</p>
                 </div>
             `;
         }
@@ -274,30 +298,41 @@ function renderQueueingState(): HTMLDivElement {
 }
 
 function renderHeader(): void {
+    const lang = localStorage.getItem('lang') || 'en';
     const headerEl = document.getElementById('tournament-header');
     if (!headerEl) return;
     headerEl.innerHTML = '';
+    
+    const titleText = translations[lang]['tournament_title'];
+    const subtitleText = translations[lang]['tournament_description'];
+    const joinButtonText = translations[lang]['tournament_join'];
+    const leaveButtonText = translations[lang]['tournament_leave'];
+
     const title = document.createElement('h1');
     title.className = 'text-2xl font-bold';
-    title.textContent = 'Tournament';
+    title.textContent = titleText;
+
     const subtitle = document.createElement('p');
     subtitle.className = 'text-gray-500';
-    subtitle.textContent = 'Compete in 6-player tournaments';
+    subtitle.textContent = subtitleText;
+
     const headerInfo = document.createElement('div');
     headerInfo.appendChild(title);
     headerInfo.appendChild(subtitle);
+
     const headerActions = document.createElement('div');
     if (tournament.status === 'queuing' && !tournament.players.some((p: Profile) => p.id === user.id)) {
         const joinButton = document.createElement('button');
         joinButton.id = 'join-button';
         joinButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mr-2';
-        joinButton.innerHTML = `Join Tournament`;
+        joinButton.innerHTML = joinButtonText;
+
         joinButton.addEventListener('click', openJoinModal);
         headerActions.appendChild(joinButton);
     } else if (tournament.status === 'queuing' && tournament.players.some((p: Profile) => p.id === user.id)) {
         const leaveButton = document.createElement('button');
         leaveButton.className = 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mr-2';
-        leaveButton.textContent = 'Leave Queue';
+        leaveButton.textContent = leaveButtonText;
         leaveButton.addEventListener('click', leaveTournament);
         headerActions.appendChild(leaveButton);
     }
@@ -321,6 +356,7 @@ function renderHeader(): void {
                     'Completed';
         statusBadgeContainer.appendChild(statusBadge);
     }
+
 }
 
 function renderTournament(): void {
@@ -334,4 +370,5 @@ function renderTournament(): void {
     } else {
         contentEl.appendChild(renderBracketTree());
     }
+    updateTournamentText();
 }

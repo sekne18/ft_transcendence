@@ -26,19 +26,21 @@ export function initializeDatabase() {
       `).run();
 
       db.prepare(`
-        INSERT INTO users (username, display_name, email, password)
-        VALUES ('ai_bot', 'AI BOT', 'ai@ai.com', 'ai');
+        INSERT INTO users (username, display_name, email, password, avatar_url)
+        VALUES ('ai_bot', 'AI BOT', 'ai@ai.com', 'ai', '/uploads/avatars/default.png');
       `).run();
 
       db.prepare(`
         CREATE TABLE friends (
-          user_id INTEGER,
-          friend_id INTEGER,
+          user1_id INTEGER,
+          user2_id INTEGER,
+          sender_id INTEGER,
           status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'blocked'
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          PRIMARY KEY (user_id, friend_id),
-          FOREIGN KEY (user_id) REFERENCES users(id),
-          FOREIGN KEY (friend_id) REFERENCES users(id)
+          PRIMARY KEY (user1_id, user2_id),
+          FOREIGN KEY (user1_id) REFERENCES users(id),
+          FOREIGN KEY (user2_id) REFERENCES users(id),
+          CHECK (user1_id < user2_id)
         );
       `).run();
       db.prepare(`

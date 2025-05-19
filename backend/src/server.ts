@@ -25,11 +25,14 @@ import dotenv from 'dotenv';
 import { TournamentManager } from './tournament/TournamentManager.js';
 import { TournamentSession } from './tournament/TournamentSession.js';
 import { PlayerQueue } from './tournament/PlayerQueue.js';
-import { ChatMsg } from './types.js';
+import { ChatMsg, User } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
+import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers, blockFriend, sendFriendRequest, acceptFriendRequest, declineFriendRequest, unblockFriend, getFriendshipStatus } from './db/queries/friends.js';
+import { parseArgs } from 'util';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { Match } from './tournament/Types.js';
+
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -134,22 +137,22 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		const googleUser = await userRes.json() as { email: string; id: string; name: string; picture: string };
 
 		// Step 3: Get or create user in your DB
-		let user = await getUserByEmail(googleUser.email) as { id: number; email: string; hash: string; name: string; picture: string; }; // Same as your login
+		let user = await getUserByEmail(googleUser.email) as User; // Same as your login
+		let userId;
 
 		if (!user) {
 			// If user doesn't exist, create them
-			const userId = await createUser({
+			userId = createUser({
 				email: googleUser.email,
 				hash: "",
 				username: googleUser.name,
 				display_name: googleUser.name,
 				avatarUrl: googleUser.picture,
 			});
-			user = await getUserById(userId) as { id: number; email: string; hash: string; name: string; picture: string; };
 		}
 
 		// Step 4: Issue token pair
-		const { token, refreshToken } = generateTokenPair(user.id);
+		const { token, refreshToken } = generateTokenPair(userId || user.id);
 
 		// Step 5: Set same cookies as in password login
 		reply
@@ -621,6 +624,24 @@ fastify.get('/api/user/profile',
 		return reply.send({ success: true, user });
 	});
 
+fastify.get('/api/user/profile/:id',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const { id } = req.params as { id: number };
+
+		if (isNaN(id)) {
+			return reply.code(400).send({ success: false, message: 'Invalid user ID' });
+		}
+
+		const user = await getUserProfileById(id);
+
+		if (!user) {
+			return reply.code(404).send({ success: false, message: 'User not found' });
+		}
+
+		return reply.send({ success: true, user });
+	});
+
 fastify.get('/api/user/stats',
 	{ onRequest: [fastify.authenticate] },
 	async (req, reply) => {
@@ -648,7 +669,7 @@ fastify.get('/api/user/stats',
 	});
 
 fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-	const id = (req.user as { id: number }).id;
+	const id = (req.user as { id: string }).id;
 
 	if (!id) {
 		return reply.code(401).send({
@@ -658,20 +679,49 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 	}
 
 	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
-	const opponentNames = matches.map(match => getUserById(match.player2_id) as { id: number; display_name: string; });
-	const username = getUserById(id) as { display_name: string; };
-	
+
 	const matchHistory = matches.map(match => {
-		const opponent = opponentNames.find(user => user.id === match.player2_id);
+		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
+		const opponent = getUserById(opponentId) as { id: number; display_name: string; }
 		return {
 			id: match.id,
 			opponent: opponent ? opponent.display_name : 'Unknown',
-			result: match.winner_id === id ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
+			result: match.winner_id === Number(id) ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
 			score: `${match.player1_score}-${match.player2_score}`,
 			date: match.played_at
 		};
 	});
 
+
+	return reply.send({ success: true, matchHistory });
+});
+
+fastify.get('/api/user/recent-matches/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const { id } = req.params as { id: string };
+
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+
+	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
+
+	const matchHistory = matches.map(match => {
+		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
+		console.log('opponentId', opponentId);
+		// get the oponnent display name
+		const opponent = getUserById(opponentId) as { id: number; display_name: string; }
+		console.log('match', match.winner_id, id, typeof match.winner_id, typeof id);
+		return {
+			id: match.id,
+			opponent: opponent ? opponent.display_name : 'Unknown',
+			result: match.winner_id === Number(id) ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
+			score: `${match.player1_score}-${match.player2_score}`,
+			date: match.played_at
+		};
+	});
 
 	return reply.send({ success: true, matchHistory });
 });
@@ -773,6 +823,17 @@ fastify.post('/api/chat/register', { onRequest: [fastify.authenticate] }, async 
 			message: 'Invalid user ID'
 		});
 	}
+
+	// First check if the chat already exists
+	const existingChat = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
+	if (existingChat && existingChat.length > 0) {
+		for (const chat of existingChat) {
+			if (chat.user_id === otherId) {
+				return reply.send({ success: true });
+			}
+		}
+	}
+
 	const chatId = createChat(id, otherId);
 	if (!chatId) {
 		return reply.code(500).send({
@@ -866,6 +927,183 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	}
 	await markMessagesAsRead(chatId, id);
 	return reply.send({ success: true });
+});
+
+fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '' || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}	
+	const friendsList: FriendListPlayer[] = await getAllFriends(id, searchVal);
+	let users: FriendListPlayer[] | undefined = undefined;
+	if (friendsList.length == 0) 
+		users = await getAllUsers(id, searchVal); 
+	if (friendsList.length !== 0)
+		return reply.send({ success: true, friendsList: friendsList, isFriends: true, type: 'all' });
+	else
+		return reply.send({ success: true, friendsList: users, isFriends: false, type: 'all' });
+});
+
+fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getOnlineFriends(id, searchVal);
+	// let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'online' });
+});
+
+fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getPendingFriends(id, searchVal);
+	// let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'pending' });
+});
+
+fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const searchVal = (req.query as any).name || '';
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	const friendsList: FriendListPlayer[] = await getBlockedFriends(id, searchVal);
+	// let users: FriendListPlayer[] | undefined = undefined;
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'blocked' });
+});
+
+fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await sendFriendRequest(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/accept-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await acceptFriendRequest(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/decline-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await declineFriendRequest(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/block', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await blockFriend(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.post('/api/friends/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.body as any).otherId);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+	await unblockFriend(id, otherId);
+	return reply.send({ success: true });
+});
+
+fastify.get('/api/friends/status/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	// Get the status of the friendship between two users
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.params as any).id);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+
+	const status = await getFriendshipStatus(id, otherId);
+	return reply.send({ success: true, status });
 });
 
 const tournamentState = new TournamentSession(1);

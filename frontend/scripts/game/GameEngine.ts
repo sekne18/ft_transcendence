@@ -3,6 +3,8 @@ import { GameParams, RenderDetails, GameStatus, WsParams } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
+import { GameState } from './GameTypes';
+import { translations } from '../i18n/translations';
 
 
 export class GameEngine {
@@ -48,27 +50,37 @@ export class GameEngine {
 		this.player = side;
 		this.inputController.setSide(side);
 	}
-
 	public onSetCountdown(time: number): void {
 		this.changeState('countdown');
+
+		const lang = localStorage.getItem('lang') || 'en';
+
+		const countdownMessages = {
+			ready: translations[lang]['game_ready'],
+			set: translations[lang]['game_set'],
+			go: translations[lang]['game_go']
+		};
+
 		let startTime = time;
 		let interval = setInterval(() => {
+			let message: string;
 			if (time / startTime > 0.65) {
-				this.UIManager.setCountdownOverlay('Ready?');
+				message = countdownMessages.ready;
+			} else if (time / startTime > 0.32) {
+				message = countdownMessages.set;
+			} else {
+				message = countdownMessages.go;
 			}
-			else if (time / startTime > 0.32) {
-				this.UIManager.setCountdownOverlay('Set...');
-			}
-			else {
-				this.UIManager.setCountdownOverlay('Go!');
-			}
+			this.UIManager.setCountdownOverlay(message);
 			time -= 0.5;
-			if (time <= 0.2) { // to protect against floating point errors
+			if (time <= 0.2)
+			{
 				clearInterval(interval);
 				this.changeState('playing');
 			}
-		}, 500); //refresh rate of 2 FPS
+		}, 500);
 	}
+
 
 	public onError(error: Error): void {
 		if (error.message === 'disconnect') {
