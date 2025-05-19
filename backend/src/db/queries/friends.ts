@@ -9,7 +9,7 @@ export interface FriendListPlayer {
 }
 
 export function getAllUsers(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
-  // Exclude users that are already friends or blocked
+  // Exclude users that are already friends or blocked and hide 
   const rows = db.prepare(`
     SELECT 
       u.id, 
@@ -22,6 +22,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     WHERE u.id != ?
       AND f.status IS NULL
       AND u.display_name LIKE ?
+      AND u.username != 'ai_bot'
     ORDER BY u.display_name ASC
     LIMIT ?
   `).all(userId, userId, userId, name + '%', limit) as {
