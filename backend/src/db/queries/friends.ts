@@ -8,7 +8,7 @@ export interface FriendListPlayer {
   avatarUrl: string;
 }
 
-export function getAllUsers(userId: number, name:string,  limit: number = 10): FriendListPlayer[] {
+export function getAllUsers(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
   const rows = db.prepare(`
     SELECT 
       u.id, 
@@ -36,7 +36,7 @@ export function getAllUsers(userId: number, name:string,  limit: number = 10): F
   }));
 }
 
-export function getAllFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
+export function getAllFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
   const rows = db.prepare(`
     SELECT 
       u.id, 
@@ -70,8 +70,8 @@ export function getAllFriends(userId: number, name:string, limit: number = 10): 
   }));
 }
 
-export function getBlockedFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
-    const rows = db.prepare(`
+export function getBlockedFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
+  const rows = db.prepare(`
       SELECT 
         u.id, 
         u.username, 
@@ -89,24 +89,24 @@ export function getBlockedFriends(userId: number, name:string, limit: number = 1
       ORDER BY u.display_name ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
-      id: number;
-      username: string;
-      state: string;
-      online: number;
-      avatarUrl: string;
-    }[];
-  
-    return rows.map(row => ({
-      id: row.id,
-      username: row.username,
-      state: row.state,
-      online: !!row.online,
-      avatarUrl: row.avatarUrl,
-    }));
-  }
+    id: number;
+    username: string;
+    state: string;
+    online: number;
+    avatarUrl: string;
+  }[];
 
-  export function getPendingFriends(userId: number, name:string, limit: number = 10): FriendListPlayer[] {
-    const rows = db.prepare(`
+  return rows.map(row => ({
+    id: row.id,
+    username: row.username,
+    state: row.state,
+    online: !!row.online,
+    avatarUrl: row.avatarUrl,
+  }));
+}
+
+export function getPendingFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
+  const rows = db.prepare(`
       SELECT 
         u.id, 
         u.username, 
@@ -121,27 +121,28 @@ export function getBlockedFriends(userId: number, name:string, limit: number = 1
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'pending'
         AND u.display_name LIKE ?
+        AND f.sender_id != ?
       ORDER BY u.display_name ASC
       LIMIT ?
-  `).all(userId, userId, userId, userId, name + '%', limit) as {
-      id: number;
-      username: string;
-      state: string;
-      online: number;
-      avatarUrl: string;
-    }[];
-  
-    return rows.map(row => ({
-      id: row.id,
-      username: row.username,
-      state: row.state,
-      online: !!row.online,
-      avatarUrl: row.avatarUrl,
-    }));
-  }
+  `).all(userId, userId, userId, userId, name + '%', userId, limit) as {
+    id: number;
+    username: string;
+    state: string;
+    online: number;
+    avatarUrl: string;
+  }[];
 
-  export function getOnlineFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
-    const rows = db.prepare(`
+  return rows.map(row => ({
+    id: row.id,
+    username: row.username,
+    state: row.state,
+    online: !!row.online,
+    avatarUrl: row.avatarUrl,
+  }));
+}
+
+export function getOnlineFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
+  const rows = db.prepare(`
       SELECT 
         u.id, 
         u.username, 
@@ -160,57 +161,57 @@ export function getBlockedFriends(userId: number, name:string, limit: number = 1
       ORDER BY u.display_name ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
-      id: number;
-      username: string;
-      state: string;
-      online: number;
-      avatarUrl: string;
-    }[];
-  
-    return rows.map(row => ({
-      id: row.id,
-      username: row.username,
-      state: row.state,
-      online: !!row.online,
-      avatarUrl: row.avatarUrl,
-    }));
-  }
+    id: number;
+    username: string;
+    state: string;
+    online: number;
+    avatarUrl: string;
+  }[];
 
-  export function blockFriend(userId: number, friendId: number): void {
-    db.prepare(`
+  return rows.map(row => ({
+    id: row.id,
+    username: row.username,
+    state: row.state,
+    online: !!row.online,
+    avatarUrl: row.avatarUrl,
+  }));
+}
+
+export function blockFriend(userId: number, friendId: number): void {
+  db.prepare(`
       INSERT OR REPLACE INTO friends (user1_id, user2_id, sender_id, status)
       VALUES (?, ?, ?, 'blocked')
     `).run(userId, friendId, userId);
-  }
+}
 
-  export function unblockFriend(userId: number, friendId: number): void {
-    db.prepare(`
+export function unblockFriend(userId: number, friendId: number): void {
+  db.prepare(`
       DELETE FROM friends
       WHERE (user1_id = ? AND user2_id = ?)
          OR (user1_id = ? AND user2_id = ?)
     `).run(userId, friendId, friendId, userId);
-  }
+}
 
-  export function acceptFriendRequest(userId: number, friendId: number): void {
-    db.prepare(`
+export function acceptFriendRequest(userId: number, friendId: number): void {
+  db.prepare(`
       UPDATE friends
       SET status = 'accepted'
       WHERE (user1_id = ? AND user2_id = ?)
          OR (user1_id = ? AND user2_id = ?)
     `).run(userId, friendId, friendId, userId);
-  }
+}
 
-  export function declineFriendRequest(userId: number, friendId: number): void {
-    db.prepare(`
+export function declineFriendRequest(userId: number, friendId: number): void {
+  db.prepare(`
       DELETE FROM friends
       WHERE (user1_id = ? AND user2_id = ?)
          OR (user1_id = ? AND user2_id = ?)
     `).run(userId, friendId, friendId, userId);
-  }
+}
 
-  export function sendFriendRequest(userId: number, friendId: number): void {
-    db.prepare(`
+export function sendFriendRequest(userId: number, friendId: number): void {
+  db.prepare(`
       INSERT OR REPLACE INTO friends (user1_id, user2_id, sender_id, status)
       VALUES (?, ?, ?, 'pending')
     `).run(userId, friendId, userId);
-  }
+}

@@ -37,10 +37,10 @@ export function initProfile(userId?: number): void {
 function setProfileButtons(isOther: boolean) {
   const editProfileBtn = getElement('edit-profile-btn') as HTMLButtonElement;
   const friendDiv = getElement('friend-div') as HTMLDivElement;
-  const addFriendBtn = getElement('add-friend-btn') as HTMLButtonElement;
-  const removeFriendBtn = getElement('remove-friend-btn') as HTMLButtonElement;
-  const blockBtn = getElement('block-btn') as HTMLButtonElement;
-  const unblockBtn = getElement('unblock-btn') as HTMLButtonElement;
+  const addFriendBtn = getElement('profile-add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
   const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
   if (isOther) {

@@ -75,7 +75,7 @@ async function getData(where: string): Promise<void> {
             console.log("response failed");
         }
         else {
-            renderFriendslist(response.friendsList, response.isFriends);
+            renderFriendslist(response.friendsList, response.isFriends, response.type);
         }
     });
 }

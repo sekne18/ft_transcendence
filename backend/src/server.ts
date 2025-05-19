@@ -943,9 +943,9 @@ fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (re
 	if (friendsList.length == 0) 
 		users = await getAllUsers(id, searchVal); 
 	if (friendsList.length !== 0)
-		return reply.send({ success: true, friendsList: friendsList, isFriends: true });
+		return reply.send({ success: true, friendsList: friendsList, isFriends: true, type: 'all' });
 	else
-		return reply.send({ success: true, friendsList: users, isFriends: false });
+		return reply.send({ success: true, friendsList: users, isFriends: false, type: 'all' });
 });
 
 fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
@@ -959,7 +959,7 @@ fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async 
 	}
 	const friendsList: FriendListPlayer[] = await getOnlineFriends(id, searchVal);
 	// let users: FriendListPlayer[] | undefined = undefined;
-	return reply.send({ success: true, friendsList, isFriends: true });
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'online' });
 });
 
 fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
@@ -973,7 +973,7 @@ fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async
 	}
 	const friendsList: FriendListPlayer[] = await getPendingFriends(id, searchVal);
 	// let users: FriendListPlayer[] | undefined = undefined;
-	return reply.send({ success: true, friendsList, isFriends: true });
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'pending' });
 });
 
 fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
@@ -987,7 +987,7 @@ fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async
 	}
 	const friendsList: FriendListPlayer[] = await getBlockedFriends(id, searchVal);
 	// let users: FriendListPlayer[] | undefined = undefined;
-	return reply.send({ success: true, friendsList, isFriends: true });
+	return reply.send({ success: true, friendsList, isFriends: true, type: 'blocked' });
 });
 
 fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
