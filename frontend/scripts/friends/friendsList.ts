@@ -1,5 +1,6 @@
 import { languageService } from "../i18n";
 import { loadContent } from "../router/router";
+import { showToast } from "../utils";
 
 export interface FriendListPlayer {
   id: number;
@@ -92,8 +93,8 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
             </svg>
           </button>
   
-          <!-- Remove Friend Button -->
-          <button class="p-2 text-white bg-yellow-600 hover:bg-yellow-700 rounded" title="Remove Friend">
+          <!-- Accept Friend Button -->
+          <button id="accept-friend-request" class="p-2 text-white bg-green-600 hover:bg-green-700 rounded" data-user-id="${friend.id}" title="Accept Request">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M18 9a3 3 0 11-6 0 3 3 0 016 0zM13.5 16H6a4 4 0 00-4 4v1h11.5M23 16h-6" />
@@ -101,7 +102,7 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
           </button>
   
           <!-- Block Button -->
-          <button class="p-2 text-white bg-red-600 hover:bg-red-700 rounded" title="Block">
+          <button id="block-friend" class="p-2 text-white bg-red-600 hover:bg-red-700 rounded" data-user-id="${friend.id}" title="Block">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M18.364 5.636a9 9 0 11-12.728 12.728 9 9 0 0112.728-12.728zM6.343 17.657l11.314-11.314" />
@@ -111,6 +112,13 @@ function createAllFriendsRow(friend: FriendListPlayer): string {
       </div>
     `;
 }
+
+// <button class="p-2 text-white bg-yellow-600 hover:bg-yellow-700 rounded" title="Remove Friend">
+// <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+//     d="M18 9a3 3 0 11-6 0 3 3 0 016 0zM13.5 16H6a4 4 0 00-4 4v1h11.5M23 16h-6" />
+// </svg>
+// </button>
 
 export function renderFriendslist(players: FriendListPlayer[], isFriends: boolean) {
   const friendslistBody = document.getElementById('friendslist-body') as HTMLElement;
@@ -132,11 +140,91 @@ function onProfileClick() {
   buttons.forEach(button => {
     button.addEventListener('click', () => {
       const userId = button.dataset.userId;
-      if (userId) {
-        loadContent(`/profile/${userId}`);
+      if (button.id == 'accept-friend-request') {
+        if (userId) {
+          onFriendRequestClick(userId);
+        }
+      } else if (button.id == 'block-friend') {
+        if (userId) {
+          onBlockFriendClick(userId);
+        }
+      } else if (button.id == 'remove-friend') {
+        if (userId) {
+          onRemoveFriendClick(userId);
+        }
+      } else if (button.id == 'see-profile') {
+        if (userId) {
+          loadContent(`/profile/${userId}`);
+        }
       }
     });
   });
+}
+
+function onBlockFriendClick(userId: string) {
+  const blockButton = document.getElementById('block-friend');
+
+  if (blockButton) {
+    fetch(`/api/friends/block`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    }).then(res => {
+      if (res.status === 200) {
+        showToast("Friend blocked", '', 'success');
+        loadContent('/friends');
+      } else {
+        showToast("Failed to block friend", '', 'error');
+      }
+    });
+  }
+}
+
+function onRemoveFriendClick(userId: string) {
+  const removeButton = document.getElementById('remove-friend');
+
+  if (removeButton) {
+    fetch(`/api/friends/decline-request`, { // APIs is not clear, but behaves the same as remove friend
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    }).then(res => {
+      if (res.status === 200) {
+        showToast("Friend removed", '', 'success');
+        loadContent('/friends');
+      } else {
+        showToast("Failed to remove friend", '', 'error');
+      }
+    });
+  }
+}
+
+function onFriendRequestClick(userId: string) {
+  const acceptButton = document.getElementById('accept-friend-request');
+
+  if (acceptButton) {
+    fetch(`/api/friends/accept-request`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    }).then(res => {
+      if (res.status === 200) {
+        showToast("Friend request accepted", '', 'success');
+        loadContent('/friends');
+      } else {
+        showToast("Failed to accept friend request", '', 'error');
+      }
+    });
+  }
 }
 
 function addTitleAndDescription() {

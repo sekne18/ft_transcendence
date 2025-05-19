@@ -990,7 +990,7 @@ fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async
 	return reply.send({ success: true, friendsList, isFriends: true });
 });
 
-fastify.post('/api/friends/send-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
 	const id = (req.user as { id: number }).id;
 	const otherId = parseInt((req.body as any).otherId);
 	if (!id) {

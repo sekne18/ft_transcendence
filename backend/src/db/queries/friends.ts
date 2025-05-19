@@ -214,5 +214,3 @@ export function getBlockedFriends(userId: number, name:string, limit: number = 1
       VALUES (?, ?, ?, 'pending')
     `).run(userId, friendId, userId);
   }
-
-  

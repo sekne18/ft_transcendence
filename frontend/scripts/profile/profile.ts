@@ -7,14 +7,14 @@ import { Match, Profile } from "./Types";
     Run any logic from this function. 
     This function is called when a tab is pressed.
 */
-let otherId: number | undefined = undefined;
+let otherId: number;
 
 export function initProfile(userId?: number): void {
   if (userId && userId > 0) {
     otherId = userId;
-    fetchUserProfile(userId).then((userProfile) => {
+    fetchUserProfile(otherId).then((userProfile) => {
       renderUserProfile(userProfile);
-      renderMatchHistory(userId);
+      renderMatchHistory(otherId);
     });
     setProfileButtons(true);
 
@@ -34,23 +34,129 @@ export function initProfile(userId?: number): void {
   );
 }
 
-function setProfileButtons(isFriend: boolean) {
+function setProfileButtons(isOther: boolean) {
   const editProfileBtn = getElement('edit-profile-btn') as HTMLButtonElement;
   const friendDiv = getElement('friend-div') as HTMLDivElement;
   const addFriendBtn = getElement('add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('remove-friend-btn') as HTMLButtonElement;
   const blockBtn = getElement('block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('unblock-btn') as HTMLButtonElement;
   const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
-  if (isFriend) {
+  if (isOther) {
     editProfileBtn.classList.add('hidden');
     friendDiv.classList.remove('hidden');
 
+    removeFriendBtn.addEventListener('click', () => {
+      fetch('/api/friends/decline-friend-request', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          otherId: otherId,
+        }),
+      }).then(res => {
+        if (res.status === 401) {
+          window.location.href = '/auth';
+          return null;
+        }
+        return res.json();
+      }).then((res) => {
+        if (res.success) {
+          showToast('Friend removed successfully!', '', 'success');
+          fetchUserProfile(otherId).then((userProfile) => {
+            renderUserProfile(userProfile);
+            renderMatchHistory(otherId);
+          });
+        } else {
+          showToast('Failed to remove friend.', '', 'error');
+        }
+      });
+    });
+
+    unblockBtn.addEventListener('click', () => {
+      fetch('/api/friends/unblock', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          otherId: otherId,
+        }),
+      }).then(res => {
+        if (res.status === 401) {
+          window.location.href = '/auth';
+          return null;
+        }
+        return res.json();
+      }).then((res) => {
+        if (res.success) {
+          showToast('User unblocked successfully!', '', 'success');
+          fetchUserProfile(otherId).then((userProfile) => {
+            renderUserProfile(userProfile);
+            renderMatchHistory(otherId);
+          });
+        } else {
+          showToast('Failed to unblock user.', '', 'error');
+        }
+      });
+    });
+
     addFriendBtn.addEventListener('click', () => {
-      // addFriendBtn();
+      fetch('/api/friends/send-friend-request', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          otherId: otherId,
+        }),
+      }).then(res => {
+        if (res.status === 401) {
+          window.location.href = '/auth';
+          return null;
+        }
+        return res.json();
+      }).then((res) => {
+        if (res.success) {
+          showToast('Friend request sent successfully!', '', 'success');
+          // fetchUserProfile(otherId).then((userProfile) => {
+          //   renderUserProfile(userProfile);
+          //   renderMatchHistory(otherId);
+          // });
+        } else {
+          showToast('Failed to send friend request.', '', 'error');
+        }
+      });
     });
 
     blockBtn.addEventListener('click', () => {
-      // blockUser();
+      fetch('/api/friends/block', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          otherId: otherId,
+        }),
+      }).then(res => {
+        if (res.status === 401) {
+          window.location.href = '/auth';
+          return null;
+        }
+        return res.json();
+      }).then((res) => {
+        if (res.success) {
+          showToast('User blocked successfully!', '', 'success');
+        } else {
+          showToast('Failed to block user.', '', 'error');
+        }
+      });
     });
 
     chatBtn.addEventListener('click', () => {
@@ -171,7 +277,7 @@ function fillProfileData(profile: Profile) {
   (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
   getElement('display_name').textContent = profile.display_name;
   getElement('username').textContent = profile.username;
-  getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
+  getElement('rank').textContent = 'rookie'; 
 
   // Set user stats
   getElement('games-played').textContent = profile.games_played.toString();
@@ -194,14 +300,10 @@ function fillProfileData(profile: Profile) {
 
 // Render match history
 function renderMatchHistory(userId?: number) {
-  const matchHistoryContainer = getElement('match-history');
   const recentActivityContainer = getElement('recent-activity');
-  // Clear containers
-  matchHistoryContainer.innerHTML = '';
   recentActivityContainer.innerHTML = '';
-
+  
   const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
-
 
   fetch(apiUrl, {
     method: 'GET',
@@ -218,8 +320,6 @@ function renderMatchHistory(userId?: number) {
       return;
     }
     matchHistory.forEach(match => {
-      const matchElement = createMatchElement(match);
-      matchHistoryContainer.appendChild(matchElement);
       if (matchHistory.indexOf(match) < 5) {
         const recentMatchElement = createMatchElement(match, false);
         recentActivityContainer.appendChild(recentMatchElement);
