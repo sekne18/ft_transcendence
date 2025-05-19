@@ -23,12 +23,16 @@ export class GameStore {
 		return session.getId();
 	}
 
-	public spectateGame(sessionId: number, spectator: PlayerConnection): void {
+	public spectateGame(sessionId: number, spectator: PlayerConnection | PlayerConnection[]): void {
 		const session = this.gameSessions.get(sessionId);
 		if (!session) {
 			throw new Error("Game session not found");
 		}
-		session.spectate(spectator);
+		if (Array.isArray(spectator)) {
+			spectator.forEach(s => session.spectate(s));
+		} else {
+			session.spectate(spectator);
+		}
 	}
 
 	private removeGame(sessionId: number): void {

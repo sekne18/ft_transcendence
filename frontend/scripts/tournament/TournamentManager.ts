@@ -1,4 +1,3 @@
-import { GameRenderer } from "../game/GameRenderer";
 import { GameState } from "../game/GameTypes";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
@@ -23,8 +22,9 @@ export class TournamentManager {
 	private tournamentContainer: HTMLDivElement;
 	private tournamentCanvas: HTMLCanvasElement;
 	private lastTournamentTime: number | null = null;
-	private gameRenderer: GameRenderer | null = null;
-	private gameState: GameState | null = null;
+	//private gameRenderer: GameRenderer | null = null;
+	//private gameState: GameState | null = null;
+	private currRenderId: number = 0;
 
 	constructor(user: Profile) {
 		this.tournamentCanvas = document.getElementById("tournament-canvas") as HTMLCanvasElement;
@@ -59,7 +59,7 @@ export class TournamentManager {
 			);
 			this.socket.addEventListener('message', event => {
 				const msg = JSON.parse(event.data);
-				console.log('Received message:', msg);
+				//console.log('Received message:', msg);
 				this.processMsg(msg);
 			});
 			this.socket.addEventListener('close', () => {
@@ -81,7 +81,7 @@ export class TournamentManager {
 		this.fetchTournamentList();
 	}
 
-	private handleJoined(data: {tournamentId: number, playerId: number}): void {
+	private handleJoined(data: { tournamentId: number, playerId: number }): void {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
 			fetch(`/api/user/profile/${data.playerId}`, {
@@ -109,7 +109,7 @@ export class TournamentManager {
 		}
 	}
 
-	private handleLeft(data: {tournamentId: number, playerId: number}): void {
+	private handleLeft(data: { tournamentId: number, playerId: number }): void {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
 			tournament.players = tournament.players.filter((player: Profile) => player.id !== data.playerId);
@@ -120,11 +120,10 @@ export class TournamentManager {
 		}
 	}
 
-	private handleBracketUpdate(data: {tournamentId: number, bracket: Bracket}): void {
+	private handleBracketUpdate(data: { tournamentId: number, bracket: Bracket }): void {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
 			tournament.bracket = data.bracket;
-			console.log('Bracket updated:', tournament.bracket);
 			this.renderTournaments();
 		}
 		else {
@@ -132,7 +131,7 @@ export class TournamentManager {
 		}
 	}
 
-	private handleSetupMatch(data: {tournamentId: number, p1: number, p2: number}): void {
+	private handleSetupMatch(data: { tournamentId: number, p1: number, p2: number }): void {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
 			if (data.p1 === this.user.id || data.p2 === this.user.id) {
@@ -160,11 +159,22 @@ export class TournamentManager {
 				this.renderTournaments();
 			}
 		}
-			
+
+	}
+
+	private handleGameState(data: GameState, matchId: number): void {
+
+	}
+
+	private handleGameEvent(data: { event: string }, matchId: number): void {
+		this.renderTournaments();
+	}
+
+	private handleGoal(data: 'left' | 'right', matchId: number): void {
+		this.renderTournaments();
 	}
 
 	private processMsg(msg: TournamentMsgIn): void {
-		console.log('Processing message:', msg);
 		switch (msg.type) {
 			case 'joined':
 				this.handleJoined(msg.data);
@@ -178,6 +188,15 @@ export class TournamentManager {
 			case 'setup_match':
 				this.handleSetupMatch(msg.data);
 				break;
+			case 'game_state':
+				this.handleGameState(msg.data, msg.matchId);
+				break;
+			case 'game_event':
+				this.handleGameEvent(msg.data, msg.matchId);
+				break;
+			case 'goal':
+				this.handleGoal(msg.data, msg.matchId);
+				break;
 			// case 'start_spectate':
 			// 	this.gameRenderer = new GameRenderer(this.tournamentCanvas, msg.data.matchId, this.socket);
 			// 	this.tournamentCanvas.classList.remove('hidden');
@@ -189,7 +208,7 @@ export class TournamentManager {
 			// 	}
 			// 	break;
 			default:
-				//console.error('Unknown message type:', msg.type);
+			//console.error('Unknown message type:', msg.type);
 		}
 	}
 
@@ -339,7 +358,7 @@ export class TournamentManager {
 		let watch = false;
 		if (state.watch) {
 			watch = false;
-			this.gameRenderer = null;
+			//this.gameRenderer = null;
 		} else {
 			watch = true;
 		}
@@ -356,33 +375,38 @@ export class TournamentManager {
 		this.tournamentCanvas.classList.toggle('hidden');
 	}
 
-	private async renderMatchCardTree(tournament: Tournament, match: RoundMatch): Promise<string> {
-		console.log('Rendering match card:', match);
+	private async renderMatchCardTree(tournament: Tournament, match: RoundMatch): Promise<HTMLDivElement> {
 		// const winnerClass = match.winner ? 'bg-green-900 border-green-500' : 'bg-[#272735] border-[#3A3A49]';
 		const player1: Profile = tournament.players.find(p => p.id === match.playerIds.p1)!;
 		const player2: Profile = tournament.players.find(p => p.id === match.playerIds.p2)!;
-		let matchDetails = null; 
+		let matchDetails = null;
 		if (match.matchId) {
-			const player1: Profile = tournament.players.find(p => p.id === match.playerIds.p1)!;
-			const player2: Profile = tournament.players.find(p => p.id === match.playerIds.p2)!;
 			const res = await fetch(`/api/match/${match.matchId}`, {
 				method: 'GET',
 				credentials: 'include'
-			
+
 			});
 			if (!res.ok) {
 				console.error('Failed to fetch match details:', res.statusText);
-				return `<div class="text-gray-500">Match details not available</div>`;
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'text-gray-500';
+				errorDiv.textContent = 'Match details not available';
+				return errorDiv;
 			}
 			const data = await res.json();
 			if (!data) {
 				console.error('Match details not found');
-				return `<div class="text-gray-500">Match details not found</div>`;
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'text-gray-500';
+				errorDiv.textContent = 'Match details not found';
+				return errorDiv;
 			}
 			matchDetails = data.match;
 		}
-		console.log('Match details:', matchDetails);
 		const containerDiv = document.createElement('div');
+		if (match.matchId)
+			containerDiv.id = `match-${match.matchId}`;
+		containerDiv.innerHTML = '';
 		containerDiv.className = 'rounded-md border bg-[#ffc038] border-[#d49204] p-2 w-52 text-white flex flex-col justify-between h-32';
 		containerDiv.innerHTML = `
 			<div>
@@ -399,23 +423,23 @@ export class TournamentManager {
 		subContainerDiv.innerHTML = `
 			<span class="text-right text-xs text-gray-400">${matchDetails ? matchDetails?.status : 'pending'}</span>
 		`;
-		if (matchDetails && matchDetails.status !== 'finished') {
-			const spectateBtn = document.createElement('button');
-			spectateBtn.className = 'text-indigo-500 hover:text-indigo-400 text-xs';
-			spectateBtn.textContent = 'Spectate';
-			spectateBtn.addEventListener('click', () => {
-				this.toggleSpectate(tournament.id);
-			});
-			subContainerDiv.appendChild(spectateBtn);
-		}
+		// if (matchDetails && matchDetails.status !== 'finished') {
+		// 	const spectateBtn = document.createElement('button');
+		// 	spectateBtn.className = 'text-indigo-500 hover:text-indigo-400 text-xs';
+		// 	spectateBtn.textContent = 'Spectate';
+		// 	spectateBtn.addEventListener('click', () => {
+		// 		this.toggleSpectate(tournament.id);
+		// 	});
+		// 	subContainerDiv.appendChild(spectateBtn);
+		// }
 		containerDiv.appendChild(subContainerDiv);
-		return containerDiv.outerHTML;
+		return containerDiv;
 	}
 
-	private async renderRoundTree(tournament: Tournament, matches: RoundMatch[], roundNumber: number): Promise<string> {
-		console.log('Rendering round:', roundNumber, 'Matches:', matches);
+	private async renderRoundTree(tournament: Tournament, matches: RoundMatch[], roundNumber: number): Promise<HTMLDivElement> {
 		const justifyContentClass = matches.length === 1 ? 'justify-center' : 'justify-around';
 		const containerDiv = document.createElement('div');
+		containerDiv.innerHTML = '';
 		containerDiv.className = `flex flex-col items-center ${justifyContentClass} gap-y-4`;
 		const roundTitle = document.createElement('h4');
 		roundTitle.className = 'text-lg font-semibold mb-2';
@@ -425,42 +449,31 @@ export class TournamentManager {
 		matchesDiv.className = `flex ${justifyContentClass} gap-x-8`;
 		for (const match of matches) {
 			const matchCard = await this.renderMatchCardTree(tournament, match);
-			matchesDiv.innerHTML += matchCard;
+			matchesDiv.appendChild(matchCard);
 		}
 		containerDiv.appendChild(matchesDiv);
-		return containerDiv.outerHTML;
-		// return `
-		// 	<div class="flex flex-col items-center ${justifyContentClass} gap-y-4">
-		// 		<h4 class="text-lg font-semibold mb-2">Round ${roundNumber}</h4>
-		// 		<div class="flex ${justifyContentClass} gap-x-8">
-		// 			${matches.map(async match => await this.renderMatchCardTree(tournament, match)).join('')}
-		// 		</div>
-		// 	</div>
-		// `;
+		return containerDiv;
 	}
 
-	private renderBracketTree(tournament: Tournament): HTMLDivElement {
+	private async renderBracketTree(tournament: Tournament): Promise<HTMLDivElement> {
 		const bracketDiv = document.createElement('div');
 		bracketDiv.className = 'flex flex-col items-center gap-y-12';
-
+		bracketDiv.innerHTML = '';
 		if (!tournament.bracket) {
 			bracketDiv.innerHTML = '<p class="text-gray-500">No matches available</p>';
 			return bracketDiv;
 		}
-		const rounds = tournament.bracket.rounds.map((_, index) => index + 1);
-		rounds.forEach(roundNumber => {
-			const matchesInRound = tournament.bracket?.rounds[roundNumber - 1] || [];
+		for (let roundNumber = 1; roundNumber <= tournament.bracket.rounds.length; roundNumber++) {
+			const matchesInRound = tournament.bracket.rounds[roundNumber - 1];
 			if (matchesInRound.length > 0) {
-				this.renderRoundTree(tournament, matchesInRound, roundNumber)
-					.then(roundHtml => {
-						bracketDiv.innerHTML += roundHtml;
-					})
-					.catch(error => {
-						console.error('Error rendering round:', error);
-					}
-					);
+				try {
+					const roundHtml = await this.renderRoundTree(tournament, matchesInRound, roundNumber);
+					bracketDiv.appendChild(roundHtml);
+				} catch (error) {
+					console.error('Error rendering round:', error);
+				}
 			}
-		});
+		}
 
 		return bracketDiv;
 	}
@@ -517,16 +530,17 @@ export class TournamentManager {
 		return queueingDiv;
 	}
 
-	private createTournamentElement(tournament: Tournament): HTMLDivElement {
+	private async createTournamentElement(tournament: Tournament): Promise<HTMLDivElement> {
 		const tournamentEl = document.createElement('div');
+		tournamentEl.innerHTML = '';
 		tournamentEl.id = `tournament-${tournament.id}`;
-		tournamentEl.className = 'bg-white shadow-md rounded-lg p-4 mb-4';
+		tournamentEl.className = 'bg-[var(--navbar)] shadow-md rounded-lg p-4 mb-4';
 		const headerEl = this.createHeaderEl(tournament);
 		tournamentEl.appendChild(headerEl);
 		if (tournament.status === 'pending') {
 			tournamentEl.appendChild(this.renderQueueingState(tournament));
 		} else {
-			tournamentEl.appendChild(this.renderBracketTree(tournament));
+			tournamentEl.appendChild(await this.renderBracketTree(tournament));
 		}
 		return tournamentEl;
 	}
@@ -544,9 +558,7 @@ export class TournamentManager {
 				return response.json();
 			})
 			.then(async data => {
-				console.log('Finished tournaments data:', data);
 				const finishedTournaments = data.tournaments as TournamentView[];
-				console.log('Finished tournaments:', finishedTournaments);
 				if (finishedTournaments.length === 0) {
 					showToast('Info', 'No more tournaments available', 'info');
 					return;
@@ -562,17 +574,17 @@ export class TournamentManager {
 						players: []
 					};
 					for (const playerId of tournamentView.players) {
-							const res = await fetch(`/api/user/profile/${playerId}`, {
-								method: 'GET',
-								credentials: 'include',
-							});
-							if (!res.ok) {
-								showToast('Error', 'Failed to fetch player data', 'error');
-								throw new Error('Network response was not ok');
-							}
-							const data = await res.json();
-							tournament.players.push(data.user as Profile);
+						const res = await fetch(`/api/user/profile/${playerId}`, {
+							method: 'GET',
+							credentials: 'include',
+						});
+						if (!res.ok) {
+							showToast('Error', 'Failed to fetch player data', 'error');
+							throw new Error('Network response was not ok');
 						}
+						const data = await res.json();
+						tournament.players.push(data.user as Profile);
+					}
 					this.tournaments.set(tournament.id, tournament);
 				}
 				this.renderTournaments();
@@ -595,12 +607,21 @@ export class TournamentManager {
 		return fetchFinishedEl;
 	}
 
-	private renderTournaments(): void {
+	private async renderTournaments(): Promise<void> {
+		this.tournamentContainer = document.getElementById("tournament-container") as HTMLDivElement;
+		this.tournamentContainer.innerHTML = "";
+		const currRenderId = ++this.currRenderId;
+		const tournamentEls = [];
+		for (const t of this.tournaments) {
+			tournamentEls.push(await this.createTournamentElement(t[1]));
+		}
+		if (currRenderId !== this.currRenderId) {
+			return;
+		}
 		this.tournamentContainer.innerHTML = '';
-		this.tournaments.forEach(tournament => {
-			const tournamentEl = this.createTournamentElement(tournament);
+		for (const tournamentEl of tournamentEls) {
 			this.tournamentContainer.appendChild(tournamentEl);
-		});
+		}
 		this.tournamentContainer.appendChild(this.createFetchFinishedElement());
 	}
 

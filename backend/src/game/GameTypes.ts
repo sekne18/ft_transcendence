@@ -1,7 +1,3 @@
-import fastifyWebsocket from "@fastify/websocket";
-import { AIPlayer } from "./AIPlayer.js";
-import { ProxyPlayer } from "./ProxyPlayer.js";
-
 export type MatchMakerParams = {
 	ratingWindowMin: number,
 	ratingWindowMax: number,

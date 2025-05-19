@@ -1,10 +1,8 @@
-import { on } from "events";
 import { updateTournament } from "../db/queries/tournament.js";
 import { GameStore } from "../game/GameStore.js";
 import { Bracket, RoundMatch, TournamentConnection, TournamentEvent } from "./Types.js";
 import { getMatchById } from "../db/queries/match.js";
 import { PlayerConnection } from "../game/GameTypes.js";
-import { ProxyPlayer } from "../game/ProxyPlayer.js";
 
 
 export class Tournament {
@@ -12,7 +10,6 @@ export class Tournament {
 	private maxPlayers: number;
 	private createdAt: number;
 	private players: TournamentConnection[];
-	private spectators: ProxyPlayer[] = [];
 	private nextPlayers: {
 		p1: PlayerConnection | null;
 		p2: PlayerConnection | null;
@@ -22,22 +19,11 @@ export class Tournament {
 	private status: 'pending' | 'ongoing' | 'finished';
 	private gameStore: GameStore;
 	private callbacks: ((event: TournamentEvent) => void)[];
-	private readonly tournamentTabFilter: Map<string, boolean> = new Map([
-		['game_state', true],
-		['set_side', true],
-		['goal', false],
-		['error', false],
-		['game_event', false]
-	]);
-	private readonly spectatorTabFilter: Map<string, boolean> = new Map([
-		['game_state', false],
-		['set_side', false],
-		['goal', false],
-		['error', false],
-		['game_event', false]
-	]);
 
-	constructor(id: number, maxPlayers: number, createdAt: number, gameStore: GameStore, private onEnd?: (id: number) => void) {
+	constructor(id: number, maxPlayers: number, createdAt: number, gameStore: GameStore,
+		private matchEndCallback: (tId: number, mId: number) => void,
+		private matchBeginCallback: (tId: number, mId: number) => void,
+		private onEnd?: (id: number) => void) {
 		this.id = id;
 		this.maxPlayers = maxPlayers;
 		this.createdAt = createdAt;
@@ -78,7 +64,6 @@ export class Tournament {
 	}
 
 	public addPlayer(player: TournamentConnection): void {
-		console.log("Adding player to tournament", player.id);
 		if (this.players.length >= this.maxPlayers || this.status !== 'pending') {
 			throw new Error("Tournament is full");
 		}
@@ -86,7 +71,6 @@ export class Tournament {
 			throw new Error("Player already in tournament");
 		}
 		this.players.push(player);
-		this.spectators.push(new ProxyPlayer(this.tournamentTabFilter, player));
 		player.enteredTournament = this.id;
 		this.notify({
 			type: 'joined',
@@ -97,30 +81,23 @@ export class Tournament {
 		if (this.players.length === this.maxPlayers) {
 			this.setupNextMatch();
 		}
-		console.log("Player added to tournament: this.players", this.players);
 	}
 
 	public subscribe(callback: (event: TournamentEvent) => void): () => void {
-		console.log("Subscribing to tournament events", this.id);
 		this.callbacks.push(callback);
-		console.log("callbacks", this.callbacks);
 		return () => {
 			this.callbacks = this.callbacks.filter((cb) => cb !== callback);
 		};
 	}
 
 	private notify(event: TournamentEvent): void {
-		console.log("Notifying event", event);
-		console.log("callbacks", this.callbacks);
 		this.callbacks.forEach((callback) => callback(event));
 	}
 
 	// requires this.winners to be set
 	private setupNextMatch(): void {
-		console.log("Setting up next match");
 		//if no match played yet: generate first round
 		if (this.bracket === null) {
-			console.log("Generating first round");
 			this.status = 'ongoing';
 			this.bracket = { rounds: [] };
 			this.bracket.rounds.push(this.generateBracketRound());
@@ -129,7 +106,6 @@ export class Tournament {
 				startTime: Date.now(),
 				bracket: this.bracket,
 			});
-			console.log("Bracket generated", this.bracket);
 			this.notify({
 				type: 'bracket_update',
 				data: {
@@ -148,6 +124,12 @@ export class Tournament {
 					status: this.status,
 					endTime: Date.now(),
 					bracket: this.bracket,
+				});
+				this.notify({
+					type: 'bracket_update',
+					data: {
+						bracket: this.bracket,
+					}
 				});
 				this.onEnd?.(this.id);
 				return;
@@ -205,6 +187,7 @@ export class Tournament {
 					bracket: this.bracket!,
 				}
 			});
+			this.matchBeginCallback(this.id, matchId);
 		}, 2000); //TODO: move hardcoded value
 	}
 
@@ -225,9 +208,10 @@ export class Tournament {
 		}
 		this.winners.push(winnerId);
 		match.winnerId = winnerId;
+		this.matchEndCallback(this.id, matchId);
 		setTimeout(() => {
 			this.setupNextMatch();
-		}, 2000); //TODO: move hardcoded value
+		}, 3000); //TODO: move hardcoded value
 	}
 
 	public setPlayerReady(player: PlayerConnection): void {
@@ -253,7 +237,6 @@ export class Tournament {
 	}
 
 	public removePlayer(playerId: number): void {
-		console.log("Removing player from tournament", playerId);
 		if (this.status !== 'pending') {
 			throw new Error("Tournament is not pending");
 		}
@@ -264,14 +247,12 @@ export class Tournament {
 		const player = this.players[playerIndex];
 		player.enteredTournament = null;
 		this.players.splice(playerIndex, 1);
-		this.spectators = this.spectators.filter((s) => s.id !== playerId);
 		this.notify({
 			type: 'left',
 			data: {
 				playerId,
 			}
 		});
-		console.log("Player removed from tournament: this.players", this.players);
 	}
 
 	public hasPlayer(playerId: number): boolean {
@@ -279,18 +260,17 @@ export class Tournament {
 	}
 
 	private generateBracketRound(): RoundMatch[] {
-		console.log("Generating bracket round");
 		const playerOrder: number[] = [];
 		if (this.winners.length === 0) {
 			this.winners = this.players.map((player) => player.id);
 		}
 		while (playerOrder.length < this.winners.length) {
-			let randomIndex = Math.floor(Math.random() * this.maxPlayers);
+			let randomIndex = Math.floor(Math.random() * this.winners.length);
 			let playerId = this.winners[randomIndex];
 			while (playerOrder.includes(playerId)) {
 				randomIndex += 1;
 
-				if (randomIndex >= this.maxPlayers) {
+				if (randomIndex >= this.winners.length) {
 					randomIndex = 0;
 				}
 				playerId = this.winners[randomIndex];
@@ -298,7 +278,7 @@ export class Tournament {
 			playerOrder.push(playerId);
 		}
 		const round: RoundMatch[] = [];
-		for (let i = 0; i < playerOrder.length; i += 2) {
+		for (let i = 0; i < playerOrder.length - 1; i += 2) {
 			round.push({
 				matchId: null,
 				winnerId: null,

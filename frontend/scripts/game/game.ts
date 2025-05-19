@@ -23,8 +23,6 @@ export function initGame(): void {
         .then(data => {
             const gameParams = data.params as GameParams;
 
-            console.log('Game parameters:', gameParams);
-
             const renderDetails = {
                 arena_color: "black",
                 ball_color: "white",

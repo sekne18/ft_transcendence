@@ -18,7 +18,6 @@ export class GameRenderer {
 		this.resizeCanvas(this.containerId);
 		this.size_ratio = this.canvas.width / this.GameParams.arena_w;
 		window.addEventListener('resize', () => {
-			console.log('Resizing canvas');
 			this.resizeCanvas(this.containerId);
 			this.size_ratio = this.canvas.width / this.GameParams.arena_w;
 			this.render();

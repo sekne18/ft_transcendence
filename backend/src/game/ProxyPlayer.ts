@@ -1,9 +1,9 @@
 
 import { TournamentConnection } from "../tournament/Types.js";
-import {PlayerSocket, wsMsg } from "./GameTypes.js";
+import { PlayerSocket, wsMsg } from "./GameTypes.js";
 
 /* Handles forwarding of filtered messages for tournaments */
-export class ProxyPlayer implements PlayerSocket{
+export class ProxyPlayer implements PlayerSocket {
 	private callbacks: { [key: string]: (data?: any) => void } = {};
 	private eventBuffer: { key: string, data: any }[] = [];
 	private messageFilter: Map<string, boolean>;
@@ -50,17 +50,17 @@ export class ProxyPlayer implements PlayerSocket{
 	// for example: { "game_state": true, "game_event": false }
 	// this will filter out all game_state messages and send all game_event messages
 	// if you want to send a msg type you have to set the value to false or not set it at all
-	private filterMessage(msg: string): boolean {
-		const parsedMsg = JSON.parse(msg) as wsMsg;
-		if (this.messageFilter.has(parsedMsg.type)) {
-			return this.messageFilter.get(parsedMsg.type) || false;
+	private filterMessage(msgType: string): boolean {
+		if (this.messageFilter.has(msgType)) {
+			return this.messageFilter.get(msgType) || false;
 		}
 		return false;
 	}
 
 	public send(msg: string): void {
-		if (!this.filterMessage(msg) && this.playerConnection.socket) {
-			this.playerConnection.socket.send(msg);
+		const parsedMsg = JSON.parse(msg);
+		if (!this.filterMessage(parsedMsg.type) && this.playerConnection.socket) {
+			this.playerConnection.socket.send(JSON.stringify(parsedMsg));
 		}
 	}
 

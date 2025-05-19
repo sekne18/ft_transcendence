@@ -20,7 +20,7 @@ export function initProfile(userId?: number): void {
 
   } else {
     setProfileButtons(false);
-    
+
     renderUserProfile();
     renderMatchHistory();
   }
@@ -73,32 +73,31 @@ function startChat() {
     method: 'POST',
     credentials: 'include',
     headers: {
-        'Content-Type': 'application/json',
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       otherId: otherId,
     }),
-})
+  })
     .then(res => {
-        if (res.status === 401) {
-            window.location.href = '/auth';
-            return null;
-        }
-        return res.json();
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
     })
     .then(data => {
-      console.log(data);
-        if (data.success) {
-          // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
-          // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
-          // chatWindow.classList.add("w-0", "h-0", "scale-0");
-          showToast('Chat started successfully!', '', 'success');
-        } else {
-            console.error('Chat failed:', data.message);
-        }
+      if (data.success) {
+        // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
+        // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
+        // chatWindow.classList.add("w-0", "h-0", "scale-0");
+        showToast('Chat started successfully!', '', 'success');
+      } else {
+        console.error('Chat failed:', data.message);
+      }
     })
     .catch(error => {
-        console.error('Error during login:', error);
+      console.error('Error during login:', error);
     });
 }
 
@@ -172,6 +171,9 @@ function fillProfileData(profile: Profile) {
   getElement('display_name').textContent = profile.display_name;
   getElement('username').textContent = profile.username;
   getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
+  const navAvatar = getElement('user-avatar') as HTMLImageElement;
+  navAvatar.src = profile.avatar_url;
+  navAvatar.alt = profile.display_name;
 
   // Set user stats
   getElement('games-played').textContent = profile.games_played.toString();
@@ -271,7 +273,7 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
-  fetch(avatarUrl) 
+  fetch(avatarUrl)
     .then(res => res.blob())
     .then(blob => {
       const reader = new FileReader();

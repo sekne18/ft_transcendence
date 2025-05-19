@@ -63,13 +63,27 @@ export type TournamentMsgIn = {
 		bracket: Bracket,
 	}
 } | {
-	type: 'start_spectate',
-	data: {
-		gameParams: GameParams,
-		
-	}
-} | {
 	type: 'game_state',
-		data: GameState,
-		timestamp: number,
+	matchId: number,
+	data: GameState,
+	timestamp: number,
+} | {
+	type: 'game_event',
+	matchId: number,
+	data: {
+		event: 'game_over'
+	} | {
+		event: 'game_found',
+		side: 'left' | 'right',
+		enemy_id: number,
+	} | {
+		event: 'start_countdown',
+		time: number,
+	},
+	timestamp: number,
+} | {
+	type: 'goal',
+	matchId: number,
+	data: 'left' | 'right',
+	timestamp: number,
 };

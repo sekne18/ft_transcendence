@@ -60,7 +60,9 @@ export class GameSession {
 			player.socket.send(JSON.stringify(msg));
 		});
 		this.spectators.forEach((spectator) => {
-			spectator.socket.send(JSON.stringify(msg));
+			const specMsg: any = { ...msg };
+			specMsg.matchId = this.matchId;
+			spectator.socket.send(JSON.stringify(specMsg));
 		});
 	}
 
@@ -109,9 +111,11 @@ export class GameSession {
 		this.players.forEach((player) => {
 			player.socket.close(1000, "Game Over");
 		});
-		this.spectators.forEach((spectator) => {
-			spectator.socket.close(1000, "Game Over");
-		});
+		// this.spectators.forEach((spectator) => {
+		// 	spectator.socket.close(1000, "Game Over");
+		// });
+		this.players = [];
+		this.spectators = [];
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;

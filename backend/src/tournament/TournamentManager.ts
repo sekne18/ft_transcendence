@@ -3,12 +3,28 @@ import { Tournament } from "./Tournament.js";
 import { TournamentConnection, TournamentEvent, TournamentMsgIn, TournamentMsgOut, TournamentParams, TournamentView } from "./Types.js";
 import { createTournament, getLiveTournaments } from "../db/queries/tournament.js";
 import fastifyWebsocket from "@fastify/websocket";
+import { ProxyPlayer } from "../game/ProxyPlayer.js";
 
 export class TournamentManager {
 	private connectedPlayers: Map<number, TournamentConnection> = new Map();
+	private spectators: { id: number, socket: ProxyPlayer }[] = [];
 	private tournaments: Map<number, Tournament> = new Map();
 	private tournamentUnsubscribers: Map<number, () => void> = new Map();
 	private gameStore: GameStore;
+	private readonly tournamentTabFilter: Map<string, boolean> = new Map([
+		['game_state', true],
+		['set_side', true],
+		['goal', false],
+		['error', false],
+		['game_event', false]
+	]);
+	private readonly spectatorTabFilter: Map<string, boolean> = new Map([
+		['game_state', false],
+		['set_side', false],
+		['goal', false],
+		['error', false],
+		['game_event', false]
+	]);
 
 	constructor(gameStore: GameStore) {
 		this.gameStore = gameStore;
@@ -17,12 +33,21 @@ export class TournamentManager {
 	public init() {
 		const tournaments = getLiveTournaments() as { id: number, max_players: number, created_at: number }[];
 		tournaments.forEach((tournament) => {
-			const newTournament = new Tournament(tournament.id, tournament.max_players, tournament.created_at, this.gameStore, this.removeTournament.bind(this));
+			const newTournament = new Tournament(tournament.id, tournament.max_players, tournament.created_at, this.gameStore,
+				this.onMatchEnd.bind(this), this.onMatchBegin.bind(this), this.removeTournament.bind(this));
 			this.tournamentUnsubscribers.set(tournament.id, newTournament.subscribe((event: TournamentEvent) => {
 				this.forwardTournamentEvent(tournament.id, event);
 			}));
 			this.tournaments.set(tournament.id, newTournament);
 		});
+	}
+
+	public onMatchBegin(tournamentId: number, matchId: number): void {
+		this.gameStore.spectateGame(matchId, this.spectators);
+	}
+
+	public onMatchEnd(tournamentId: number, matchId: number): void {
+		//...
 	}
 
 	public addTournament(tournament: TournamentParams): void {
@@ -32,7 +57,8 @@ export class TournamentManager {
 			throw new Error("Max players must be less than or equal to 8");
 		const date = Date.now();
 		const id = createTournament(tournament.maxPlayers, date);
-		const newTournament = new Tournament(id, tournament.maxPlayers, date, this.gameStore, this.removeTournament.bind(this));
+		const newTournament = new Tournament(id, tournament.maxPlayers, date, this.gameStore,
+			this.onMatchEnd.bind(this), this.onMatchBegin.bind(this), this.removeTournament.bind(this));
 		this.tournamentUnsubscribers.set(id, newTournament.subscribe((event: TournamentEvent) => {
 			this.forwardTournamentEvent(id, event);
 		}));
@@ -90,6 +116,7 @@ export class TournamentManager {
 			socket: player.socket,
 		} as TournamentConnection;
 		this.connectedPlayers.set(player.id, tournamentConnection);
+		this.spectators.push({ id: player.id, socket: new ProxyPlayer(this.tournamentTabFilter, tournamentConnection) });
 		player.socket.on("close", () => {
 			this.disconnectPlayer(player.id);
 		});
@@ -182,6 +209,7 @@ export class TournamentManager {
 			throw new Error("Player not found");
 		}
 		this.connectedPlayers.delete(playerId);
+		this.spectators = this.spectators.filter((s) => s.id !== playerId);
 		if (player.enteredTournament) {
 			this.removePlayerFromTournamentQueue(player.enteredTournament, playerId);
 			player.socket?.close();

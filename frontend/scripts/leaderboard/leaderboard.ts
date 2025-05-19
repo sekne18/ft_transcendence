@@ -6,7 +6,6 @@ import { leaderboardEntry } from "./types";
     This function is called when a tab is pressed.
 */
 export function initLeaderboard(): void {
-    console.log("Leaderboard initialized");
     getData();
 }
 
@@ -21,7 +20,6 @@ function getData(offset = 0): void {
         }
         response.json().then((data: any) => {
             const leaderboard: leaderboardEntry[] = data.leaderboard;
-            console.log('Leaderboard data:', leaderboard);
             const leaderboardData: LeaderboardPlayer[] = leaderboard.map((entry, i) => ({
                 id: entry.user_id.toString(),
                 rank: i + 1 + offset,
