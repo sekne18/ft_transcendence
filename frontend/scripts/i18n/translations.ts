@@ -69,7 +69,19 @@ export const translations: Record<string, LanguageMap> = {
 
     // Chat items
     chat_title: 'Spreek',
-    chat_send: 'Stuur'
+    chat_send: 'Stuur',
+
+    // Friendslist items
+    friendslist_title: 'Vrienden',
+    friendslist_desc: 'Beheer vrienden en verbindingen',
+    friendslist_all_friends: 'Alle Vrienden',
+    friendslist_online: 'Online',
+    friendslist_pending: 'In afwachting',
+    friendslist_blocked: 'Geblokkeerd',
+    friendslist_search: 'Zoek vrienden...',
+    friendslist_no_friends: 'Geen vrienden gevonden',
+    friendslist_no_users: 'Geen gebruikers gevonden',
+    friendslist_showing_users: 'Toon alle gebruikers'
   },
   sl: {
     // Navbar items
@@ -98,6 +110,18 @@ export const translations: Record<string, LanguageMap> = {
 
     // Chat items
     chat_title: 'Pogovor',
-    chat_send: 'Pošlji'
+    chat_send: 'Pošlji',
+
+    // Friendslist items
+    friendslist_title: 'Prijatelji',
+    friendslist_desc: 'Upravljaj prijatelje in povezave',
+    friendslist_all_friends: 'Vsi prijatelji',
+    friendslist_online: 'Spletni',
+    friendslist_pending: 'Čaka',
+    friendslist_blocked: 'Blokirani',
+    friendslist_search: 'Išči prijatelje...',
+    friendslist_no_friends: 'Noben prijatelj ni najden',
+    friendslist_no_users: 'Noben uporabnik ni najden',
+    friendslist_showing_users: 'Prikaži vse uporabnike'
   }
 };
