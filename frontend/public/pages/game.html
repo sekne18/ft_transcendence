@@ -34,12 +34,10 @@
     <div class="grow flex flex-col items-center justify-center relative">
         <!-- Game Canvas -->
         <canvas id="game-canvas" class="min-h-0 rounded-lg border border-gray-700 shadow-lg"></canvas>
-
         <!-- Game Overlay -->
         <div id="game-overlay"
-            class="invisible w-full absolute h-full z-20 flex flex-col items-center justify-center rounded-lg">
-            <h2 id="game-result-text" class="text-4xl sm:text-5xl font-orbitron font-bold mb-3"></h2>
-            <p id="game-result-score" class="text-xl sm:text-2xl font-orbitron mb-6"></p>
+            class="invisible w-full text-yellow-500 absolute h-full z-20 flex flex-col items-center justify-center rounded-lg">
+            <h2 id="game-result-text" class="text-3xl hidden text-yellow-500 sm:text-4xl font-orbitron font-bold mb-3"></h2>
             <button id="game-matchmake-button"
                 class="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-orbitron rounded-md transition-colors shadow-lg">
                 Play Again
