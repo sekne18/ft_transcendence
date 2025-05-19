@@ -9,23 +9,29 @@ export interface FriendListPlayer {
 }
 
 export function getAllUsers(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
+  // Exclude users that are already friends or blocked
   const rows = db.prepare(`
     SELECT 
       u.id, 
       u.username, 
+      'Not Friends Yet' AS state, 
       u.online, 
       u.avatar_url AS avatarUrl
     FROM users u
-    WHERE u.display_name LIKE ?
-    AND u.id != ?
+    LEFT JOIN friends f ON (f.user1_id = ? AND f.user2_id = u.id) OR (f.user2_id = ? AND f.user1_id = u.id)
+    WHERE u.id != ?
+      AND f.status IS NULL
+      AND u.display_name LIKE ?
+    ORDER BY u.display_name ASC
     LIMIT ?
-  `).all(name + '%', userId, limit) as {
+  `).all(userId, userId, userId, name + '%', limit) as {
     id: number;
     username: string;
     state: string;
     online: number;
     avatarUrl: string;
   }[];
+  
 
   return rows.map(row => ({
     id: row.id,

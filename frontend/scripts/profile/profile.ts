@@ -59,7 +59,7 @@ function setProfileButtons(isOther: boolean) {
       console.log(res);
       if (res.success) {
         const status = res.status;
-        if (status === 'friend') {
+        if (status === 'accepted') {
           addFriendBtn.classList.add('hidden');
           removeFriendBtn.classList.remove('hidden');
           blockBtn.classList.remove('hidden');
@@ -173,10 +173,10 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast('Friend request sent successfully!', '', 'success');
-        // fetchUserProfile(otherId).then((userProfile) => {
-        //   renderUserProfile(userProfile);
-        //   renderMatchHistory(otherId);
-        // });
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
       } else {
         showToast('Failed to send friend request.', '', 'error');
       }
@@ -202,6 +202,10 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast('User blocked successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
       } else {
         showToast('Failed to block user.', '', 'error');
       }

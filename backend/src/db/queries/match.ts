@@ -16,7 +16,7 @@ export function createMatch(
 }
 
 export function getMatchesByUserId(userId: string) {
-    const stmt = db.prepare(`SELECT * FROM matches WHERE player1_id = ? OR player2_id = ?`);
+    const stmt = db.prepare(`SELECT * FROM matches WHERE player1_id = ? OR player2_id = ? ORDER BY id DESC`);
     return stmt.all(userId, userId);
 }
 
