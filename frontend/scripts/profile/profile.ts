@@ -394,7 +394,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
           ${icon}
         </div>
         <div>
-          <p class="font-semibold"><p data-i18n="profile_versus"></p> ${match.opponent}</p>
+          <p class="font-semibold"><span data-i18n="profile_versus"></span> ${match.opponent}</p>
           <p class="text-gray-400 text-sm">${date}</p>
         </div>
       </div>
