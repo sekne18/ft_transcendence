@@ -32,16 +32,16 @@ export function initializeDatabase() {
 
 		db.prepare(`
 			CREATE TABLE friends (
-          user1_id INTEGER,
-          user2_id INTEGER,
-          sender_id INTEGER,
-          status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'blocked'
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          PRIMARY KEY (user1_id, user2_id),
-          FOREIGN KEY (user1_id) REFERENCES users(id),
-          FOREIGN KEY (user2_id) REFERENCES users(id),
-          CHECK (user1_id < user2_id)
-        );
+				user1_id INTEGER,
+				user2_id INTEGER,
+				sender_id INTEGER,
+				status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'blocked'
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+				PRIMARY KEY (user1_id, user2_id),
+				FOREIGN KEY (user1_id) REFERENCES users(id),
+				FOREIGN KEY (user2_id) REFERENCES users(id),
+				CHECK (user1_id < user2_id)
+			);
 		`).run();
 
 		db.prepare(`

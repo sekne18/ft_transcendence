@@ -32,7 +32,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     online: number;
     avatarUrl: string;
   }[];
-  
+
 
   return rows.map(row => ({
     id: row.id,
@@ -217,10 +217,12 @@ export function declineFriendRequest(userId: number, friendId: number): void {
 }
 
 export function sendFriendRequest(userId: number, friendId: number): void {
+  const user1 = userId < friendId ? userId : friendId;
+  const user2 = userId < friendId ? friendId : userId;
   db.prepare(`
       INSERT OR REPLACE INTO friends (user1_id, user2_id, sender_id, status)
       VALUES (?, ?, ?, 'pending')
-    `).run(userId, friendId, userId);
+    `).run(user1, user2, userId);
 }
 
 export function getFriendshipStatus(userId: number, friendId: number): string | null {
