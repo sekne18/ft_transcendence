@@ -1,4 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
+import { languageService } from "../i18n";
 import { getDataFromForm, getElement, showToast } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
@@ -373,6 +374,7 @@ function renderMatchHistory(userId?: number) {
         recentActivityContainer.appendChild(recentMatchElement);
       }
     });
+    languageService.init();
   });
 
 }
@@ -392,7 +394,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
           ${icon}
         </div>
         <div>
-          <p class="font-semibold">Match vs ${match.opponent}</p>
+          <p class="font-semibold"><p data-i18n="profile_versus"></p> ${match.opponent}</p>
           <p class="text-gray-400 text-sm">${date}</p>
         </div>
       </div>
