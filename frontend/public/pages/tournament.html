@@ -1,9 +1,12 @@
 <div id="page-tournament" class="h-full w-full">
-    <div class="bg-[#16161F] p-6 rounded-xl w-full max-w-7xl mt-10 justify-self-center">
-        <div id="tournament-header">
-        </div>
-        <div id="tournament-content">
-        </div>
+    <div class="p-6 rounded-xl w-full max-w-7xl mt-10 justify-self-center">
+        <div id="tournament-container"></div>
+        <canvas id="tournament-canvas" class="w-full h-96 bg-gray-900 rounded-lg mt-4 z-50">
+            <button id="tournament-canvas-close"
+                class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                X
+            </button>
+        </canvas>
         <div id="join-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title"
             role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -29,15 +32,17 @@
                                 </h3>
                                 <div class="mt-2">
                                     <p class="text-sm text-gray-400">
-                                        Join the current tournament queue. The tournament will start automatically once
+                                        Join the current tournament queue. The tournament will start automatically
+                                        once
                                         6 players have joined.
                                     </p>
                                     <div class="bg-gray-700 p-4 rounded-lg mt-4">
                                         <div class="flex items-center gap-3 mb-4">
-                                            <img id="modal-avatar" src="https://via.placeholder.com/50"
-                                                alt="Your Avatar" class="w-10 h-10 rounded-full">
+                                            <img id="modal-avatar" src="/uploads/avatars/default.png" alt="Your Avatar"
+                                                class="w-10 h-10 rounded-full">
                                             <div>
-                                                <h4 id="modal-username" class="font-semibold text-white">CurrentPlayer
+                                                <h4 id="modal-username" class="font-semibold text-white">
+                                                    CurrentPlayer
                                                 </h4>
                                                 <p id="modal-level" class="text-gray-400 text-sm">Level 1</p>
                                             </div>

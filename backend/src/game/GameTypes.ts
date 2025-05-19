@@ -1,6 +1,3 @@
-import fastifyWebsocket from "@fastify/websocket";
-import { AIPlayer } from "./AIPlayer.js";
-
 export type MatchMakerParams = {
 	ratingWindowMin: number,
 	ratingWindowMax: number,
@@ -39,9 +36,17 @@ export type AIPlayerParams = {
 	skill_deviation: number, // [0, ...[ 0 = smartest
 }
 
+export interface PlayerSocket {
+	on(event: string, callback: (data: any) => void): void;
+	send(msg: string): void;
+	close(): void;
+	close(code: number): void;
+	close(code: number, reason: string): void;
+}
+
 export type PlayerConnection = {
 	id: number,
-	socket: fastifyWebsocket.WebSocket | AIPlayer,
+	socket: PlayerSocket, //fastifyWebsocket.WebSocket | AIPlayer | ProxyPlayer,
 };
 
 export type QueuedPlayer = {
@@ -86,4 +91,10 @@ export type wsMsg = {
 	type: 'error',
 	data: string,
 	timestamp: number,
+};
+
+
+export type MatchParams = {
+	tournamentId: number | null,
+	round: number | null
 };

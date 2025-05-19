@@ -6,18 +6,19 @@ export class GameRenderer {
 	private GameParams: GameParams;
 	private renderDetails: RenderDetails;
 	private size_ratio: number;
+	private containerId: string;
 
 
-	constructor(canvas: HTMLCanvasElement, GameParams: GameParams, renderDetails: RenderDetails, private getGameState: () => GameState) {
+	constructor(canvas: HTMLCanvasElement, GameParams: GameParams, renderDetails: RenderDetails, private getGameState: () => GameState, containerId: string = 'page-game') {
+		this.containerId = containerId;
 		this.GameParams = GameParams;
 		this.renderDetails = renderDetails;
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d")!;
-		this.resizeCanvas();
+		this.resizeCanvas(this.containerId);
 		this.size_ratio = this.canvas.width / this.GameParams.arena_w;
 		window.addEventListener('resize', () => {
-			console.log('Resizing canvas');
-			this.resizeCanvas();
+			this.resizeCanvas(this.containerId);
 			this.size_ratio = this.canvas.width / this.GameParams.arena_w;
 			this.render();
 		});
@@ -81,16 +82,14 @@ export class GameRenderer {
 		);
 	}
 
-	private resizeCanvas(): void {
-		const gameContainer = document.getElementById('page-game') as HTMLDivElement;
+	private resizeCanvas(containerId: string): void {
+		const gameContainer = document.getElementById(containerId) as HTMLDivElement;
 		const dpr = window.devicePixelRatio || 1;
 
 		// === Compute desired CSS size based on arena aspect ratio and screen ===
 		const maxWidth = Math.min(this.renderDetails.max_canvas_width, gameContainer.clientWidth - this.renderDetails.canvas_margin * 2);
 		const maxHeight = gameContainer.clientHeight - this.renderDetails.canvas_margin * 2;
 		const aspect = this.GameParams.arena_w / this.GameParams.arena_h;
-
-		console.log(`maxWidth: ${maxWidth}, maxHeight: ${maxHeight}, aspect: ${aspect}`);
 
 		let cssWidth = maxWidth;
 		let cssHeight = cssWidth / aspect;

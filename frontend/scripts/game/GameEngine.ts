@@ -1,8 +1,9 @@
 import { GameConnection } from './GameConnection';
-import { GameParams, RenderDetails, GameStatus, WsParams } from './GameTypes';
+import { GameParams, RenderDetails, GameStatus, WsParams, TournamentParams } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
+import { loadContent } from '../router/router';
 
 
 export class GameEngine {
@@ -13,9 +14,13 @@ export class GameEngine {
 	private UIManager: UIManager;
 	private player: 'left' | 'right' | null;
 	private enemyDisconnected: boolean = false;
+	private tournamentParams: TournamentParams | null = null;
+	private isTournament: boolean;
 
-	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams) {
-		this.status = 'idle';
+	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams, tournamentParams: TournamentParams | null = null) {
+		this.isTournament = tournamentParams ? true : false;
+		this.tournamentParams = tournamentParams;
+		this.status = this.isTournament ? 'idle-tournament' : 'idle';
 		this.player = null;
 		this.game = new GameConnection(
 			gameParams,
@@ -33,7 +38,7 @@ export class GameEngine {
 	}
 
 	public start(): void {
-		this.changeState('idle');
+		this.changeState(this.isTournament ? 'idle-tournament' : 'idle');
 	}
 
 	public matchmake(): void {
@@ -87,7 +92,11 @@ export class GameEngine {
 	}
 
 	private onGameOver(): void {
-		this.changeState('gameover');
+		if (this.tournamentParams && this.tournamentParams.isPlaying) {
+			this.changeState('gameover-tournament');
+		} else {
+			this.changeState('gameover');
+		}
 		this.game.disconnect();
 	}
 
@@ -118,6 +127,13 @@ export class GameEngine {
 				break;
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('hidden');
+				break;
+			case 'idle-tournament':
+				this.UIManager.toggleOverlayVisibility('hidden');
+				break;
+			case 'gameover-tournament':
+				this.UIManager.toggleOverlayVisibility('hidden');
+				this.UIManager.updateScore(0, 0);
 				break;
 			default:
 				break;
@@ -154,6 +170,16 @@ export class GameEngine {
 				break;
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('visible');
+				break;
+			case 'idle-tournament':
+				this.UIManager.setCountdownOverlay('Waiting for your match to begin...');
+				this.UIManager.toggleOverlayVisibility('visible');
+				if (this.tournamentParams && this.tournamentParams.isPlaying) {
+					this.game.connect();
+				}
+				break;
+			case 'gameover-tournament':
+				loadContent('/tournament');
 				break;
 			default:
 				break;

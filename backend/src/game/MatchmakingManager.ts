@@ -2,13 +2,15 @@ import { MatchMakerParams, PlayerConnection, QueuedPlayer, GameParams, AIPlayerP
 import { GameSession } from "./GameSession.js";
 import { gameParams, matchmakerParams, aiParams } from "./GameParams.js";
 import { AIPlayer } from "./AIPlayer.js";
-import { getUserByUsername } from "../db/queries/user.js";
+import { GameStore } from "./GameStore.js";
 
 export class MatchmakingManager {
 	private queue: QueuedPlayer[] = [];
 	private updateInterval: NodeJS.Timeout | null = null;
+	private gameStore: GameStore;
 
-	constructor() {
+	constructor(gameStore: GameStore) {
+		this.gameStore = gameStore;
 	}
 
 	public start(): void {
@@ -27,7 +29,6 @@ export class MatchmakingManager {
 		}
 	}
 
-
 	public enqueue(conn: PlayerConnection, rating: number): void {
 		this.queue.push({
 			conn,
@@ -36,8 +37,7 @@ export class MatchmakingManager {
 		});
 		conn.socket.on("close", () => {
 			this.dequeue(conn);
-		}
-		);
+		});
 	}
 
 	public dequeue(conn: PlayerConnection): void {
@@ -68,29 +68,20 @@ export class MatchmakingManager {
 				if (ratingDiff <= maxAllowedDiff) {
 					// Found match
 					console.log(`Matched players ${p1.conn.id} and ${p2.conn.id} with rating difference ${ratingDiff}`);
-					const session = new GameSession(p1.conn, p2.conn, gameParams);
+					this.gameStore.addGame(p1.conn, p2.conn, { tournamentId: null, round: null });
 
 					this.queue.splice(j, 1);
 					this.queue.splice(i, 1);
-
-					session.start();
 					return;
 				}
 			}
 			if (Date.now() - p1.joinedAt > matchmakerParams.timeUntilAI * 1000) {
 				// If player has been waiting too long, assign AI
 				const aiPlayer = new AIPlayer(gameParams, aiParams);
-				const aiUser = getUserByUsername("ai_bot") as { id: number };
-				const session = new GameSession(p1.conn, { id: aiUser.id, socket: aiPlayer }, gameParams);
+				this.gameStore.addGame(p1.conn, { id: 1, socket: aiPlayer }, { tournamentId: null, round: null });
 				this.queue.splice(i, 1);
-				session.start();
 				return;
 			}
 		}
 	}
-
-	public startSession(p1: PlayerConnection, p2: PlayerConnection): void {
-		const session = new GameSession(p1, p2, gameParams);
-		session.start();
-	};
 };

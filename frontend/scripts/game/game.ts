@@ -1,3 +1,4 @@
+import { State } from "../state/State";
 import { wsConfig } from "../wsConfig";
 import { GameEngine } from "./GameEngine";
 import { GameParams } from "./GameTypes";
@@ -22,8 +23,6 @@ export function initGame(): void {
         .then(data => {
             const gameParams = data.params as GameParams;
 
-            console.log('Game parameters:', gameParams);
-
             const renderDetails = {
                 arena_color: "black",
                 ball_color: "white",
@@ -32,11 +31,14 @@ export function initGame(): void {
                 canvas_margin: 32
             };
 
+            const tournament = State.getState("tournament");
+            const isTournament = tournament ? true : false;
+
             const wsParams = {
-                url: `${wsConfig.scheme}://${wsConfig.host}/api/game/ws`,
+                url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? `tournament/${tournament.id}` : "game"}/ws`,
             };
 
-            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams);
+            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, isTournament ? tournament : null);
             gameEngine.start();
         })
         .catch(error => {

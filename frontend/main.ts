@@ -6,6 +6,22 @@ import { initChat } from './scripts/chat/chat';
 // Initial page load
 document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('auth-ready', async () => {
+    // Set avatar
+    fetch("/api/user", {
+        method: "GET",
+        credentials: "include"
+    }).then((response) => {
+        if (response.ok) {
+            response.json().then((data) => {
+                const avatar = document.getElementById("user-avatar") as HTMLImageElement;
+                const user = data.user;
+                avatar.src = user.avatar_url;
+                avatar.alt = user.display_name;
+            });
+        } else {
+            console.error("Failed to fetch user data");
+        }
+    });
     initChat();
   });
   initRouter();

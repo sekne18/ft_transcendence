@@ -1,7 +1,7 @@
 
-import { GameState, GameParams, UserInput, AIPlayerParams, vec2d } from "./GameTypes.js";
+import { GameState, GameParams, UserInput, AIPlayerParams, vec2d, PlayerSocket } from "./GameTypes.js";
 
-export class AIPlayer {
+export class AIPlayer implements PlayerSocket {
 	private callbacks: { [key: string]: (data: any) => void } = {};
 	private newestState: GameState;
 	private currState: GameState;

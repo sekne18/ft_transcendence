@@ -8,7 +8,7 @@ export class PointerInputController {
 	private canvas: HTMLCanvasElement;
 	private readonly onMove = this.handlePointerMove.bind(this);
 	private readonly gameParams: GameParams;
-	private readonly sizeRatio: number;
+	private readonly sizeRatio: () => number;
 	private side: 'left' | 'right' = 'left';
 
 	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, private getGameState: () => GameState, private onInput: (paddle: 'left' | 'right', input: UserInput) => void) {
@@ -19,7 +19,9 @@ export class PointerInputController {
 			x: gameState.left.x,
 			y: gameState.left.y
 		};
-		this.sizeRatio = canvas.width / gameParams.arena_w;
+		this.sizeRatio = () => {
+			return canvas.width / gameParams.arena_w;
+		}
 	}
 
 	public setSide(side: 'left' | 'right'): void {
@@ -58,7 +60,7 @@ export class PointerInputController {
 		gameState: GameState,
 		latestCursorPos: { x: number; y: number })
 		: UserInput {
-		const distance = latestCursorPos.y / this.sizeRatio - (this.side === 'left' ? gameState.left.y : gameState.right.y);
+		const distance = latestCursorPos.y / this.sizeRatio() - (this.side === 'left' ? gameState.left.y : gameState.right.y);
 		if (Math.abs(distance) < gameParams.deadzone)
 			return 0;
 		const input = Math.max(-1, Math.min(1, distance * 2 / gameParams.paddle_h));

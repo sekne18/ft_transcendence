@@ -46,13 +46,11 @@ class ChatManager {
         this.messageContainer.addEventListener("scroll", () => {
             if (this.messageContainer.scrollTop === 0 && this.SelectedChatId !== null) {
                 const firstMessage = this.messageContainer.querySelector("div");
-                console.log("firstMessage", firstMessage);
                 if (firstMessage) {
                     if (firstMessage.id === "loading-messages") {
                         return;
                     }
                     const firstMessageDate = parseInt((firstMessage.querySelector("span") as HTMLSpanElement).dataset.timestamp || "0");
-                    console.log("firstMessageDate", firstMessageDate);
                     this.renderOlderMessages(this.SelectedChatId, firstMessageDate);
                 }
             }
@@ -108,9 +106,7 @@ class ChatManager {
         const response = await fetch("/api/chat");
         if (response.ok) {
             const chats = (await response.json() as any).chats;
-            console.log("Fetched chat list:", chats);
             if (chats.length === 0) {
-                console.log("No chats found");
                 return;
             }
             chats.forEach((chat: { chat_id: number; user_id: number, display_name: string, avatar_url: string }) => {
@@ -127,7 +123,6 @@ class ChatManager {
     }
 
     private updateChatBadges(chatId: number, count: number): void {
-        console.log("Updating chat badges for chat ID:", chatId, "with count:", count);
         const badge = document.getElementById(`badge-${chatId}`);
         if (badge) {
             if (count > 0) {
@@ -171,7 +166,6 @@ class ChatManager {
     }
 
     private async fetchMessages(chatId: number, before?: number): Promise<ChatMessage[] | null> {
-        console.log("Fetching messages for chat ID:", chatId);
         const date = before ? before : Date.now();
         const response = await fetch(`/api/chat/${chatId}/messages?limit=10&before=${date}`);
         if (response.ok) {
@@ -208,7 +202,6 @@ class ChatManager {
 
     private renderMessages(chatId: number): void {
         const chatMessages = this.messages[chatId];
-        console.log("chatMessages", chatMessages);
         if (!chatMessages || chatMessages.length === 0) {
             this.setLoadingElement(false, "Loading messages...");
             this.fetchMessages(chatId).then((data) => {
@@ -231,7 +224,6 @@ class ChatManager {
         } else {
             this.messageContainer.innerHTML = "";
             chatMessages.forEach((message) => {
-                console.log("creating message element", message.sender_id, this.SelectedUserId);
                 const messageElement = this.createMessageElement(message, message.sender_id === this.SelectedUserId);
                 this.messageContainer.insertAdjacentElement("afterbegin", messageElement);
             });
@@ -241,9 +233,7 @@ class ChatManager {
 
     private renderOlderMessages(chatId: number, before: number): void {
         const loadingElement = this.setLoadingElement(false, "Loading older messages...");
-        console.log("Loading older messages before", before, new Date(before).toISOString());
         this.fetchMessages(chatId, before).then((messages) => {
-            console.log("Fetched older messages:", messages);
             if (messages) {
                 if (messages.length === 0) {
                     loadingElement.textContent = "Beginning of this chat.";
@@ -276,7 +266,6 @@ class ChatManager {
         const response = await fetch(`/api/chat/${chatId}/unread-count`);
         if (response.ok) {
             const data = await response.json();
-            console.log("Fetched unread count:", data.count);
             return data.count;
         } else {
             console.error("Failed to fetch unread count");
@@ -359,7 +348,6 @@ class ChatManager {
 
     private handleIncomingMessage(event: MessageEvent): void {
         const message = JSON.parse(event.data);
-        console.log("Received message:", message);
         // Handle the incoming message here
         switch (message.type) {
             case "message":
@@ -399,7 +387,6 @@ class ChatManager {
             sender_id: 0, // Replaced with actual sender ID on backend
             created_at: Date.now()
         };
-        console.log("Sending message at", new Date(msgObj.created_at).toISOString());
         const msg = {
             type: "message",
             data: msgObj

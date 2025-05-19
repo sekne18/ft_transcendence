@@ -1,4 +1,5 @@
 import { User } from "../../types.js";
+import { defaultAvatarPath } from "../../Config.js";
 import db from "../connection.js";
 
 
@@ -18,6 +19,9 @@ export function createUser({ username, display_name, email, hash, avatarUrl }: {
     INSERT INTO users (username, display_name, email, password, avatar_url)
     VALUES (?, ?, ?, ?, ?)
   `);
+  if (!avatarUrl) {
+    avatarUrl = defaultAvatarPath;
+  }
   const result = insertUser.run(username, display_name, email, hash, avatarUrl);
   const userId = result.lastInsertRowid as number;
 
@@ -50,17 +54,17 @@ export function getUserProfileById(id: number) {
   return stmt.get(id);
 }
 
-export function getUserByEmail(email: string) : User | undefined {
+export function getUserByEmail(email: string): User | undefined {
   const stmt = db.prepare(`SELECT * FROM users WHERE email = ?`);
   return stmt.get(email) as User;
 }
 
-export function getUserByUsername(username: string) : User | undefined {
+export function getUserByUsername(username: string): User | undefined {
   const stmt = db.prepare(`SELECT * FROM users WHERE username = ?`);
   return stmt.get(username) as User;
 }
 
-export function getUserById(id: number) : User | undefined {
+export function getUserById(id: number): User | undefined {
   const stmt = db.prepare(`SELECT * FROM users WHERE id = ?`);
   return stmt.get(id) as User;
 }

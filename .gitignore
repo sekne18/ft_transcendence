@@ -9,3 +9,6 @@
 nginx/ssl
 **/backend/public/uploads/avatars/*
 !**/backend/public/uploads/avatars/default.png
+!**/backend/public/uploads/avatars/bot.jpg
+**/.DS_Store
+**/db_data

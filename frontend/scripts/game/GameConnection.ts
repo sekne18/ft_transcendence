@@ -112,7 +112,6 @@ export class GameConnection {
 						this.onMatchFound(msg.data.side, msg.data.enemy_id);
 						break;
 					case 'game_over':
-						console.log('Received message:', msg);
 						this.onGameOver();
 						break;
 					case 'start_countdown':
@@ -125,7 +124,6 @@ export class GameConnection {
 				}
 				break;
 			case 'goal':
-				console.log('Received message:', msg);
 				this.onGoal(msg.data);
 				break;
 			case 'error':

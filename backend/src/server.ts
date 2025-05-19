@@ -7,7 +7,7 @@ import { readFile } from 'fs/promises';
 import { getChatsByUserId, getChatMessages, markMessagesAsRead, getUnreadCount, createChat } from './db/queries/chat.js';
 import { createUser, getUserByEmail, getUserById, getUserProfileById, updateUser } from './db/queries/user.js';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
-import { getMatchesByUserId } from './db/queries/match.js';
+import { getMatchById, getMatchesByUserId } from './db/queries/match.js';
 import { getStatsByUserId } from './db/queries/stats.js';
 import { initializeDatabase } from './db/schema.js';
 import * as argon2 from "argon2";
@@ -15,23 +15,22 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import './types.js';
 import { MatchmakingManager } from './game/MatchmakingManager.js';
-import { MatchMakerParams } from './game/GameTypes.js';
 import { gameParams } from './game/GameParams.js';
-import path, { dirname } from 'path';
+import path from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { TournamentManager } from './tournament/TournamentManager.js';
-import { TournamentSession } from './tournament/TournamentSession.js';
-import { PlayerQueue } from './tournament/PlayerQueue.js';
-import { ChatMsg, User } from './types.js';
-import { create } from 'domain';
+import { User } from './types.js';
 import { ChatManager } from './chat/ChatManager.js';
 import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers, blockFriend, sendFriendRequest, acceptFriendRequest, declineFriendRequest, unblockFriend, getFriendshipStatus } from './db/queries/friends.js';
 import { parseArgs } from 'util';
 import { getLeaderboard } from './db/queries/leaderboard.js';
-import { Match } from './tournament/Types.js';
+import { defaultAvatarPath } from './Config.js';
+import { GameStore } from './game/GameStore.js';
+import { getCompletedTournaments } from './db/queries/tournament.js';
+import { Bracket } from './tournament/Types.js';
 
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
@@ -43,7 +42,9 @@ const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | 
 const access_exp = 15 * 60; // 15 minutes
 const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 
-const matchmaker = new MatchmakingManager();
+const gameStore = new GameStore();
+const matchmaker = new MatchmakingManager(gameStore);
+const tournamentManager = new TournamentManager(gameStore);
 const chatManager = new ChatManager();
 
 const fastify: FastifyInstance = Fastify({
@@ -472,7 +473,7 @@ fastify.post('/api/register', async (req, reply) => {
 			display_name: username,
 			email,
 			hash,
-			avatarUrl: '/uploads/avatars/default.png'
+			avatarUrl: `${defaultAvatarPath}`
 		});
 
 		if (!userId) {
@@ -627,10 +628,12 @@ fastify.get('/api/user/profile',
 fastify.get('/api/user/profile/:id',
 	{ onRequest: [fastify.authenticate] },
 	async (req, reply) => {
-		const { id } = req.params as { id: number };
-
-		if (isNaN(id)) {
-			return reply.code(400).send({ success: false, message: 'Invalid user ID' });
+		const id = parseInt((req.params as any).id);
+		if (!id) {
+			return reply.code(400).send({
+				success: false,
+				message: 'Invalid user ID'
+			});
 		}
 
 		const user = await getUserProfileById(id);
@@ -669,7 +672,7 @@ fastify.get('/api/user/stats',
 	});
 
 fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-	const id = (req.user as { id: string }).id;
+	const id = (req.user as { id: number }).id;
 
 	if (!id) {
 		return reply.code(401).send({
@@ -697,15 +700,13 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 });
 
 fastify.get('/api/user/recent-matches/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-	const { id } = req.params as { id: string };
-
+	const id = parseInt((req.params as any).id);
 	if (!id) {
-		return reply.code(401).send({
+		return reply.code(400).send({
 			success: false,
-			message: 'Invalid user ID'
+			message: 'Invalid match ID'
 		});
 	}
-
 	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
 
 	const matchHistory = matches.map(match => {
@@ -724,6 +725,24 @@ fastify.get('/api/user/recent-matches/:id', { onRequest: [fastify.authenticate] 
 	});
 
 	return reply.send({ success: true, matchHistory });
+});
+
+fastify.get('/api/match/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = parseInt((req.params as any).id);
+	if (!id) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid match ID'
+		});
+	}
+	const match = getMatchById(id);
+	if (!match) {
+		return reply.code(404).send({
+			success: false,
+			message: 'Match not found'
+		});
+	}
+	return reply.send({ success: true, match });
 });
 
 fastify.get('/api/leaderboard', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -748,14 +767,14 @@ fastify.get('/api/game/params', { onRequest: [fastify.authenticate] }, async (re
 });
 
 fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
-	const user = getUserById((req.user as { id: number }).id) as { id: number; };
+	const user = getUserProfileById((req.user as { id: number }).id) as { id: number, wins: number };
 	console.log('WebSocket connection established:', user.id);
 	if (!user) {
 		console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
-	const rating = parseInt("5") || 0;
+	const rating = user.wins || 0;
 	matchmaker.enqueue({
 		id: user.id,
 		socket: conn
@@ -763,13 +782,29 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 });
 
 fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
+	const user = getUserProfileById((req.user as { id: number }).id) as { id: number; };
+	if (!user) {
+		console.error('User not found');
+		conn.close(1008, 'User not found');
+		return;
+	}
+	tournamentManager.connectPlayer({ id: user.id, socket: conn });
+});
+
+fastify.get('/api/tournament/:tId/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
 	if (!user) {
 		console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
-	tournamentManager.handleConnection(conn, req);
+	const tournamentId = parseInt((req.params as any).tId);
+	if (!tournamentId) {
+		console.error('Tournament ID not found');
+		conn.close(1008, 'Tournament ID not found');
+		return;
+	}
+	tournamentManager.setPlayerReady(tournamentId, { id: user.id, socket: conn });
 });
 
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
@@ -784,6 +819,55 @@ fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true
 		online: true
 	});
 	chatManager.addConnection({ id: user.id, socket: conn });
+});
+
+fastify.get('/api/tournament', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const id = (req.user as { id: number }).id;
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	console.log('Fetching tournaments for user:', id);
+	const tournaments = tournamentManager.getCurrentTournaments();
+	return reply.send({ success: true, tournaments: tournaments });
+});
+
+fastify.get('/api/tournament/finished', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	const limit = parseInt((req.query as any).limit) || 10;
+	const before = parseInt((req.query as any).before) || Date.now();
+
+	const tournaments = await getCompletedTournaments(limit, before) as { id: number; status: 'pending' | 'ongoing' | 'finished'; max_players: number; created_at: number; ended_at: number | null; players: number[]; bracket: string | null }[];
+	console.log('Fetching finished tournaments:', tournaments);
+	if (!tournaments) {
+		return reply.code(500).send({
+			success: false,
+			message: 'Failed to fetch tournaments'
+		});
+	}
+	const tournamentsAltered = tournaments.map((tournament) => {
+		const t2 = {
+			id: tournament.id,
+			status: tournament.status,
+			maxPlayers: tournament.max_players,
+			createdAt: tournament.created_at,
+			endedAt: tournament.ended_at,
+			players: [] as number[],
+			bracket: null as Bracket | null
+		};
+		const bracket = JSON.parse(tournament.bracket!) as Bracket;
+		if (bracket) {
+			bracket.rounds[0].forEach((match) => {
+				t2.players.push(match.playerIds.p1);
+				t2.players.push(match.playerIds.p2);
+			});
+			t2.bracket = bracket;
+		}
+		return t2;
+	});
+	console.log('tournamentsAltered', tournamentsAltered);
+	return reply.send({ success: true, tournaments: tournamentsAltered });
 });
 
 fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -929,7 +1013,7 @@ fastify.post('/api/chat/:chat_id/mark-as-read', { onRequest: [fastify.authentica
 	return reply.send({ success: true });
 });
 
-fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const searchVal = (req.query as any).name || '' || '';
 	if (!id) {
@@ -937,18 +1021,18 @@ fastify.get('/api/friends/all', { onRequest: [fastify.authenticate] }, async (re
 			success: false,
 			message: 'Invalid user ID'
 		});
-	}	
+	}
 	const friendsList: FriendListPlayer[] = await getAllFriends(id, searchVal);
 	let users: FriendListPlayer[] | undefined = undefined;
-	if (friendsList.length == 0) 
-		users = await getAllUsers(id, searchVal); 
+	if (friendsList.length == 0)
+		users = await getAllUsers(id, searchVal);
 	if (friendsList.length !== 0)
 		return reply.send({ success: true, friendsList: friendsList, isFriends: true, type: 'all' });
 	else
 		return reply.send({ success: true, friendsList: users, isFriends: false, type: 'all' });
 });
 
-fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const searchVal = (req.query as any).name || '';
 	if (!id) {
@@ -962,7 +1046,7 @@ fastify.get('/api/friends/online', { onRequest: [fastify.authenticate] }, async 
 	return reply.send({ success: true, friendsList, isFriends: true, type: 'online' });
 });
 
-fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const searchVal = (req.query as any).name || '';
 	if (!id) {
@@ -976,7 +1060,7 @@ fastify.get('/api/friends/pending', { onRequest: [fastify.authenticate] }, async
 	return reply.send({ success: true, friendsList, isFriends: true, type: 'pending' });
 });
 
-fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const searchVal = (req.query as any).name || '';
 	if (!id) {
@@ -990,7 +1074,7 @@ fastify.get('/api/friends/blocked', { onRequest: [fastify.authenticate] }, async
 	return reply.send({ success: true, friendsList, isFriends: true, type: 'blocked' });
 });
 
-fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const otherId = parseInt((req.body as any).otherId);
 	if (!id) {
@@ -1009,7 +1093,7 @@ fastify.post('/api/friends/send-friend-request', { onRequest: [fastify.authentic
 	return reply.send({ success: true });
 });
 
-fastify.post('/api/friends/accept-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.post('/api/friends/accept-request', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const otherId = parseInt((req.body as any).otherId);
 	if (!id) {
@@ -1028,7 +1112,7 @@ fastify.post('/api/friends/accept-request', { onRequest: [fastify.authenticate] 
 	return reply.send({ success: true });
 });
 
-fastify.post('/api/friends/decline-request', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.post('/api/friends/decline-request', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const otherId = parseInt((req.body as any).otherId);
 	if (!id) {
@@ -1047,7 +1131,7 @@ fastify.post('/api/friends/decline-request', { onRequest: [fastify.authenticate]
 	return reply.send({ success: true });
 });
 
-fastify.post('/api/friends/block', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.post('/api/friends/block', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const otherId = parseInt((req.body as any).otherId);
 	if (!id) {
@@ -1066,7 +1150,7 @@ fastify.post('/api/friends/block', { onRequest: [fastify.authenticate] }, async 
 	return reply.send({ success: true });
 });
 
-fastify.post('/api/friends/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) =>{
+fastify.post('/api/friends/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 	const otherId = parseInt((req.body as any).otherId);
 	if (!id) {
@@ -1106,13 +1190,10 @@ fastify.get('/api/friends/status/:id', { onRequest: [fastify.authenticate] }, as
 	return reply.send({ success: true, status });
 });
 
-const tournamentState = new TournamentSession(1);
-const playerQueue = new PlayerQueue(tournamentState);
-const tournamentManager = new TournamentManager(tournamentState, playerQueue);
-
 try {
 	initializeDatabase();
 	matchmaker.start();
+	tournamentManager.init();
 	await fastify.listen({ port: 3000, host: '0.0.0.0' });
 } catch (err) {
 	fastify.log.error(err)

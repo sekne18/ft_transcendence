@@ -79,7 +79,6 @@ export function init2FA() {
         const codeInput = document.getElementById('2fa-code') as HTMLInputElement;
         const code = codeInput.value.trim();
         if (code.length === 6 && /^[0-9]+$/.test(code)) {
-            console.log('Verifying 2FA with code:', code);
             // Call api to verify the 2FA code
             fetch('/api/2fa/confirm', {
                 method: 'POST',
@@ -101,7 +100,7 @@ export function init2FA() {
                     toggle2FA.checked = true;
                     modal2FA.classList.add('hidden');
                 } else {
-                    showToast('Failed to enable 2FA. Please try again.', '' , 'error');
+                    showToast('Failed to enable 2FA. Please try again.', '', 'error');
                     closeModal();
                 }
             });

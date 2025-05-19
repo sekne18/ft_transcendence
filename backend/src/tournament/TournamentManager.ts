@@ -1,92 +1,259 @@
+import { GameStore } from "../game/GameStore.js";
+import { Tournament } from "./Tournament.js";
+import { TournamentConnection, TournamentEvent, TournamentMsgIn, TournamentMsgOut, TournamentParams, TournamentView } from "./Types.js";
+import { createTournament, getLiveTournaments } from "../db/queries/tournament.js";
 import fastifyWebsocket from "@fastify/websocket";
-import { getUserById } from "../db/queries/user.js";
-import { Match, Player } from "./Types.js";
-import { TournamentSession } from "./TournamentSession.js";
-import { PlayerQueue } from "./PlayerQueue.js";
+import { ProxyPlayer } from "../game/ProxyPlayer.js";
 
 export class TournamentManager {
-  private tournamentSession: TournamentSession;
-  private playerQueue: PlayerQueue;
+	private connectedPlayers: Map<number, TournamentConnection> = new Map();
+	private spectators: { id: number, socket: ProxyPlayer }[] = [];
+	private tournaments: Map<number, Tournament> = new Map();
+	private tournamentUnsubscribers: Map<number, () => void> = new Map();
+	private gameStore: GameStore;
+	private readonly tournamentTabFilter: Map<string, boolean> = new Map([
+		['game_state', true],
+		['set_side', true],
+		['goal', false],
+		['error', false],
+		['game_event', false]
+	]);
+	private readonly spectatorTabFilter: Map<string, boolean> = new Map([
+		['game_state', false],
+		['set_side', false],
+		['goal', false],
+		['error', false],
+		['game_event', false]
+	]);
 
-  constructor(tournamentSession: TournamentSession, playerQueue: PlayerQueue) {
-    this.tournamentSession = tournamentSession;
-    this.playerQueue = playerQueue;
-  }
+	constructor(gameStore: GameStore) {
+		this.gameStore = gameStore;
+	}
 
-  handleConnection(conn: fastifyWebsocket.WebSocket, req: any) {
-    const user = getUserById(req.user.id) as { id: number; display_name: string; avatar_url: string; };
+	public init() {
+		const tournaments = getLiveTournaments() as { id: number, max_players: number, created_at: number }[];
+		tournaments.forEach((tournament) => {
+			const newTournament = new Tournament(tournament.id, tournament.max_players, tournament.created_at, this.gameStore,
+				this.onMatchEnd.bind(this), this.onMatchBegin.bind(this), this.removeTournament.bind(this));
+			this.tournamentUnsubscribers.set(tournament.id, newTournament.subscribe((event: TournamentEvent) => {
+				this.forwardTournamentEvent(tournament.id, event);
+			}));
+			this.tournaments.set(tournament.id, newTournament);
+		});
+	}
 
-    if (!user) {
-      console.error('User not found');
-      conn.close(1008, 'User not found');
-      return;
-    }
+	public onMatchBegin(tournamentId: number, matchId: number): void {
+		this.gameStore.spectateGame(matchId, this.spectators);
+	}
 
-    const player: Player = {
-      id: user.id,
-      socket: conn,
-      username: user.display_name,
-      avatar_url: user.avatar_url,
-      isEliminated: false,
-    };
+	public onMatchEnd(tournamentId: number, matchId: number): void {
+		//...
+	}
 
-    this.tournamentSession.addClient(player);
+	public addTournament(tournament: TournamentParams): void {
+		if (!isPowerOfTwo(tournament.maxPlayers))
+			throw new Error("Max players must be a power of two");
+		if (tournament.maxPlayers > 8)
+			throw new Error("Max players must be less than or equal to 8");
+		const date = Date.now();
+		const id = createTournament(tournament.maxPlayers, date);
+		const newTournament = new Tournament(id, tournament.maxPlayers, date, this.gameStore,
+			this.onMatchEnd.bind(this), this.onMatchBegin.bind(this), this.removeTournament.bind(this));
+		this.tournamentUnsubscribers.set(id, newTournament.subscribe((event: TournamentEvent) => {
+			this.forwardTournamentEvent(id, event);
+		}));
+		this.tournaments.set(id, newTournament);
+	}
 
-    // Send the initial queue state to the newly connected client
-    const initialQueue = this.playerQueue.getPlayersInQueue().map(p => ({ id: p.id, username: p.username, avatar_url: p.avatar_url }));
-    conn.send(JSON.stringify({ type: 'queue_updated', players: initialQueue }));
+	public getCurrentTournaments(): TournamentView[] {
+		const tournaments = Array.from(this.tournaments.values());
+		return tournaments.map((tournament) => {
+			return {
+				id: tournament.getId(),
+				maxPlayers: tournament.getMaxPlayers(),
+				createdAt: tournament.getCreatedAt(),
+				status: tournament.getStatus(),
+				players: tournament.getPlayerIds(),
+				bracket: tournament.getBracket()
+			};
+		});
+	}
 
-    conn.on('message', (raw: any) => {
-      const msg = JSON.parse(raw.toString());
+	public removeTournament(tournamentId: number): void {
+		console.log("Removing tournament", tournamentId);
+		const tournament = this.tournaments.get(tournamentId);
+		if (!tournament) {
+			throw new Error("Tournament not found");
+		}
+		tournament.getPlayerIds().forEach((playerId) => {
+			const player = this.connectedPlayers.get(playerId);
+			if (player) {
+				player.enteredTournament = null;
+			}
+		});
+		const unsubscribe = this.tournamentUnsubscribers.get(tournamentId);
+		if (unsubscribe) {
+			unsubscribe();
+		}
+		this.tournaments.delete(tournamentId);
+	}
 
-      switch (msg.type) {
-        case 'join_tournament':
-          console.log(`Received 'join_tournament' message from user: ${player.username}`);
-          this.playerQueue.enqueue(player);
-          break;
-        case 'leave_tournament':
-          console.log(`Received 'leave_tournament' message from user: ${player.id}`);
-          this.playerQueue.remove(player);
-          // this.tournamentSession.removePlayer(player);
-          break;
-        case 'spectate_request':
-          const { matchId } = msg;
-          console.log(`Received 'spectate_request' for match ${matchId} from user: ${player.id}`);
-          this.handleSpectateRequest(player, matchId);
-          break;
-        case 'match_result':
-          const { resultMatchId, winnerId } = msg;
-          this.tournamentSession.handleMatchResult(resultMatchId, winnerId);
-          break;
-        default:
-          console.log('Received unknown message type:', msg.type);
-      }
+	public connectPlayer(player: { id: number, socket: fastifyWebsocket.WebSocket }): void {
+		if (this.connectedPlayers.has(player.id)) {
+			const playerConnection = this.connectedPlayers.get(player.id)!;
+			if (playerConnection.socket) {
+				playerConnection.socket.close();
+			}
+			playerConnection.socket = player.socket;
+			return;
+		}
+		if (!player.socket) {
+			throw new Error("Player socket not found");
+		}
+		const tournamentConnection = {
+			id: player.id,
+			enteredTournament: null,
+			socket: player.socket,
+		} as TournamentConnection;
+		this.connectedPlayers.set(player.id, tournamentConnection);
+		this.spectators.push({ id: player.id, socket: new ProxyPlayer(this.tournamentTabFilter, tournamentConnection) });
+		player.socket.on("close", () => {
+			this.disconnectPlayer(player.id);
+		});
+		player.socket.on("error", () => {
+			this.disconnectPlayer(player.id);
+		});
+		player.socket.on("message", (message) => {
+			console.log(`Received message from player ${player.id}: ${message}`);
+			const parsedMessage: TournamentMsgIn = JSON.parse(message.toString());
+			this.handleMsg(player.id, parsedMessage);
+		});
+	}
 
-    });
+	private handleMsg(playerId: number, message: TournamentMsgIn): void {
+		const player = this.connectedPlayers.get(playerId);
+		if (!player) {
+			throw new Error("Player not found");
+		}
+		switch (message.type) {
+			case "join":
+				this.addPlayerToTournamentQueue(message.data.tournamentId, player);
+				break;
+			case "leave":
+				this.removePlayerFromTournamentQueue(message.data.tournamentId, playerId);
+				break;
+			default:
+				throw new Error("Unknown message type");
+		}
+	}
 
-    conn.on('close', () => {
-      console.log(`WebSocket connection closed for user: ${player.id}`);
-      this.playerQueue.remove(player);
-      this.tournamentSession.removeClient(player);
-    });
-  }
+	private forwardTournamentEvent(tId: number, event: TournamentEvent): void {
+		console.log("Forwarding tournament event", event);
+		let message: TournamentMsgOut;
+		switch (event.type) {
+			case "setup_match":
+				message = {
+					type: "setup_match",
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
+				};
+				break;
+			case "joined":
+				message = {
+					type: "joined",
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
+				};
+				break;
+			case "left":
+				message = {
+					type: "left",
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
+				};
+				break;
+			case "bracket_update":
+				message = {
+					type: "bracket_update",
+					data: {
+						tournamentId: tId,
+						...event.data
+					}
+				};
+				break;
+			default:
+				throw new Error("Unknown event type");
+		}
+		if (this.tournaments.has(tId)) {
+			this.broadcastMsg(message);
+		}
+	}
 
-  // private broadcastPlayerUpdate() {
-  //   const playersInQueue = this.playerQueue.getPlayersInQueue().map(p => ({
-  //     id: p.id,
-  //     username: p.username,
-  //     avatar_url: p.avatar_url,
-  //   }));
-  //   this.tournamentSession.broadcast({ type: 'player_list_updated', players: playersInQueue });
-  // }
+	public broadcastMsg(message: TournamentMsgOut): void {
+		this.connectedPlayers.forEach((player) => {
+			if (player.socket) {
+				player.socket.send(JSON.stringify(message));
+			}
+		});
+	}
 
-  private handleSpectateRequest(spectator: Player, matchId: number) {
-    const match = this.tournamentSession.getMatchById(matchId);
-    if (match && !match.isFinished) {
-      spectator.socket.send(JSON.stringify({ type: 'spectate_init', match }));
-      this.tournamentSession.addSpectator(matchId, spectator);
-    } else {
-      spectator.socket.send(JSON.stringify({ type: 'spectate_failed', message: 'Match not found or finished.' }));
-    }
-  }
+	private disconnectPlayer(playerId: number): void {
+		const player = this.connectedPlayers.get(playerId);
+		if (!player) {
+			throw new Error("Player not found");
+		}
+		this.connectedPlayers.delete(playerId);
+		this.spectators = this.spectators.filter((s) => s.id !== playerId);
+		if (player.enteredTournament) {
+			this.removePlayerFromTournamentQueue(player.enteredTournament, playerId);
+			player.socket?.close();
+			player.socket = null;
+		}
+		console.log("Player disconnected", playerId);
+		console.log("Connected players", this.connectedPlayers);
+	}
+
+	private addPlayerToTournamentQueue(tournamentId: number, player: TournamentConnection): void {
+		const tournament = this.tournaments.get(tournamentId);
+		if (!tournament) {
+			throw new Error("Tournament not found");
+		}
+		if (tournament.getStatus() !== 'pending') {
+			throw new Error("Tournament is not pending");
+		}
+		tournament.addPlayer(player);
+	}
+
+	public setPlayerReady(tournamentId: number, player: { id: number, socket: fastifyWebsocket.WebSocket }): void {
+		const tournament = this.tournaments.get(tournamentId);
+		if (!tournament) {
+			throw new Error("Tournament not found");
+		}
+		if (tournament.getStatus() !== 'ongoing') {
+			throw new Error("Tournament is not ongoing");
+		}
+		tournament.setPlayerReady(player);
+	}
+
+	private removePlayerFromTournamentQueue(tournamentId: number, playerId: number): void {
+		const tournament = this.tournaments.get(tournamentId);
+		if (!tournament) {
+			throw new Error("Tournament not found");
+		}
+		if (tournament.getStatus() !== 'pending') return;
+		if (!tournament.hasPlayer(playerId))
+			throw new Error("Player not in tournament");
+		tournament.removePlayer(playerId);
+	}
+}
+
+function isPowerOfTwo(n: number): boolean {
+	if (n <= 0) return false;
+	return (n & (n - 1)) === 0;
 }
