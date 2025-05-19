@@ -215,3 +215,14 @@ export function sendFriendRequest(userId: number, friendId: number): void {
       VALUES (?, ?, ?, 'pending')
     `).run(userId, friendId, userId);
 }
+
+export function getFriendshipStatus(userId: number, friendId: number): string | null {
+  const row = db.prepare(`
+      SELECT status
+      FROM friends
+      WHERE (user1_id = ? AND user2_id = ?)
+         OR (user1_id = ? AND user2_id = ?)
+    `).get(userId, friendId, friendId, userId) as { status: string } | undefined;
+
+  return row ? row.status : null;
+}

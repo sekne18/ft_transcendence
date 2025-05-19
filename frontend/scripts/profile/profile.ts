@@ -16,11 +16,10 @@ export function initProfile(userId?: number): void {
       renderUserProfile(userProfile);
       renderMatchHistory(otherId);
     });
+    setClickEvents();
     setProfileButtons(true);
-
   } else {
     setProfileButtons(false);
-    
     renderUserProfile();
     renderMatchHistory();
   }
@@ -41,132 +40,177 @@ function setProfileButtons(isOther: boolean) {
   const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
   const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
   const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
-  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
   if (isOther) {
+    // fetch friend status to determine which buttons to show
     editProfileBtn.classList.add('hidden');
     friendDiv.classList.remove('hidden');
 
-    removeFriendBtn.addEventListener('click', () => {
-      fetch('/api/friends/decline-friend-request', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          otherId: otherId,
-        }),
-      }).then(res => {
-        if (res.status === 401) {
-          window.location.href = '/auth';
-          return null;
-        }
-        return res.json();
-      }).then((res) => {
-        if (res.success) {
-          showToast('Friend removed successfully!', '', 'success');
-          fetchUserProfile(otherId).then((userProfile) => {
-            renderUserProfile(userProfile);
-            renderMatchHistory(otherId);
-          });
+    fetch(`/api/friends/status/${otherId}`, {
+      method: 'GET',
+      credentials: 'include'
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      console.log(res);
+      if (res.success) {
+        const status = res.status;
+        if (status === 'friend') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.remove('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        } else if (status === 'pending') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.remove('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
+        } else if (status === 'blocked') {
+          addFriendBtn.classList.add('hidden');
+          removeFriendBtn.classList.add('hidden');
+          blockBtn.classList.add('hidden');
+          unblockBtn.classList.remove('hidden');
         } else {
-          showToast('Failed to remove friend.', '', 'error');
+          addFriendBtn.classList.remove('hidden');
+          removeFriendBtn.classList.add('hidden');
+          blockBtn.classList.remove('hidden');
+          unblockBtn.classList.add('hidden');
         }
-      });
-    });
-
-    unblockBtn.addEventListener('click', () => {
-      fetch('/api/friends/unblock', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          otherId: otherId,
-        }),
-      }).then(res => {
-        if (res.status === 401) {
-          window.location.href = '/auth';
-          return null;
-        }
-        return res.json();
-      }).then((res) => {
-        if (res.success) {
-          showToast('User unblocked successfully!', '', 'success');
-          fetchUserProfile(otherId).then((userProfile) => {
-            renderUserProfile(userProfile);
-            renderMatchHistory(otherId);
-          });
-        } else {
-          showToast('Failed to unblock user.', '', 'error');
-        }
-      });
-    });
-
-    addFriendBtn.addEventListener('click', () => {
-      fetch('/api/friends/send-friend-request', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          otherId: otherId,
-        }),
-      }).then(res => {
-        if (res.status === 401) {
-          window.location.href = '/auth';
-          return null;
-        }
-        return res.json();
-      }).then((res) => {
-        if (res.success) {
-          showToast('Friend request sent successfully!', '', 'success');
-          // fetchUserProfile(otherId).then((userProfile) => {
-          //   renderUserProfile(userProfile);
-          //   renderMatchHistory(otherId);
-          // });
-        } else {
-          showToast('Failed to send friend request.', '', 'error');
-        }
-      });
-    });
-
-    blockBtn.addEventListener('click', () => {
-      fetch('/api/friends/block', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          otherId: otherId,
-        }),
-      }).then(res => {
-        if (res.status === 401) {
-          window.location.href = '/auth';
-          return null;
-        }
-        return res.json();
-      }).then((res) => {
-        if (res.success) {
-          showToast('User blocked successfully!', '', 'success');
-        } else {
-          showToast('Failed to block user.', '', 'error');
-        }
-      });
-    });
-
-    chatBtn.addEventListener('click', () => {
-      startChat();
+      }
     });
 
   } else {
     editProfileBtn.classList.remove('hidden');
     friendDiv.classList.add('hidden');
   }
+}
+
+function setClickEvents() {
+  const addFriendBtn = getElement('profile-add-friend-btn') as HTMLButtonElement;
+  const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
+  const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
+  const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
+
+  removeFriendBtn.addEventListener('click', () => {
+    fetch('/api/friends/decline-friend-request', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('Friend removed successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to remove friend.', '', 'error');
+      }
+    });
+  });
+
+  unblockBtn.addEventListener('click', () => {
+    fetch('/api/friends/unblock', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('User unblocked successfully!', '', 'success');
+        fetchUserProfile(otherId).then((userProfile) => {
+          renderUserProfile(userProfile);
+          renderMatchHistory(otherId);
+        });
+      } else {
+        showToast('Failed to unblock user.', '', 'error');
+      }
+    });
+  });
+
+  addFriendBtn.addEventListener('click', () => {
+    fetch('/api/friends/send-friend-request', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('Friend request sent successfully!', '', 'success');
+        // fetchUserProfile(otherId).then((userProfile) => {
+        //   renderUserProfile(userProfile);
+        //   renderMatchHistory(otherId);
+        // });
+      } else {
+        showToast('Failed to send friend request.', '', 'error');
+      }
+    });
+  });
+
+  blockBtn.addEventListener('click', () => {
+    fetch('/api/friends/block', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        otherId: otherId,
+      }),
+    }).then(res => {
+      if (res.status === 401) {
+        window.location.href = '/auth';
+        return null;
+      }
+      return res.json();
+    }).then((res) => {
+      if (res.success) {
+        showToast('User blocked successfully!', '', 'success');
+      } else {
+        showToast('Failed to block user.', '', 'error');
+      }
+    });
+  });
+
+  chatBtn.addEventListener('click', () => {
+    startChat();
+  });
 }
 
 function startChat() {

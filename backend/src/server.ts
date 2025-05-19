@@ -28,7 +28,7 @@ import { PlayerQueue } from './tournament/PlayerQueue.js';
 import { ChatMsg, User } from './types.js';
 import { create } from 'domain';
 import { ChatManager } from './chat/ChatManager.js';
-import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers, blockFriend, sendFriendRequest, acceptFriendRequest, declineFriendRequest, unblockFriend } from './db/queries/friends.js';
+import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers, blockFriend, sendFriendRequest, acceptFriendRequest, declineFriendRequest, unblockFriend, getFriendshipStatus } from './db/queries/friends.js';
 import { parseArgs } from 'util';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { Match } from './tournament/Types.js';
@@ -1083,6 +1083,27 @@ fastify.post('/api/friends/unblock', { onRequest: [fastify.authenticate] }, asyn
 	}
 	await unblockFriend(id, otherId);
 	return reply.send({ success: true });
+});
+
+fastify.get('/api/friends/status/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	// Get the status of the friendship between two users
+	const id = (req.user as { id: number }).id;
+	const otherId = parseInt((req.params as any).id);
+	if (!id) {
+		return reply.code(401).send({
+			success: false,
+			message: 'Invalid user ID'
+		});
+	}
+	if (!otherId) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Invalid other user ID'
+		});
+	}
+
+	const status = await getFriendshipStatus(id, otherId);
+	return reply.send({ success: true, status });
 });
 
 const tournamentState = new TournamentSession(1);
