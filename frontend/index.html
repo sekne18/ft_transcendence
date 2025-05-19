@@ -9,7 +9,8 @@
 </head>
 
 <body class="dark text-foreground bg-background min-h-screen h-screen flex flex-col">
-  <nav class="flex items-center justify-between bg-[var(--navbar)] px-4 py-4 shadow-sm">
+  <!-- 786px and up navbar -->
+  <nav class="md:flex hidden items-center justify-between bg-[var(--navbar)] px-4 py-4 shadow-sm">
     <div class="flex items-center">
       <a href="/" class="nav-link ml-4 text-xl font-semibold text-white hover:text-blue-500" data-i18n="nav_title"></a>
     </div>
@@ -20,7 +21,7 @@
         data-i18n="nav_leaderboard" data-page="leaderboard"></a>
       <a href="/tournament" class="nav-link px-3 py-2 text-white hover:text-blue-500 rounded" data-i18n="nav_tournament"
         data-page="tournament"></a>
-        <a href="/friends" class="nav-link px-3 py-2 text-white hover:text-blue-500 rounded" data-i18n="nav_friends"
+      <a href="/friends" class="nav-link px-3 py-2 text-white hover:text-blue-500 rounded" data-i18n="nav_friends"
         data-page="friends"></a>
     </div>
 
@@ -53,8 +54,8 @@
               class=" px-4 py-2 hover:border-blue-600 border-transparent mb-1 border-2 mx-1 text-gray-700 rounded-lg hover:bg-gray-300 text-left">Slovenščina</button>
           </li>
           <li><button data-lang="ua"
-            class=" px-4 py-2 hover:border-blue-600 border-transparent mb-1 border-2 mx-1 text-gray-700 rounded-lg hover:bg-gray-300 text-left">Українська</button>
-        </li>
+              class=" px-4 py-2 hover:border-blue-600 border-transparent mb-1 border-2 mx-1 text-gray-700 rounded-lg hover:bg-gray-300 text-left">Українська</button>
+          </li>
         </ul>
       </div>
       <div class="relative inline-block text-left" id="user-dropdown">
@@ -79,6 +80,27 @@
       </div>
     </div>
   </nav>
+  <!-- Mobile Nav -->
+  <nav class="md:hidden flex items-center justify-between bg-[var(--navbar)] px-4 py-4 shadow-sm">
+    <a href="/" class="text-xl font-semibold text-white" data-i18n="nav_title"></a>
+    <button id="mobile-menu-button" class="text-white focus:outline-none">
+      <!-- Hamburger Icon -->
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="md:hidden hidden flex-col bg-[var(--navbar)] text-white px-4 py-2 space-y-2 shadow-sm">
+    <a href="/game" class="nav-link block py-2 px-3 rounded hover:text-blue-500" data-i18n="nav_game"></a>
+    <a href="/leaderboard" class="nav-link block py-2 px-3 rounded hover:text-blue-500" data-i18n="nav_leaderboard"></a>
+    <a href="/tournament" class="nav-link block py-2 px-3 rounded hover:text-blue-500" data-i18n="nav_tournament"></a>
+    <a href="/friends" class="nav-link block py-2 px-3 rounded hover:text-blue-500" data-i18n="nav_friends"></a>
+    <a href="/profile" class="block py-2 px-3 rounded hover:text-blue-500" data-i18n="nav_profile"></a>
+    <a href="#" id="logout-btn-mobile" class="block py-2 px-3 rounded text-red-400 hover:text-red-600"
+      data-i18n="nav_logout"></a>
+  </div>
   <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col items-end space-y-2">
   </div>
   <main id="app" class="flex-grow flex p-4">

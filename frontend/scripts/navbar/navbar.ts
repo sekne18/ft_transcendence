@@ -6,11 +6,17 @@ export function setEventHandlers() {
 }
 
 function setProfileEvents() {
-
     const avatar = getElement("user-avatar") as HTMLImageElement;
     const dropdown = getElement("dropdown-menu") as HTMLDivElement;
     const dropdownWrapper = getElement("user-dropdown") as HTMLDivElement;
     const logoutBtn = getElement("logout-btn");
+    const menuBtn = getElement("mobile-menu-button");
+    const mobileMenu = getElement("mobile-menu");
+
+    // Toggle mobile menu
+    menuBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+    });
 
     // Set avatar
     fetch("/api/user", {

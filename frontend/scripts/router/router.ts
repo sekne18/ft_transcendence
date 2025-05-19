@@ -147,6 +147,9 @@ export async function checkAuth(): Promise<boolean> {
 }
 
 function updateActiveLink(url: string) {
+    const mobileMenu = document.getElementById('mobile-menu') as HTMLDivElement;
+
+    mobileMenu?.classList.toggle("hidden");
     document.querySelectorAll('.nav-link').forEach(link => {
         const href = link.getAttribute('href');
         const isActive = href === url;
