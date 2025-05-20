@@ -121,8 +121,8 @@
                     <div class="border-b border-[#43454b]">
                         <ul class="flex flex-wrap mb-4 rounded-lg bg-[#27272A]" id="tabs-list">
                             <li class="bg-[#3F3F46] m-1 rounded-lg">
-                                <button class="p-2 border-b-2 border-transparent tab-button active"
-                                    data-tab="stats" data-i18n="statistics_tab" ></button>
+                                <button class="p-2 border-b-2 border-transparent tab-button active" data-tab="stats"
+                                    data-i18n="statistics_tab"></button>
                             </li>
                             <li id="pending-requests-tab" class="m-1 hidden">
                                 <button class="p-2 border-b-2 border-transparent hover:text-gray-300 tab-button"
@@ -178,9 +178,9 @@
                             </div>
                             <!-- Match History Tab Content -->
                             <div id="requests-content" class="tab-content hidden">
-                                <h3 class="text-lg font-semibold mb-4" >Pending Requests</h3>
+                                <h3 class="text-lg font-semibold mb-4">Pending Requests</h3>
                                 <div id="pending-requests" class="space-y-4">
-                                    
+
                                 </div>
                             </div>
                         </div>
@@ -194,8 +194,8 @@
 
 <!-- Edit Profile Modal -->
 <div id="edit-profile-modal"
-    class="fixed inset-0 bg-[#000000ca] bg-opacity-50 z-50 flex items-center justify-center hidden">
-    <div class="bg-[#15151E] rounded-lg shadow-lg max-w-2xl w-full mx-4">
+    class="fixed inset-0 bg-[#000000ca] bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-auto">
+    <div class="bg-[#15151E] rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b border-[#43454b]">
             <h2 class="text-xl font-bold" data-i18n="edit_profile_btn"></h2>
             <button id="close-modal" class="text-gray-400 hover:text-white">
@@ -218,8 +218,8 @@
                         <div class="space-y-4">
                             <h4 class="text-lg font-semibold" data-i18n="edit_basic_section"></h4>
                             <div>
-                                <label for="display-name-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_display_name"></label>
+                                <label for="display-name-input" class="block text-sm font-medium text-gray-400 mb-1"
+                                    data-i18n="edit_display_name"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
 
@@ -230,8 +230,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="username-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_username"></label>
+                                <label for="username-input" class="block text-sm font-medium text-gray-400 mb-1"
+                                    data-i18n="edit_username"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
 
@@ -242,8 +242,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="email-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_email">Email</label>
+                                <label for="email-input" class="block text-sm font-medium text-gray-400 mb-1"
+                                    data-i18n="edit_email">Email</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
 
@@ -258,8 +258,8 @@
                         <div class="border-t border-[#43454b] my-4 pt-4">
                             <h4 class="text-lg font-semibold" data-i18n="edit_change_pass"></h4>
                             <div class="mt-4">
-                                <label for="current-password-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_current_pass"></label>
+                                <label for="current-password-input" class="block text-sm font-medium text-gray-400 mb-1"
+                                    data-i18n="edit_current_pass"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <i class="fas fa-lock text-gray-400"></i>
@@ -270,7 +270,8 @@
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <label for="new-password-input" class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_new_pass"></label>
+                                <label for="new-password-input" class="block text-sm font-medium text-gray-400 mb-1"
+                                    data-i18n="edit_new_pass"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <i class="fas fa-key text-gray-400"></i>
@@ -281,8 +282,8 @@
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <label for="confirm-password-input"
-                                    class="block text-sm font-medium text-gray-400 mb-1" data-i18n="edit_conf_new_pass"></label>
+                                <label for="confirm-password-input" class="block text-sm font-medium text-gray-400 mb-1"
+                                    data-i18n="edit_conf_new_pass"></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <i class="fas fa-check-circle text-gray-400"></i>
@@ -313,9 +314,11 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 p-4 border-t border-[#43454b]">
-                <button data-i18n="edit_cancel_btn" type="button" id="cancel-edit" class="text-red-500 hover:font-bold px-4 py-2 rounded-lg">
+                <button data-i18n="edit_cancel_btn" type="button" id="cancel-edit"
+                    class="text-red-500 hover:font-bold px-4 py-2 rounded-lg">
                 </button>
-                <button data-i18n="edit_save_btn" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                <button data-i18n="edit_save_btn" type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                 </button>
             </div>
         </form>
