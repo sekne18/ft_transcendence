@@ -50,8 +50,10 @@ function handleTabSwitching() {
                 loginForm.classList.add("flex");
                 registerForm.classList.add("hidden");
 
-                registerBtn.classList.remove("border-b-2", "border-blue-500");
+                registerBtn.classList.remove("border-b-2", "border-blue-500", "text-white");
+                registerBtn.classList.add("text-gray-500");
                 loginBtn.classList.add("border-b-2", "border-blue-500");
+                loginBtn.classList.remove("text-gray-500");
             }
         });
 
@@ -63,8 +65,10 @@ function handleTabSwitching() {
                 loginForm.classList.add("hidden");
                 registerForm.classList.add("flex");
 
-                loginBtn.classList.remove("border-b-2", "border-blue-500");
+                loginBtn.classList.remove("border-b-2", "border-blue-500", "text-white");
+                loginBtn.classList.add("text-gray-500");
                 registerBtn.classList.add("border-b-2", "border-blue-500");
+                registerBtn.classList.remove("text-gray-500");
             }
         });
     }
