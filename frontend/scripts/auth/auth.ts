@@ -249,9 +249,7 @@ function handleRegister(event: Event) {
 
     // Sanitize inputs
     registerData.username = sanitizeInput(registerData.username);
-    registerData.password = sanitizeInput(registerData.password);
     registerData.email = sanitizeInput(registerData.email);
-    registerData.repassword = sanitizeInput(registerData.repassword);
 
     if (registerData.username.length < 3 || registerData.username.length > 20) {
         const errMsg = document.getElementById("error-register-message");
