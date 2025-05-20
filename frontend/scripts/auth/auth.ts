@@ -50,8 +50,10 @@ function handleTabSwitching() {
                 loginForm.classList.add("flex");
                 registerForm.classList.add("hidden");
 
-                registerBtn.classList.remove("border-b-2", "border-blue-500");
+                registerBtn.classList.remove("border-b-2", "border-blue-500", "text-white");
+                registerBtn.classList.add("text-gray-500");
                 loginBtn.classList.add("border-b-2", "border-blue-500");
+                loginBtn.classList.remove("text-gray-500");
             }
         });
 
@@ -63,8 +65,10 @@ function handleTabSwitching() {
                 loginForm.classList.add("hidden");
                 registerForm.classList.add("flex");
 
-                loginBtn.classList.remove("border-b-2", "border-blue-500");
+                loginBtn.classList.remove("border-b-2", "border-blue-500", "text-white");
+                loginBtn.classList.add("text-gray-500");
                 registerBtn.classList.add("border-b-2", "border-blue-500");
+                registerBtn.classList.remove("text-gray-500");
             }
         });
     }
@@ -229,6 +233,16 @@ function set2FaValidationEvents() {
     }
 }
 
+function sanitizeInput(input: string): string {
+    return input
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
 function handleRegister(event: Event) {
     event.preventDefault();
 
@@ -236,6 +250,18 @@ function handleRegister(event: Event) {
 
     if (!registerData.username || !registerData.password || !registerData.email || !registerData.repassword)
         return;
+
+    // Sanitize inputs
+    registerData.username = sanitizeInput(registerData.username);
+    registerData.email = sanitizeInput(registerData.email);
+
+    if (registerData.username.length < 3 || registerData.username.length > 20) {
+        const errMsg = document.getElementById("error-register-message");
+        if (errMsg) {
+            errMsg.innerText = 'Username must be between 3 and 20 characters.';
+            return;
+        }
+    }
 
     // Call to the backend to register the user 
     fetch('/api/register', {

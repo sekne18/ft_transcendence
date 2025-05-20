@@ -55,6 +55,8 @@ export function getMatchesByUserId(userId: number, limit = 10, offset = 0) {
 export function updateMatch(matchId: number, data: Partial<{
 	score1: number,
 	score2: number,
+	player1Id: number,
+	player2Id: number,
 	winnerId: number,
 	endTime: number,
 	status: 'finished' | 'disconnected'
@@ -84,6 +86,25 @@ export function updateMatch(matchId: number, data: Partial<{
 	if (fields.length === 0) {
 		return; // No fields to update
 	}
+
+	// If game is finished, update average_score and longest_streak for both users.
+	// Longest stream works by checking if the user has a streak of wins and adding 1 to it if he won. Otherwise it resets to 1.
+	if (data.winnerId !== undefined) {
+		const updateStats = db.prepare(`
+			UPDATE stats
+			SET 
+				avg_score = (avg_score * games_played + ?) / (games_played + 1),
+				longest_streak = CASE
+					WHEN longest_streak IS NULL THEN 1
+					WHEN ? = ? THEN longest_streak + 1
+					ELSE 1
+				END
+			WHERE user_id = ?
+		`);
+		updateStats.run(data.score1, data.winnerId, data.player1Id, data.player1Id);
+		updateStats.run(data.score2, data.winnerId, data.player2Id, data.player2Id);
+	}
+
 
 	const sql = `
 		UPDATE matches

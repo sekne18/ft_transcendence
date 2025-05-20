@@ -26,8 +26,8 @@ export function createUser({ username, display_name, email, hash, avatarUrl }: {
   const userId = result.lastInsertRowid as number;
 
   const insertStats = db.prepare(`
-    INSERT INTO stats (user_id, games_played, wins, losses)
-    VALUES (?, 0, 0, 0)
+    INSERT INTO stats (user_id, games_played, wins, losses, avg_score, longest_streak)
+    VALUES (?, 0, 0, 0, 0, 0)
   `);
   insertStats.run(userId);
 
@@ -45,7 +45,9 @@ export function getUserProfileById(id: number) {
       users.avatar_url,
       stats.games_played,
       stats.wins,
-      stats.losses
+      stats.losses,
+      stats.avg_score,
+      stats.longest_streak
     FROM users
     LEFT JOIN stats ON users.id = stats.user_id
     WHERE users.id = ?

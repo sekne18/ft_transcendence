@@ -42,6 +42,7 @@ function setProfileButtons(isOther: boolean) {
   const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
   const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
   const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
+  const pendingBtn = getElement('profile-pending-btn') as HTMLButtonElement;
 
   if (isOther) {
     // fetch friend status to determine which buttons to show
@@ -65,9 +66,11 @@ function setProfileButtons(isOther: boolean) {
           removeFriendBtn.classList.remove('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
+          pendingBtn.classList.add('hidden');
         } else if (status === 'pending') {
+          pendingBtn.classList.remove('hidden');
           addFriendBtn.classList.add('hidden');
-          removeFriendBtn.classList.remove('hidden');
+          removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
         } else if (status === 'blocked') {
@@ -75,11 +78,13 @@ function setProfileButtons(isOther: boolean) {
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.add('hidden');
           unblockBtn.classList.remove('hidden');
+          pendingBtn.classList.add('hidden');
         } else {
           addFriendBtn.classList.remove('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
+          pendingBtn.classList.add('hidden');
         }
       }
     });
@@ -321,6 +326,7 @@ function renderUserProfile(profile: Profile | undefined = undefined) {
 }
 
 function fillProfileData(profile: Profile) {
+  console.log(profile);
   // Set user details
   (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
   getElement('display_name').textContent = profile.display_name;
@@ -334,6 +340,17 @@ function fillProfileData(profile: Profile) {
   getElement('games-played').textContent = profile.games_played.toString();
   getElement('wins').textContent = profile.wins.toString();
   getElement('losses').textContent = profile.losses.toString();
+
+  // Calculate avg score
+  const avg_score = profile.avg_score > 5 ? 5 : profile.avg_score;
+  getElement('avg-score').textContent = profile.avg_score.toString();
+  getElement('avg-score-bar').style.width = `${Math.round(avg_score * 20)}%`;
+
+  // // Calculate Longest streak
+  const streak = profile.longest_streak > 10 ? 10 : profile.longest_streak;
+  getElement('longest-streak').textContent = profile.longest_streak.toString();
+  getElement('longest-streak-bar').style.width = `${streak * 10}%`;
+
   // Calculate win rate
   const winRate = profile.games_played > 0
     ? Math.round((profile.wins / profile.games_played) * 100)
@@ -387,7 +404,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
   const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
   const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
   const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
-  const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDay();
+  const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDate();
 
   matchElement.innerHTML = `
     <div class="flex items-center justify-between">

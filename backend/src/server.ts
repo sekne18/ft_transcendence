@@ -663,31 +663,31 @@ fastify.get('/api/user/profile/:id',
 		return reply.send({ success: true, user });
 	});
 
-fastify.get('/api/user/stats',
-	{ onRequest: [fastify.authenticate] },
-	async (req, reply) => {
-		const id = (req.user as { id: number }).id;
+// fastify.get('/api/user/stats',
+// 	{ onRequest: [fastify.authenticate] },
+// 	async (req, reply) => {
+// 		const id = (req.user as { id: number }).id;
 
-		// Validate and convert to number
-		if (!id || isNaN(Number(id))) {
-			return reply.code(401).send({
-				success: false,
-				message: 'Invalid user ID'
-			});
-		}
+// 		// Validate and convert to number
+// 		if (!id || isNaN(Number(id))) {
+// 			return reply.code(401).send({
+// 				success: false,
+// 				message: 'Invalid user ID'
+// 			});
+// 		}
 
-		const stats = await getStatsByUserId(Number(id));
+// 		const stats = await getStatsByUserId(Number(id));
 
-		// Handle case where user isn't found
-		if (!stats) {
-			return reply.code(404).send({
-				success: false,
-				message: 'Stats not found'
-			});
-		}
+// 		// Handle case where user isn't found
+// 		if (!stats) {
+// 			return reply.code(404).send({
+// 				success: false,
+// 				message: 'Stats not found'
+// 			});
+// 		}
 
-		return reply.send({ success: true, stats });
-	});
+// 		return reply.send({ success: true, stats });
+// 	});
 
 fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
@@ -699,7 +699,7 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 		});
 	}
 
-	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
+	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; ended_at: string; }[];
 
 	const matchHistory = matches.map(match => {
 		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
@@ -709,7 +709,7 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 			opponent: opponent ? opponent.display_name : 'Unknown',
 			result: match.winner_id === Number(id) ? 'win' : (match.winner_id === null ? 'ongoing' : 'loss'),
 			score: `${match.player1_score}-${match.player2_score}`,
-			date: match.played_at
+			date: match.ended_at
 		};
 	});
 

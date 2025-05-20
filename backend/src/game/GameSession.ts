@@ -165,6 +165,8 @@ export class GameSession {
 		updateMatch(this.matchId, {
 			winnerId: gameState.left_score > gameState.right_score ? this.players[0].id : this.players[1].id,
 			endTime: Date.now(),
+			player1Id: this.players[0].id,
+			player2Id: this.players[1].id,
 			score1: gameState.left_score,
 			score2: gameState.right_score,
 			status: 'finished'
@@ -199,6 +201,8 @@ export class GameSession {
 		updateMatch(this.matchId, {
 			winnerId: this.players[0].id,
 			endTime: Date.now(),
+			player1Id: this.players[0].id,
+			player2Id: this.players[1].id,
 			score1: gameState.left_score,
 			score2: gameState.right_score,
 			status: 'disconnected'
