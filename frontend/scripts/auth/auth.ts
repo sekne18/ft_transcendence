@@ -229,6 +229,16 @@ function set2FaValidationEvents() {
     }
 }
 
+function sanitizeInput(input: string): string {
+    return input
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
 function handleRegister(event: Event) {
     event.preventDefault();
 
@@ -236,6 +246,20 @@ function handleRegister(event: Event) {
 
     if (!registerData.username || !registerData.password || !registerData.email || !registerData.repassword)
         return;
+
+    // Sanitize inputs
+    registerData.username = sanitizeInput(registerData.username);
+    registerData.password = sanitizeInput(registerData.password);
+    registerData.email = sanitizeInput(registerData.email);
+    registerData.repassword = sanitizeInput(registerData.repassword);
+
+    if (registerData.username.length < 3 || registerData.username.length > 20) {
+        const errMsg = document.getElementById("error-register-message");
+        if (errMsg) {
+            errMsg.innerText = 'Username must be between 3 and 20 characters.';
+            return;
+        }
+    }
 
     // Call to the backend to register the user 
     fetch('/api/register', {
