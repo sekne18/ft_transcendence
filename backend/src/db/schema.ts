@@ -114,6 +114,8 @@ export function initializeDatabase() {
 				user_id INTEGER PRIMARY KEY,
 				wins INTEGER DEFAULT 0,
 				losses INTEGER DEFAULT 0,
+				avg_score REAL DEFAULT 0,
+				longest_streak INTEGER DEFAULT 0,
 				games_played INTEGER DEFAULT 0,
 				FOREIGN KEY (user_id) REFERENCES users(id)
 			);

@@ -23,6 +23,8 @@ export interface Profile {
     wins: number;
     losses: number;
     has2fa: boolean;
+    longest_streak: number;
+    avg_score: number;
 }
 
 export interface EditForm {
