@@ -8,6 +8,22 @@ export type TournamentParams = {
 	isPlaying: boolean,
 }
 
+export type LobbyParams = {
+	id: number,
+	expiresAt: number,
+}
+
+export type ExtraParams = {
+	type: 'tournament',
+	data: TournamentParams,
+} | {
+	type: 'lobby',
+	data: LobbyParams,
+} | {
+	type: 'game',
+	data: null,
+};
+
 export type WsParams = {
 	url: string,
 }
@@ -39,7 +55,7 @@ export type RenderDetails = {
 	canvas_margin: number,
 };
 
-export type GameStatus = 'idle' | 'idle-tournament' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'gameover-tournament' | 'countdown' | 'paused'; //paused not implemented but for future use (controlled tournament)
+export type GameStatus = 'idle' | 'idle-lobby' | 'idle-tournament' | 'matchmaking' | 'playing' | 'goal' | 'gameover' | 'gameover-lobby' | 'gameover-tournament' | 'countdown' | 'paused' | 'error'; //paused not implemented but for future use (controlled tournament)
 
 export type wsMsg = {
 	type: 'game_state',

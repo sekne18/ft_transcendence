@@ -3,8 +3,8 @@ import db from "../connection.js";
 export interface FriendListPlayer {
   id: number;
   username: string;
-  state: string;
-  online: boolean;
+  state: string; // friend relationship status
+  status: string; // online status
   avatarUrl: string;
 }
 
@@ -15,7 +15,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
       u.id, 
       u.username, 
       'Not Friends Yet' AS state, 
-      u.online, 
+      u.status, 
       u.avatar_url AS avatarUrl
     FROM users u
     LEFT JOIN friends f ON (f.user1_id = ? AND f.user2_id = u.id) OR (f.user2_id = ? AND f.user1_id = u.id)
@@ -29,7 +29,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     id: number;
     username: string;
     state: string;
-    online: number;
+    status: string;
     avatarUrl: string;
   }[];
 
@@ -38,7 +38,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     id: row.id,
     username: row.username,
     state: 'Not Friends Yet',
-    online: !!row.online,
+    status: row.status,
     avatarUrl: row.avatarUrl,
   }));
 }
@@ -49,7 +49,7 @@ export function getAllFriends(userId: number, name: string, limit: number = 10):
       u.id, 
       u.username, 
       f.status AS state, 
-      u.online, 
+      u.status, 
       u.avatar_url AS avatarUrl
     FROM friends f
     JOIN users u ON u.id = CASE
@@ -65,14 +65,14 @@ export function getAllFriends(userId: number, name: string, limit: number = 10):
     id: number;
     username: string;
     state: string;
-    online: number;
+    status: string,
     avatarUrl: string;
   }[];
   return rows.map(row => ({
     id: row.id,
     username: row.username,
     state: row.state,
-    online: !!row.online,
+    status: row.status,
     avatarUrl: row.avatarUrl,
   }));
 }
@@ -83,7 +83,7 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
         u.id, 
         u.username, 
         f.status AS state, 
-        u.online, 
+        u.status, 
         u.avatar_url AS avatarUrl
       FROM friends f
       JOIN users u ON u.id = CASE
@@ -99,7 +99,7 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
     id: number;
     username: string;
     state: string;
-    online: number;
+    status: string;
     avatarUrl: string;
   }[];
 
@@ -107,7 +107,7 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
     id: row.id,
     username: row.username,
     state: row.state,
-    online: !!row.online,
+    status: row.status,
     avatarUrl: row.avatarUrl,
   }));
 }
@@ -118,7 +118,7 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
         u.id, 
         u.username, 
         f.status AS state, 
-        u.online, 
+        u.status, 
         u.avatar_url AS avatarUrl
       FROM friends f
       JOIN users u ON u.id = CASE
@@ -135,7 +135,7 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
     id: number;
     username: string;
     state: string;
-    online: number;
+    status: string;
     avatarUrl: string;
   }[];
 
@@ -143,7 +143,7 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
     id: row.id,
     username: row.username,
     state: row.state,
-    online: !!row.online,
+    status: row.status,
     avatarUrl: row.avatarUrl,
   }));
 }
@@ -154,7 +154,7 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
         u.id, 
         u.username, 
         f.status AS state, 
-        u.online, 
+        u.status AS status, 
         u.avatar_url AS avatarUrl
       FROM friends f
       JOIN users u ON u.id = CASE
@@ -163,7 +163,7 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'accepted'
-        AND u.online = true
+        AND (u.status = 'online' OR u.status = 'in-game' OR u.status = 'in-tournament')
         AND u.display_name LIKE ?
       ORDER BY u.display_name ASC
       LIMIT ?
@@ -171,7 +171,7 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
     id: number;
     username: string;
     state: string;
-    online: number;
+    status: string;
     avatarUrl: string;
   }[];
 
@@ -179,7 +179,7 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
     id: row.id,
     username: row.username,
     state: row.state,
-    online: !!row.online,
+    status: row.status,
     avatarUrl: row.avatarUrl,
   }));
 }

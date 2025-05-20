@@ -1,5 +1,9 @@
-import { wsConfig } from "../wsConfig";
+import { networkConfig } from "../wsConfig";
 import { ChatMessage } from "./ChatTypes";
+import { getStatusColor } from "../friends/friendsList";
+import { showToast } from "../utils";
+import { loadContent } from "../router/router";
+import { State } from "../state/State";
 
 let chatManager: ChatManager | null = null;
 
@@ -13,7 +17,7 @@ export function initChat(): void {
         console.log("Chat already initialized");
         return;
     }
-    chatManager = new ChatManager(`${wsConfig.scheme}://${wsConfig.host}/api/chat/ws`);
+    chatManager = new ChatManager(`${networkConfig.wsScheme}://${networkConfig.host}/api/chat/ws`);
     console.log("Chat initialized");
     const chatToggle = document.getElementById("chat-toggle") as HTMLButtonElement;
     const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
@@ -25,6 +29,7 @@ export function initChat(): void {
 class ChatManager {
     private SelectedChatId: number | null = null;
     private SelectedUserId: number | null = null;
+    private inviteId: number | null = null;
     private ChatSocket: WebSocket;
     private isOpen: boolean = false;
     private chatList: HTMLDivElement;
@@ -89,9 +94,7 @@ class ChatManager {
         chatItem.dataset.chatId = `${chatId}`;
         chatItem.innerHTML = `
             <div class="flex items-center space-x-1">
-                <a href="http://localhost:5173/api/profile?id=${userId}" target="_blank" class="text-blue-600 hover:underline">
-                    <img src="${avatarUrl}" alt="${displayName}" class="w-4 h-4 rounded-full">
-                </a>
+                <img id="chat-avatar-${userId}" src="${avatarUrl}" alt="${displayName}" class="w-4 h-4 rounded-full border-2 border-gray-500">
                 <span class="text-sm">${displayName}</span>
             </div>
             <span id="badge-${chatId}" class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
@@ -99,10 +102,22 @@ class ChatManager {
         chatItem.addEventListener("click", () => {
             this.selectChat(chatId);
         });
+        const chatAvatar = chatItem.querySelector(`#chat-avatar-${userId}`) as HTMLImageElement;
+        chatAvatar.addEventListener("click", (event) => {
+            event.stopPropagation();
+            this.handleChatToggle();
+            loadContent(`/profile/${userId}`);
+        });
         return chatItem;
     }
 
     private async fetchChatList(): Promise<void> {
+        this.chatList = document.getElementById("chat-items") as HTMLDivElement;
+        this.chatWindow = document.getElementById("chat-window") as HTMLDivElement;
+        this.messageContainer = document.getElementById("message-container") as HTMLDivElement;
+        this.chatInput = document.getElementById("chat-input") as HTMLInputElement;
+        this.chatToggle = document.getElementById("chat-toggle") as HTMLButtonElement;
+        this.chatBadge = document.getElementById("chat-badge") as HTMLSpanElement;
         const response = await fetch("/api/chat");
         if (response.ok) {
             const chats = (await response.json() as any).chats;
@@ -147,7 +162,66 @@ class ChatManager {
         }
     }
 
+    private createInviteMessageElement(message: ChatMessage, other: boolean): HTMLDivElement {
+        const msgWrapper = document.createElement("div");   
+        msgWrapper.className = `flex items-center mb-2 justify-center`;
+        const messageElement = document.createElement("div");
+        messageElement.className = `flex flex-col max-w-[70%] text-center`;
+        const dateElement = document.createElement("span");
+        dateElement.className = "text-[10px] text-gray-400 mb-1";
+        dateElement.dataset.timestamp = `${message.created_at}`;
+        dateElement.textContent = new Date(message.created_at).toLocaleString();
+        const messageContent = document.createElement("div");
+        messageContent.className = `text-sm bg-violet-600 rounded p-2`;
+        messageElement.appendChild(dateElement);
+        messageElement.appendChild(messageContent);
+        msgWrapper.appendChild(messageElement);
+        if (!message.expires_at || message.expires_at <= Date.now()) {
+            messageContent.textContent = "Invite expired";
+            return msgWrapper;
+        }
+        const inviteBtn = document.createElement("button");
+        inviteBtn.className = "bg-blue-500 text-white rounded px-2 py-1";
+        inviteBtn.textContent = "Join Lobby";
+        inviteBtn.addEventListener("click", () => {
+            State.setState('lobby', { 
+                id: message.chat_id,
+                expiresAt: message.expires_at! - Date.now()
+            });
+            this.handleChatToggle();
+            loadContent("/game");
+        });
+        messageContent.appendChild(inviteBtn);
+        const timer = document.createElement("span");
+        timer.className = "text-sm text-gray-400 text-white";
+        const timeLeft = message.expires_at - Date.now();
+        const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        timer.textContent = ` ${minutesLeft}:${secondsLeft < 10 ? "0" : ""}${secondsLeft}`;
+        messageContent.appendChild(timer);
+        if (this.inviteId) {
+            clearInterval(this.inviteId!);
+        }
+        this.inviteId = setInterval(() => {
+            const now = Date.now();
+            if (message.expires_at && now > message.expires_at) {
+                clearInterval(this.inviteId!);
+                this.inviteId = null;
+                messageContent.textContent = "Invite expired";
+            } else {
+                const timeLeft = message.expires_at ? message.expires_at - now : 0;
+                const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                timer.textContent = ` ${minutesLeft}:${secondsLeft < 10 ? "0" : ""}${secondsLeft}`;
+            }
+        }, 500);
+        return msgWrapper;
+    }
+
     private createMessageElement(message: ChatMessage, other: boolean): HTMLDivElement {
+        if (message.is_invite) {
+            return this.createInviteMessageElement(message, other);
+        }
         const msgWrapper = document.createElement("div");
         msgWrapper.className = `flex items-center ${other ? "justify-end" : "justify-start"} mb-2`;
         const messageElement = document.createElement("div");
@@ -157,7 +231,7 @@ class ChatManager {
         dateElement.dataset.timestamp = `${message.created_at}`;
         dateElement.textContent = new Date(message.created_at).toLocaleString();
         const messageContent = document.createElement("div");
-        messageContent.className = `text-sm ${other ? "bg-green-100" : "bg-blue-100"} rounded p-2`;
+        messageContent.className = `text-sm ${other ? "bg-green-600" : "bg-blue-600"} rounded p-2`;
         messageContent.textContent = `${message.content}`;
         messageElement.appendChild(dateElement);
         messageElement.appendChild(messageContent);
@@ -174,7 +248,9 @@ class ChatManager {
                 chat_id: message.chat_id,
                 content: message.content,
                 sender_id: message.sender_id,
-                created_at: message.created_at
+                created_at: message.created_at,
+                is_invite: message.is_invite || false,
+                expires_at: message.expires_at || null,
             })) as ChatMessage[];
         } else {
             console.error("Failed to fetch chat messages");
@@ -212,6 +288,16 @@ class ChatManager {
                     }
                     this.messages[chatId] = data;
                     this.renderMessages(chatId);
+                    if (this.messageContainer.scrollHeight <= this.messageContainer.clientHeight && this.SelectedChatId !== null) {
+                        const firstMessage = this.messageContainer.querySelector("div");
+                        if (firstMessage) {
+                            if (firstMessage.id === "loading-messages") {
+                                return;
+                            }
+                            const firstMessageDate = parseInt((firstMessage.querySelector("span") as HTMLSpanElement).dataset.timestamp || "0");
+                            this.renderOlderMessages(this.SelectedChatId, firstMessageDate);
+                        }
+                    }
                 } else {
                     this.setLoadingElement(false, "Error loading messages");
                 }
@@ -291,11 +377,11 @@ class ChatManager {
         this.SelectedUserId = parseInt((this.chatList.querySelector(`#chat-${chatId}`) as HTMLElement)?.dataset.userId || "0");
         const chatItems = this.chatList.querySelectorAll("li");
         chatItems.forEach((item) => {
-            item.classList.remove("bg-gray-200");
+            item.classList.remove("bg-gray-600");
         });
         const selectedItem = document.getElementById(`chat-${chatId}`);
         if (selectedItem) {
-            selectedItem.classList.add("bg-gray-200");
+            selectedItem.classList.add("bg-gray-600");
         }
         this.chatInput.focus();
         this.renderMessages(chatId);
@@ -309,7 +395,7 @@ class ChatManager {
             method: "POST"
         }).then((response) => {
             if (response.ok) {
-                console.log("Marked messages as read for chat ID:", chatId);
+                //console.log("Marked messages as read for chat ID:", chatId);
             } else {
                 console.error("Failed to mark messages as read");
             }
@@ -328,9 +414,38 @@ class ChatManager {
         }
     }
 
+    private async updateOnlineStatus(): Promise<void> {
+        const chatItems = this.chatList.querySelectorAll("li");
+        chatItems.forEach((item) => {
+            const userId = parseInt(item.dataset.userId || "0");
+            fetch(`/api/user/${userId}/status`).then((response) => {
+                if (response.ok) {
+                    response.json().then((data) => {
+                        const status = data.status;
+                        const chatAvatar = item.querySelector("img");
+                        if (chatAvatar) {
+                            const [statusColor, statusText] = getStatusColor(status);
+                            chatAvatar.classList.remove(
+                                "border-gray-500",
+                                'border-[#45D483]',
+                                'border-[#F4407F]',
+                                'border-[#F4A440]',
+                            );
+                            chatAvatar.classList.add(statusColor);
+                        }
+
+                    });
+                } else {
+                    console.error("Failed to fetch user status");
+                }
+            });
+        });
+    }
+
     private handleChatToggle(): void {
         this.isOpen = !this.isOpen;
         if (this.isOpen) {
+            this.updateOnlineStatus();
             this.chatWindow.classList.remove("w-0", "h-0", "scale-0");
             this.chatWindow.classList.add("w-[480px]", "h-[300px]", "animate-grow-bounce");
             this.renderChatWindow();
@@ -353,19 +468,29 @@ class ChatManager {
             case "message":
                 this.handleNewMessage(message.data);
                 break;
+            case "user_left":
+                this.updateOnlineStatus();
+                break;
+            case "user_joined":
+                this.updateOnlineStatus();
+                break;
+            case "accepted_game":
+                break;
             default:
                 console.error("Unknown message type:", message.type);
                 break;
         }
     }
 
-    private handleNewMessage(data: { content: string; chat_id: number, sender_id: number, created_at: number }): void {
+    private handleNewMessage(data: { content: string; chat_id: number, sender_id: number, created_at: number, expires_at?: number | null, is_invite: boolean }): void {
         const chatId = data.chat_id;
         const message: ChatMessage = {
             chat_id: chatId,
             content: data.content,
             sender_id: data.sender_id,
-            created_at: data.created_at
+            created_at: data.created_at,
+            expires_at: data.expires_at || null,
+            is_invite: data.is_invite || false,
         };
         if (!this.messages[chatId]) {
             this.messages[chatId] = [];
@@ -381,11 +506,18 @@ class ChatManager {
     }
 
     private sendMessage(chatSocket: WebSocket, message: string, chat_id: number): void {
+        const isInvite = (message === "/invite");
+        if (isInvite && this.inviteId) {
+            showToast("Whoah there", "You can only have one active invite at a time.", "warning");
+            return;
+        }
         const msgObj: ChatMessage = {
             chat_id: chat_id,
             content: message,
             sender_id: 0, // Replaced with actual sender ID on backend
-            created_at: Date.now()
+            created_at: Date.now(),
+            expires_at: isInvite ? Date.now() + 15000 : null, // 1 minute expiration for invite links
+            is_invite: isInvite,
         };
         const msg = {
             type: "message",

@@ -5,7 +5,7 @@ export interface FriendListPlayer {
   id: number;
   username: string;
   state: string;
-  online: boolean;
+  status: string;
   avatarUrl: string;
 }
 
@@ -21,16 +21,23 @@ function noUserFound(isFriends: boolean): string {
     `;
 }
 
-function renderAllUsers(friend: FriendListPlayer): string {
-  const borderColor = friend.online == true
-    ? 'border-[#45D483]'
-    : friend.online == false
-      ? 'border-[#F4407F]'
-      : 'border-gray-500';
+export function getStatusColor(status: string): [string, string] {
+  switch (status) {
+    case 'online':
+      return ['border-[#45D483]', 'Online'];
+    case 'offline':
+      return ['border-[#F4407F]', 'Offline'];
+    case 'in-game':
+      return ['border-[#F4A440]', 'In Game'];
+    case 'in-tournament':
+      return ['border-[#F4A440]', 'In Tournament'];
+    default:
+      return ['border-gray-500', 'Unknown'];
+  }
+}
 
-  const status = friend.online == false
-    ? 'Offline'
-    : 'Online';
+function renderAllUsers(friend: FriendListPlayer): string {
+  const [borderColor, status] = getStatusColor(friend.status);
     
   return `
     <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">
@@ -79,14 +86,7 @@ function renderAllUsers(friend: FriendListPlayer): string {
 }
 
 function renderAllFriends(friend: FriendListPlayer): string {
-  const borderColor = friend.online == true
-    ? 'border-[#45D483]'
-    : friend.online == false
-      ? 'border-[#F4407F]'
-      : 'border-gray-500';
-  const status = friend.online == false
-    ? 'Offline'
-    : 'Online';
+  const [borderColor, status] = getStatusColor(friend.status);
 
   return `
       <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">
@@ -134,14 +134,7 @@ function renderAllFriends(friend: FriendListPlayer): string {
 }
 
 function renderPending(friend: FriendListPlayer): string {
-  const borderColor = friend.online == true
-    ? 'border-[#45D483]'
-    : friend.online == false
-      ? 'border-[#F4407F]'
-      : 'border-gray-500';
-  const status = friend.online == false
-    ? 'Offline'
-    : 'Online';
+  const [borderColor, status] = getStatusColor(friend.status);
 
   return `
       <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">
@@ -190,14 +183,7 @@ function renderPending(friend: FriendListPlayer): string {
 }
 
 function renderBlocked(friend: FriendListPlayer): string {
-  const borderColor = friend.online == true
-    ? 'border-[#45D483]'
-    : friend.online == false
-      ? 'border-[#F4407F]'
-      : 'border-gray-500';
-  const status = friend.online == false
-    ? 'Offline'
-    : 'Online';
+  const [borderColor, status] = getStatusColor(friend.status);
 
   return `
       <div class="flex items-center p-4 bg-[#1E1E2A] hover:bg-[#252532] transition-colors duration-200">

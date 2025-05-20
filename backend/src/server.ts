@@ -31,6 +31,7 @@ import { defaultAvatarPath } from './Config.js';
 import { GameStore } from './game/GameStore.js';
 import { getCompletedTournaments } from './db/queries/tournament.js';
 import { Bracket } from './tournament/Types.js';
+import { match } from 'assert';
 
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
@@ -45,7 +46,7 @@ const refresh_exp = 7 * 24 * 60 * 60; // 7 days
 const gameStore = new GameStore();
 const matchmaker = new MatchmakingManager(gameStore);
 const tournamentManager = new TournamentManager(gameStore);
-const chatManager = new ChatManager();
+const chatManager = new ChatManager(matchmaker);
 
 const fastify: FastifyInstance = Fastify({
 	logger: true
@@ -106,6 +107,24 @@ function generateTokenPair(userId: number) {
 	fastify.log.info('Token pair generated:', { token, refreshToken });
 	return { token, refreshToken };
 }
+
+fastify.decorate('authenticate', async function handler(request: any, reply: any) {
+	const accessToken = request.cookies.access;
+	// First try to verify the access token
+	console.log('authenticating');
+	if (accessToken) {
+		try {
+			request.user = await fastify.jwt.verify(accessToken);
+			return;
+		} catch (err) {
+			fastify.log.warn('Access token invalid or expired');
+		}
+	}
+	else {
+		console.log('No access token found');
+		return reply.code(401).send({ error: 'Unauthorized' });
+	}
+});
 
 fastify.get('/api/login/google/callback', async (req, reply) => {
 	const code = (req.query as any).code;
@@ -178,24 +197,6 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 	}
 });
 
-fastify.decorate('authenticate', async function handler(request: any, reply: any) {
-	const accessToken = request.cookies.access;
-	// First try to verify the access token
-	console.log('authenticating');
-	if (accessToken) {
-		try {
-			request.user = await fastify.jwt.verify(accessToken);
-			return;
-		} catch (err) {
-			fastify.log.warn('Access token invalid or expired');
-		}
-	}
-	else {
-		console.log('No access token found');
-		return reply.code(401).send({ error: 'Unauthorized' });
-	}
-});
-
 fastify.post('/api/login', async (req, reply) => {
 	const { email, password } = req.body as {
 		email: string;
@@ -232,7 +233,7 @@ fastify.post('/api/login', async (req, reply) => {
 
 			await updateUser(user.id, {
 				last_login: Date.now(),
-				online: true
+				status: 'online'
 			});
 			// password match
 			return reply.code(200)
@@ -607,6 +608,23 @@ fastify.get('/api/user',
 		return reply.send({ success: true, user });
 	});
 
+fastify.get('/api/user/:id/status',
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		const id = parseInt((req.params as any).id);
+		if (!id) {
+			return reply.code(400).send({
+				success: false,
+				message: 'Invalid user ID'
+			});
+		}
+		const user = await getUserById(id);
+		if (!user) {
+			return reply.code(404).send({ success: false, message: 'User not found' });
+		}
+		return reply.send({ success: true, status: user.status });
+	});
+
 fastify.get('/api/user/profile',
 	{ onRequest: [fastify.authenticate] },
 	async (req, reply) => {
@@ -816,9 +834,25 @@ fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true
 	}
 	updateUser(user.id, {
 		last_login: Date.now(),
-		online: true
+		status: 'online'
 	});
 	chatManager.addConnection({ id: user.id, socket: conn });
+});
+
+fastify.get('/api/lobby/:id/ws', { onRequest: [fastify.authenticate], websocket: true }, async (conn, req) => {
+	const lobbyId = parseInt((req.params as any).id);
+	if (!lobbyId) {
+		return conn.close(1008, 'Invalid lobby ID');
+	}
+	try {
+		matchmaker.enqueueLobby(lobbyId, {
+			id: (req.user as { id: number }).id,
+			socket: conn
+		});
+	} catch (err: any) {
+		fastify.log.error('Error adding user to lobby:', err);
+		conn.close(1008, err.message);
+	}
 });
 
 fastify.get('/api/tournament', { onRequest: [fastify.authenticate] }, async (req, reply) => {

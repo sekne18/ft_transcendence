@@ -3,6 +3,7 @@ import { GameStore } from "../game/GameStore.js";
 import { Bracket, RoundMatch, TournamentConnection, TournamentEvent } from "./Types.js";
 import { getMatchById } from "../db/queries/match.js";
 import { PlayerConnection } from "../game/GameTypes.js";
+import { updateUser } from "../db/queries/user.js";
 
 
 export class Tournament {
@@ -72,6 +73,9 @@ export class Tournament {
 		}
 		this.players.push(player);
 		player.enteredTournament = this.id;
+		updateUser(player.id, {
+			status: 'in-tournament',
+		});
 		this.notify({
 			type: 'joined',
 			data: {
@@ -246,6 +250,7 @@ export class Tournament {
 		}
 		const player = this.players[playerIndex];
 		player.enteredTournament = null;
+		
 		this.players.splice(playerIndex, 1);
 		this.notify({
 			type: 'left',

@@ -192,7 +192,7 @@ export const translations: Record<string, LanguageMap> = {
     friendslist_title: 'Vrienden',
     friendslist_desc: 'Beheer vrienden en verbindingen',
     friendslist_all_friends: 'Alle Vrienden',
-    friendslist_online: 'Online',
+    friendslist_online: 'Actief',
     friendslist_pending: 'In afwachting',
     friendslist_blocked: 'Geblokkeerd',
     friendslist_search: 'Zoek vrienden...',

@@ -3,6 +3,7 @@ import { GameParams, MatchParams, UserInput, wsMsg } from "./GameTypes.js";
 import { PlayerConnection } from "./GameTypes.js";
 import { createMatch, updateMatch } from "../db/queries/match.js";
 import { updateUserStats } from "../db/queries/stats.js";
+import { updateUser } from "../db/queries/user.js";
 
 export class GameSession {
 	private game: GameInstance;
@@ -180,6 +181,9 @@ export class GameSession {
 			updateUserStats(this.players[0].id, 0, 1, 1);
 			updateUserStats(this.players[1].id, 1, 0, 1);
 		}
+		this.players.forEach((player) => {
+			updateUser(player.id, { status: 'online' });
+		});
 		this.stopGame();
 	};
 
@@ -188,14 +192,18 @@ export class GameSession {
 			return;
 		}
 		this.status = 'disconnected';
+		updateUserStats(player.id, 0, 1, 1);
+		updateUserStats(this.players[0].id === player.id ? this.players[1].id : this.players[0].id, 1, 0, 1);
 		this.players = this.players.filter((p) => p.id !== player.id);
 		const gameState = this.game.getState();
 		updateMatch(this.matchId, {
 			winnerId: this.players[0].id,
 			endTime: Date.now(),
 			score1: gameState.left_score,
-			score2: gameState.right_score
+			score2: gameState.right_score,
+			status: 'disconnected'
 		});
+		updateUser(player.id, { status: 'online' });
 		this.broadcastMsg({
 			type: "error",
 			data: "disconnect",

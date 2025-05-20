@@ -15,9 +15,11 @@ export type ChatMsg = {
 		chat_id: number;
 		content: string;
 		sender_id: number;
-		created_at: string;
-	};
-}
+		created_at: number;
+		is_invite: boolean;
+		expires_at: number | null;
+	}
+};
 
 export type ChatConnection = {
 	id: number,
@@ -31,7 +33,7 @@ export type User = {
 	email: string;
 	password: string;
 	has2fa: boolean;
-	online: boolean;
+	status: string;
 	last_login: Date;
 	totp_secret: string;
 	avatar_url: string;

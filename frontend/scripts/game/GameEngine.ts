@@ -1,9 +1,10 @@
 import { GameConnection } from './GameConnection';
-import { GameParams, RenderDetails, GameStatus, WsParams, TournamentParams } from './GameTypes';
+import { GameParams, RenderDetails, GameStatus, WsParams, TournamentParams, ExtraParams } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
 import { loadContent } from '../router/router';
+import { State } from '../state/State';
 
 
 export class GameEngine {
@@ -14,13 +15,16 @@ export class GameEngine {
 	private UIManager: UIManager;
 	private player: 'left' | 'right' | null;
 	private enemyDisconnected: boolean = false;
-	private tournamentParams: TournamentParams | null = null;
+	//private tournamentParams: TournamentParams | null = null;
+	private extraParams: ExtraParams;
 	private isTournament: boolean;
+	private isLobby: boolean;
 
-	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams, tournamentParams: TournamentParams | null = null) {
-		this.isTournament = tournamentParams ? true : false;
-		this.tournamentParams = tournamentParams;
-		this.status = this.isTournament ? 'idle-tournament' : 'idle';
+	constructor(canvas: HTMLCanvasElement, gameParams: GameParams, renderDetails: RenderDetails, wsParams: WsParams, extraParams: ExtraParams) {
+		this.isTournament = extraParams.type === 'tournament' ? true : false;
+		this.isLobby = extraParams.type === 'lobby' ? true : false;
+		this.extraParams = extraParams;
+		this.status = this.isTournament ? 'idle-tournament' : (this.isLobby ? 'idle-lobby' : 'idle');
 		this.player = null;
 		this.game = new GameConnection(
 			gameParams,
@@ -30,6 +34,7 @@ export class GameEngine {
 			this.onGoal.bind(this),
 			this.onGameOver.bind(this),
 			this.onError.bind(this),
+			this.onClose.bind(this)
 		);
 		this.gameRenderer = new GameRenderer(canvas, gameParams, renderDetails, this.game.getState.bind(this.game));
 		this.inputController = new PointerInputController(canvas, gameParams, this.game.getState.bind(this.game), this.game.receiveInput.bind(this.game));
@@ -38,7 +43,7 @@ export class GameEngine {
 	}
 
 	public start(): void {
-		this.changeState(this.isTournament ? 'idle-tournament' : 'idle');
+		this.changeState(this.isTournament ? 'idle-tournament' : (this.isLobby ? 'idle-lobby' : 'idle'));
 	}
 
 	public matchmake(): void {
@@ -75,9 +80,24 @@ export class GameEngine {
 		}, 500); //refresh rate of 2 FPS
 	}
 
+	public onClose(): void {
+		if (this.status === 'idle-lobby') {
+			State.clearState('lobby');
+			this.UIManager.setCountdownOverlay('game lobby expired');
+			this.UIManager.toggleOverlayVisibility('visible');
+			setTimeout(() => {
+				this.UIManager.toggleReloadButton('visible');
+			}, 2000);
+		}
+	}
+
 	public onError(error: Error): void {
+		if (this.isLobby) {
+			State.clearState('lobby');
+		}
 		if (error.message === 'disconnect') {
 			this.enemyDisconnected = true;
+			return;
 		}
 		console.error('Game error:', error);
 		this.changeState('idle');
@@ -92,8 +112,10 @@ export class GameEngine {
 	}
 
 	private onGameOver(): void {
-		if (this.tournamentParams && this.tournamentParams.isPlaying) {
+		if (this.extraParams.type === 'tournament' && this.extraParams.data.isPlaying) {
 			this.changeState('gameover-tournament');
+		} else if (this.extraParams.type === 'lobby') {
+			this.changeState('gameover-lobby');
 		} else {
 			this.changeState('gameover');
 		}
@@ -135,6 +157,16 @@ export class GameEngine {
 				this.UIManager.toggleOverlayVisibility('hidden');
 				this.UIManager.updateScore(0, 0);
 				break;
+			case 'idle-lobby':
+				this.UIManager.toggleOverlayVisibility('hidden');
+				break;
+			case 'gameover-lobby':
+				this.UIManager.toggleOverlayVisibility('hidden');
+				this.UIManager.updateScore(0, 0);
+				break;
+			case 'error':
+				this.UIManager.toggleReloadButton('hidden');
+				break;
 			default:
 				break;
 		}
@@ -165,8 +197,9 @@ export class GameEngine {
 						gameState.left_score > gameState.right_score :
 						gameState.right_score > gameState.left_score
 					));
-				this.UIManager.setMatchmakingOverlay('button');
-				this.UIManager.toggleOverlayVisibility('visible');
+				setTimeout(() => {
+					this.changeState('idle');
+				}, 2000);
 				break;
 			case 'countdown':
 				this.UIManager.toggleOverlayVisibility('visible');
@@ -174,12 +207,36 @@ export class GameEngine {
 			case 'idle-tournament':
 				this.UIManager.setCountdownOverlay('Waiting for your match to begin...');
 				this.UIManager.toggleOverlayVisibility('visible');
-				if (this.tournamentParams && this.tournamentParams.isPlaying) {
+				if (this.extraParams.type === 'tournament' && this.extraParams.data.isPlaying) {
 					this.game.connect();
 				}
 				break;
 			case 'gameover-tournament':
 				loadContent('/tournament');
+				break;
+			case 'idle-lobby':
+				this.UIManager.setCountdownOverlay('Waiting for your match to begin...');
+				this.UIManager.toggleOverlayVisibility('visible');
+				this.game.connect();
+				break;
+			case 'gameover-lobby':
+				State.clearState('lobby');
+				const gameState2 = this.game.getState();
+				this.UIManager.setGameOverOverlay(
+					this.enemyDisconnected ||
+					(this.player === 'left' ?
+						gameState2.left_score > gameState2.right_score :
+						gameState2.right_score > gameState2.left_score
+					));
+				this.UIManager.toggleOverlayVisibility('visible');
+				setTimeout(() => {
+					this.UIManager.toggleReloadButton('visible');
+					this.UIManager.toggleOverlayVisibility('visible');
+				}, 2000);
+				break;
+			case 'error':
+				this.UIManager.toggleReloadButton('visible');
+				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			default:
 				break;

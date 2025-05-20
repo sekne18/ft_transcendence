@@ -19,7 +19,7 @@ export function getChatsByUserId(userId: number) {
 
 export function getChatMessages(chatId: number, limit = 10, before?: number) {
 	let query = `
-	  SELECT id, chat_id, sender_id, content, created_at
+	  SELECT id, chat_id, sender_id, content, created_at, is_invite, expires_at
 	  FROM messages
 	  WHERE chat_id = ?
 	`;
@@ -67,14 +67,14 @@ export function createChat(user1Id: number, user2Id: number) {
 	return chatId;
 }
 
-export function createMessage(chatId: number, senderId: number, content: string, createdAt: number) {
+export function createMessage(chatId: number, senderId: number, content: string, createdAt: number, isInvite = false, expiresAt: number | null = null) {
 	const now = new Date(createdAt)
 		.toISOString()
 		.replace('T', ' ')
 		.replace(/\.\d{3}Z$/, '');
 	console.log('creating message', now);
 	return db.prepare(`
-	  INSERT INTO messages (chat_id, sender_id, content, created_at)
-	  VALUES (?, ?, ?, ?)
-	`).run(chatId, senderId, content, createdAt);
+	  INSERT INTO messages (chat_id, sender_id, content, created_at, is_invite, expires_at)
+	  VALUES (?, ?, ?, ?, ?, ?)
+	`).run(chatId, senderId, content, createdAt, isInvite ? 1 : 0, expiresAt);
 }

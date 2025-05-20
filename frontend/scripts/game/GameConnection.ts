@@ -13,7 +13,8 @@ export class GameConnection {
 		private onSetCountdown: (time: number) => void,
 		private onGoal: (paddle: 'left' | 'right') => void,
 		private onGameOver: () => void,
-		private onError: (error: Error) => void) {
+		private onError: (error: Error) => void,
+		private onClose: () => void) {
 		this.params = params;
 		this.wsParams = wsParams;
 		this.currState = {
@@ -62,14 +63,18 @@ export class GameConnection {
 
 		this.socket.addEventListener('close', event => {
 			console.log('Disconnected from server');
+			this.disconnect();
 			if (event.code !== 1000) {
-				this.onError(new Error('server disconnected'));
+				this.onError(new Error(event.reason));
 			}
+			this.onClose();
 		});
 
 		this.socket.addEventListener('error', err => {
 			console.error('WebSocket error:', err);
+			this.disconnect();
 			this.onError(new Error('WebSocket error'));
+
 		});
 	}
 
@@ -88,7 +93,8 @@ export class GameConnection {
 
 	public receiveInput(paddle: 'left' | 'right', input: number): void {
 		if (!this.socket) {
-			throw new Error('WebSocket not initialized');
+			//throw new Error('WebSocket not initialized');
+			return;
 		}
 		const msg: wsMsg = {
 			type: 'user_input',
@@ -115,7 +121,6 @@ export class GameConnection {
 						this.onGameOver();
 						break;
 					case 'start_countdown':
-						console.log(`Game starting in ${msg.data.time} seconds`);
 						this.onSetCountdown(msg.data.time);
 						break;
 					default:

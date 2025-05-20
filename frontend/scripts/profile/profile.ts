@@ -58,7 +58,6 @@ function setProfileButtons(isOther: boolean) {
       }
       return res.json();
     }).then((res) => {
-      console.log(res);
       if (res.success) {
         const status = res.status;
         if (status === 'accepted') {

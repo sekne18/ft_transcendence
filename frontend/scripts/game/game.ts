@@ -1,7 +1,7 @@
 import { State } from "../state/State";
-import { wsConfig } from "../wsConfig";
+import { networkConfig } from "../wsConfig";
 import { GameEngine } from "./GameEngine";
-import { GameParams } from "./GameTypes";
+import { ExtraParams, GameParams } from "./GameTypes";
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
@@ -33,12 +33,21 @@ export function initGame(): void {
 
             const tournament = State.getState("tournament");
             const isTournament = tournament ? true : false;
+            const lobby = State.getState("lobby");
+            const isLobby = lobby ? true : false;
 
             const wsParams = {
-                url: `${wsConfig.scheme}://${wsConfig.host}/api/${isTournament ? `tournament/${tournament.id}` : "game"}/ws`,
+                url: `${networkConfig.wsScheme}://${networkConfig.host}/api/${isTournament ? 
+                `tournament/${tournament.id}` : (isLobby ?
+                    `lobby/${lobby.id}` : "game")}/ws`,
             };
 
-            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, isTournament ? tournament : null);
+            const extraParams: ExtraParams = {
+                type: isTournament ? "tournament" : (isLobby ? "lobby" : "game"),
+                data: isTournament ? tournament : (isLobby ? lobby : null),
+            }
+
+            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, extraParams);
             gameEngine.start();
         })
         .catch(error => {

@@ -74,7 +74,7 @@ export function updateUser(id: number, data: Partial<{
   password: string;
   avatarUrl: string;
   has2fa: boolean;
-  online: boolean;
+  status: 'online' | 'offline' | 'in-game' | 'in-tournament';
   last_login: number;
   totp_secret: string;
 }>) {
@@ -97,9 +97,9 @@ export function updateUser(id: number, data: Partial<{
     fields.push('has2fa = ?');
     values.push(data.has2fa ? 1 : 0);
   }
-  if (data.online !== undefined) {
-    fields.push('online = ?');
-    values.push(data.online ? 1 : 0);
+  if (data.status !== undefined) {
+    fields.push('status = ?');
+    values.push(data.status);
   }
   if (data.last_login !== undefined) {
     const now = new Date(data.last_login)

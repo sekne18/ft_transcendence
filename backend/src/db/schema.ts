@@ -21,7 +21,7 @@ export function initializeDatabase() {
 				email TEXT NOT NULL UNIQUE,
 				password TEXT NOT NULL,
 				has2fa BOOLEAN DEFAULT false,
-				online BOOLEAN DEFAULT false,
+				status TEXT DEFAULT 'offline', -- 'offline', 'online', 'in-game', 'in-tournament'
 				last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
 				totp_secret TEXT,
 				avatar_url TEXT DEFAULT '',
@@ -103,7 +103,9 @@ export function initializeDatabase() {
 				sender_id INTEGER NOT NULL,
 				read BOOLEAN DEFAULT false,
 				content TEXT NOT NULL,
+				is_invite BOOLEAN DEFAULT false,
 				created_at DATETIME NOT NULL,
+				expires_at DATETIME DEFAULT NULL,
 				FOREIGN KEY (chat_id) REFERENCES chats(id),
 				FOREIGN KEY (sender_id) REFERENCES users(id)
 			);
@@ -131,9 +133,9 @@ export function initializeDatabase() {
 		`).run();
 
 		db.prepare(`
-			INSERT INTO users (username, display_name, email, password, avatar_url, role)
-			VALUES (?, ?, ?, ?, ?, ?);
-		`).run(botData.username, botData.display_name, botData.email, '', botData.avatarPath, 'bot');
+			INSERT INTO users (username, display_name, email, password, avatar_url, role, status)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		`).run(botData.username, botData.display_name, botData.email, '', botData.avatarPath, 'bot', 'online');
 
 		db.prepare(`
 			INSERT INTO stats (user_id, wins, losses, games_played)

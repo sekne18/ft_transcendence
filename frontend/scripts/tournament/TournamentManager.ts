@@ -3,7 +3,7 @@ import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { State } from "../state/State";
 import { showToast } from "../utils";
-import { wsConfig } from "../wsConfig";
+import { networkConfig } from "../wsConfig";
 import { Bracket, RoundMatch, Tournament, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
 export class TournamentManager {
@@ -52,7 +52,7 @@ export class TournamentManager {
 		if (state && state.socket) {
 			this.socket = state.socket;
 		} else {
-			this.socket = new WebSocket(`${wsConfig.scheme}://${wsConfig.host}/api/tournament/ws`);
+			this.socket = new WebSocket(`${networkConfig.wsScheme}://${networkConfig.host}/api/tournament/ws`);
 			this.socket.addEventListener('open', () => {
 				console.log('Connected to tournament server');
 			}

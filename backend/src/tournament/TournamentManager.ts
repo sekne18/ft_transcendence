@@ -4,6 +4,7 @@ import { TournamentConnection, TournamentEvent, TournamentMsgIn, TournamentMsgOu
 import { createTournament, getLiveTournaments } from "../db/queries/tournament.js";
 import fastifyWebsocket from "@fastify/websocket";
 import { ProxyPlayer } from "../game/ProxyPlayer.js";
+import { updateUser } from "../db/queries/user.js";
 
 export class TournamentManager {
 	private connectedPlayers: Map<number, TournamentConnection> = new Map();
@@ -89,6 +90,9 @@ export class TournamentManager {
 			const player = this.connectedPlayers.get(playerId);
 			if (player) {
 				player.enteredTournament = null;
+				updateUser(playerId, {
+					status: 'online',
+				});
 			}
 		});
 		const unsubscribe = this.tournamentUnsubscribers.get(tournamentId);
@@ -141,6 +145,9 @@ export class TournamentManager {
 				break;
 			case "leave":
 				this.removePlayerFromTournamentQueue(message.data.tournamentId, playerId);
+				updateUser(playerId, {
+					status: 'online',
+				});
 				break;
 			default:
 				throw new Error("Unknown message type");
