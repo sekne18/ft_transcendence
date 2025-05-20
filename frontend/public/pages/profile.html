@@ -72,6 +72,18 @@
                             <p data-i18n="remove_friend_btn">
                             </p>
                         </div>
+                        <div id="profile-pending-btn"
+                            class="flex justify-center mt-4 w-full bg-[#5d4024] text-[#de8b3b] font-semibold py-2 px-4 rounded-xl transition">
+                            
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em"
+                                style="align-self:center; margin-right: 10px" viewBox="0 0 640 512">
+                                <g fill="#de8b3b">
+                                    <path d="M0 24C0 10.7 10.7 0 24 0L360 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-8 0 0 19c0 40.3-16 79-44.5 107.5L225.9 256l81.5 81.5C336 366 352 404.7 352 445l0 19 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24L24 512c-13.3 0-24-10.7-24-24s10.7-24 24-24l8 0 0-19c0-40.3 16-79 44.5-107.5L158.1 256 76.5 174.5C48 146 32 107.3 32 67l0-19-8 0C10.7 48 0 37.3 0 24zM110.5 371.5c-3.9 3.9-7.5 8.1-10.7 12.5l184.4 0c-3.2-4.4-6.8-8.6-10.7-12.5L192 289.9l-81.5 81.5zM284.2 128C297 110.4 304 89 304 67l0-19L80 48l0 19c0 22.1 7 43.4 19.8 61l184.4 0z"/>
+                                </g>
+                            </svg>
+                            <p data-i18n="pending_btn">
+                            </p>
+                        </div>
                         <div id="profile-block-btn"
                             class="cursor-pointer flex justify-center mt-4 w-full hover:bg-[#381528] text-[#F54180] font-semibold py-2 px-4 rounded-xl transition">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1em" height="1em"
@@ -194,7 +206,7 @@
 
 <!-- Edit Profile Modal -->
 <div id="edit-profile-modal"
-    class="fixed inset-0 bg-[#000000ca] bg-opacity-50 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-auto">
+    class="fixed inset-0 bg-[#000000ca] bg-opacity-50 z-50 hidden flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 overflow-auto">
     <div class="bg-[#15151E] rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b border-[#43454b]">
             <h2 class="text-xl font-bold" data-i18n="edit_profile_btn"></h2>

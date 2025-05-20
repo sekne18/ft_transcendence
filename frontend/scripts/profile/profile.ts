@@ -42,6 +42,7 @@ function setProfileButtons(isOther: boolean) {
   const removeFriendBtn = getElement('profile-remove-friend-btn') as HTMLButtonElement;
   const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
   const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
+  const pendingBtn = getElement('profile-pending-btn') as HTMLButtonElement;
 
   if (isOther) {
     // fetch friend status to determine which buttons to show
@@ -66,9 +67,11 @@ function setProfileButtons(isOther: boolean) {
           removeFriendBtn.classList.remove('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
+          pendingBtn.classList.add('hidden');
         } else if (status === 'pending') {
+          pendingBtn.classList.remove('hidden');
           addFriendBtn.classList.add('hidden');
-          removeFriendBtn.classList.remove('hidden');
+          removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
         } else if (status === 'blocked') {
@@ -76,11 +79,13 @@ function setProfileButtons(isOther: boolean) {
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.add('hidden');
           unblockBtn.classList.remove('hidden');
+          pendingBtn.classList.add('hidden');
         } else {
           addFriendBtn.classList.remove('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
+          pendingBtn.classList.add('hidden');
         }
       }
     });

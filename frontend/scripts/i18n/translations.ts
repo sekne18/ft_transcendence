@@ -38,6 +38,7 @@ export const translations: Record<string, LanguageMap> = {
     recent_matches: 'Recent Matches',
     performance: 'Performance',
     win_rate: 'Win Rate',
+    pending_btn: 'Pending',
     avg_score: 'Average Score',
     longest_streak: 'Longest Win Streak',
     add_friend_btn: 'Add Friend',
@@ -152,6 +153,7 @@ export const translations: Record<string, LanguageMap> = {
     user_wins: 'Overwinningen',
     user_losses: 'Verliezen',
     profile_versus: 'Wedstrijd tegen',
+    pending_btn: 'In afwachting',
 
     // Edit proifle
     change_avatar_btn: 'Verander Avatar',
@@ -253,6 +255,7 @@ export const translations: Record<string, LanguageMap> = {
     user_wins: 'Zmage',
     user_losses: 'Porazi',
     profile_versus: 'Tekma proti',
+    pending_btn: 'Čaka',
 
     // Edit proifle
     change_avatar_btn: 'Spremeni avatar',
@@ -353,6 +356,7 @@ export const translations: Record<string, LanguageMap> = {
     user_wins: 'Перемоги',
     user_losses: 'Поразки',
     profile_versus: 'Матч проти',
+    pending_btn: 'В очікуванні',
 
     // Edit proifle
     change_avatar_btn: 'Змінити аватар',
