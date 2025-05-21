@@ -17,6 +17,14 @@ install packages & run the backend
 npm i
 npm run dev
 ```
+set up ./backend/.env:
+```
+GOOGLE_CLIENT_ID=${your client id}
+GOOGLE_CLIENT_SECRET=${your client secret}
+GOOGLE_REDIRECT_URI=/api/login/google/callback
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:3000
+```
 ## setting up the frontend
 ```
 cd frontend
@@ -47,9 +55,13 @@ export const wsConfig: {
 	host: window.location.host, // "localhost:3000" in dev, window.location.host in prod
 }
 ```
-in ./backend/.env file change the URI
+set up ./backend/.env:
 ```
-GOOGLE_REDIRECT_URI=https://${ip of server host}:8443/api/login/google/callback
+GOOGLE_CLIENT_ID=${your client id}
+GOOGLE_CLIENT_SECRET=${your client secret}
+GOOGLE_REDIRECT_URI=/api/login/google/callback
+FRONTEND_URL=https://${server ip}
+BACKEND_URL=https://${server ip}
 ```
 
 
