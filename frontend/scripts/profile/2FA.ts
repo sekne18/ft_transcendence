@@ -1,3 +1,4 @@
+import { languageService } from "../i18n";
 import { getElement, showToast } from "../utils";
 
 export function init2FA() {
@@ -34,7 +35,7 @@ export function init2FA() {
                     secretCode.textContent = res.secret;
                 }
                 else {
-                    showToast('Failed to set up 2FA. Please try again.', '', 'error');
+                    showToast(languageService.retrieveValue('toast_failed_2FA_setup'), '', 'error');
                     ignoreToggleEvent = true;
                     toggle2FA.checked = false;
                 }
@@ -55,10 +56,10 @@ export function init2FA() {
                 return res.json();
             }).then((res) => {
                 if (res.success) {
-                    showToast('2FA disabled successfully!', '', 'success');
+                    showToast(languageService.retrieveValue('toast_2FA_disabled'), '', 'success');
                     toggle2FA.checked = false;
                 } else {
-                    showToast('Failed to disable 2FA', '', 'error');
+                    showToast(languageService.retrieveValue('toast_failed_2FA_disabled'), '', 'error');
                     ignoreToggleEvent = true;
                     toggle2FA.checked = true;
                 }
@@ -95,17 +96,17 @@ export function init2FA() {
                 return res.json();
             }).then((res) => {
                 if (res.success) {
-                    showToast('2FA enabled successfully!', '', 'success');
+                    showToast(languageService.retrieveValue('toast_2FA_enabled'), '', 'success');
                     ignoreToggleEvent = true;
                     toggle2FA.checked = true;
                     modal2FA.classList.add('hidden');
                 } else {
-                    showToast('Failed to enable 2FA. Please try again.', '', 'error');
+                    showToast(languageService.retrieveValue('toast_failed_2FA_enable'), '', 'error');
                     closeModal();
                 }
             });
         } else {
-            showToast('Please enter a valid 6-digit code.', '', 'error');
+            showToast(languageService.retrieveValue('toast_6_digits'), '', 'error');
         }
     });
 }

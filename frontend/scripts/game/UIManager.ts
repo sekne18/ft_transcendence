@@ -1,3 +1,4 @@
+import { languageService } from "../i18n";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { getElement } from "../utils";
@@ -54,14 +55,14 @@ export class UIManager {
 	}
 
 	public setGameOverOverlay(winner: true | false): void {
-		this.matchmakeTitle.textContent = winner ? "You Win!" : "You Lose!";
+		this.matchmakeTitle.textContent = winner ? languageService.retrieveValue('winner') : languageService.retrieveValue('looser');
 		this.matchmakeTitle.classList.remove('hidden');
 		this.matchmakeButton.classList.add('hidden');
 		this.reloadButton.classList.add('hidden');
 	}
 
 	public setGoalOverlay(username: string): void {
-		this.matchmakeTitle.textContent = `${username} Scored!`;
+		this.matchmakeTitle.textContent = `${username} ${languageService.retrieveValue('game_scored')}`;
 	}
 
 	public toggleReloadButton(visibility: 'hidden' | 'visible'): void {
@@ -83,7 +84,7 @@ export class UIManager {
 			this.reloadButton.classList.add('hidden');
 			this.matchmakeButton.classList.add('hidden');
 			this.matchmakeTitle.classList.remove('hidden');
-			this.matchmakeTitle.textContent = "Searching for opponent";
+			this.matchmakeTitle.textContent = languageService.retrieveValue('game_waiting');
 			this.matchmakeButton.style.visibility = 'hidden';
 			if (this.matchmakingIntervalId) {
 				clearInterval(this.matchmakingIntervalId);
@@ -92,13 +93,13 @@ export class UIManager {
 			this.matchmakingIntervalId = setInterval(() => {
 				this.matchmakeTitle.textContent += '.';
 				if (this.matchmakeTitle?.textContent && this.matchmakeTitle.textContent.length > 25) {
-					this.matchmakeTitle.textContent = "Searching for opponent";
+					this.matchmakeTitle.textContent = languageService.retrieveValue('game_waiting');
 				}
 			}
 				, 1000);
 		}
 		else if (state === 'found') {
-			this.matchmakeTitle.textContent = "Opponent Found!";
+			this.matchmakeTitle.textContent = languageService.retrieveValue('opponent_found');
 			if (this.matchmakingIntervalId) {
 				clearInterval(this.matchmakingIntervalId);
 			}
@@ -130,7 +131,7 @@ export class UIManager {
 		avatarEl.src = user.avatar_url;
 		avatarEl.alt = user.username;
 		usernameEl.innerText = user.username;
-		statsEl.innerText = `Wins: ${user.wins} | Losses: ${user.losses}`;
+		statsEl.innerText = `W: ${user.wins} | L: ${user.losses}`;
 	}
 
 	private setRightPlayerInfo(user: Profile) {
@@ -140,7 +141,7 @@ export class UIManager {
 		avatarEl.src = user.avatar_url;
 		avatarEl.alt = user.username;
 		usernameEl.innerText = user.username;
-		statsEl.innerText = `Wins: ${user.wins} | Losses: ${user.losses}`;
+		statsEl.innerText = `W: ${user.wins} | L: ${user.losses}`;
 	}
 
 	public async setPlayerInfo(id: number | 'self', side: 'left' | 'right') {

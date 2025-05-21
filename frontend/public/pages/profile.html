@@ -14,19 +14,17 @@
                         <p id="username" class="text-gray-500"></p>
                     </div>
 
-                    <div class="flex items-center gap-2 mt-2">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Level 5</span>
-                        <span id="rank"
-                            class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded"></span>
+                    <div class="flex items-center gap-2 mt-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        <span data-i18n="profile_level"></span><span id="level"></span>
                     </div>
 
                     <div class="w-full mt-4">
                         <div class="flex justify-between text-sm mb-1">
-                            <span>Experience</span>
-                            <span>250/500 XP</span>
+                            <span data-i18n="profile_exeprience"></span>
+                            <span id="experience">0/500 XP</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-[#6366F1] h-2 rounded-full" style="width: 50%"></div>
+                            <div id="experience-bar" class="bg-[#6366F1] h-2 rounded-full" style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -248,7 +246,7 @@
                                     </div>
                                     <input type="text" id="display-name-input" name="display_name"
                                         class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
-                                        placeholder="Enter your display name">
+                                        data-i18nplaceholder="display_name_placeholder">
                                 </div>
                             </div>
                             <div>
@@ -288,7 +286,7 @@
                                     </div>
                                     <input type="password" id="current-password-input" name="currentPassword"
                                         class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
-                                        placeholder="Enter current password">
+                                        data-i18nplaceholder="current_pass_placeholder">
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -300,7 +298,7 @@
                                     </div>
                                     <input type="password" id="new-password-input" name="newPassword"
                                         class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
-                                        placeholder="Enter new password">
+                                        data-i18nplaceholder="new_password_placeholder">
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -312,7 +310,7 @@
                                     </div>
                                     <input type="password" id="confirm-password-input" name="confirmPassword"
                                         class="bg-[#1E1E2A] text-white rounded-lg block w-full pl-10 p-2.5"
-                                        placeholder="Confirm new password">
+                                        data-i18nplaceholder="confirm_pass_placeholder">
                                 </div>
                             </div>
                         </div>

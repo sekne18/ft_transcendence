@@ -35,7 +35,7 @@ function createLeaderboardRow(player: LeaderboardPlayer): string {
       : 'bg-[#F4407F]';
 
   const winRateHtml = Number.isNaN(player.winRate) ? `
-          <span class="text-sm font-semibold">No Games Played</span>
+          <span class="text-sm font-semibold" data-i18n="leaderboard_no_games_played"></span>
           ` : `
   <div class="w-full max-w-[100px] h-2 bg-gray-200 rounded-full overflow-hidden">
             <div class="h-full ${progressBarColor}" style="width: ${player.winRate}%"></div>

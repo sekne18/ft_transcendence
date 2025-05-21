@@ -20,6 +20,15 @@ export const translations: Record<string, LanguageMap> = {
     game_start: 'Start Game',
     game_score: 'Score',
     game_lives: 'Lives',
+    game_ready: 'Ready',
+    game_set: 'Set',
+    game_go: 'Go!',
+    game_waiting: 'Waiting for opponent...',
+    opponent_found: 'Opponent Found',
+    winner: 'winner',
+    losser: 'loser',
+    game_lobby_wait: 'Waiting for your match to begin...',
+    game_scored: ' Scored!',
 
     // Leaderboard items
     leaderboard_title: 'Leaderboard',
@@ -31,6 +40,7 @@ export const translations: Record<string, LanguageMap> = {
     leaderboard_win_rate: 'Win Rate',
     leaderboard_score: 'Score',
     leaderboard_desc: "See who's dominating the Pong arena",
+    leaderboard_no_games_played: 'No Games Played',
 
     // Profile items
     statistics_tab: 'Statistics',
@@ -48,6 +58,8 @@ export const translations: Record<string, LanguageMap> = {
     chat_btn: 'Chat',
     profile_versus: 'Match vs',
     profile_streak_games: 'games',
+    profile_exeprience: 'Experience',
+    profile_level: 'Level',
 
     // Edit proifle
     change_avatar_btn: 'Change Avatar',
@@ -64,6 +76,10 @@ export const translations: Record<string, LanguageMap> = {
     edit_2fa_desc: 'Add an extra layer of security to your account.',
     edit_cancel_btn: 'Cancel',
     edit_save_btn: 'Save Changes',
+    display_name_placeholder: 'Enter your display name',
+    confirm_pass_placeholder: 'Confirm new password',
+    current_pass_placeholder: 'Enter current password',
+    new_password_placeholder: 'Enter new password',
 
     // 2FA modal
     twoFA_title: 'Set Up Two-Factor Authentication',
@@ -84,10 +100,13 @@ export const translations: Record<string, LanguageMap> = {
 
     // Tournament items
     tournament_title: 'Tournament',
-    tournament_description: 'Compete in tournaments with 6 players',
-    tournament_players_joined: 'Players joined',
+    tournament_waiting_for_player: 'Waiting for player...',
+    tournament_modal_desc: 'Join the current tournament queue. The tournament will start automatically once all players have joined.',
     tournament_join: 'Join Tournament',
-    tournament_waiting: 'Waiting for players...',
+    tournament_subtitle_1: 'Compete in ',
+    tournament_subtitle_3: '-player tournament',
+    btn_join: 'Join',
+    tournament_fetch: 'Fetch Finished Tournaments',
 
     // Friendslist items
     friendslist_title: 'Friends',
@@ -99,7 +118,32 @@ export const translations: Record<string, LanguageMap> = {
     friendslist_search: 'Search friends...',
     friendslist_no_friends: 'No friends found',
     friendslist_no_users: 'No users found',
-    friendslist_showing_users: 'Showing all users'
+    friendslist_showing_users: 'Showing all users',
+
+    // Toast messages
+    toast_error: 'Error',
+    toast_success: 'Success',
+    toast_warning: 'Warning',
+    toast_limit_inv: 'Whoah there',
+    toast_limit_inv_desc: 'You can only have one active invite at a time.',
+    toast_friend_removed: 'Friend removed successfully!',
+    toast_failed_friend_rm: 'Failed to remove friend',
+    toast_req_sent: 'Friend request sent successfully!',
+    toast_req_failed_sent: 'Failed to add friend',
+    toast_req_accepted: 'Friend request accepted',
+    toast_req_failed_accepted: 'Failed to accept friend request',
+    toast_block_user: 'User blocked successfully!',
+    toast_failed_block_user: 'Failed to block friend',
+    toast_unblock_user: 'User unblocked successfully!',
+    toast_failed_unblock_user: 'Failed to unblock friend',
+    toast_match_setup: 'Match Setup',
+    toast_2FA_disabled: '2FA disabled successfully!',
+    toast_failed_2FA_disabled: 'Failed to disable 2FA',
+    toast_2FA_enabled: '2FA enabled successfully!',
+    toast_failed_2FA_enable: 'Failed to enable 2FA. Please try again.',
+    toast_6_digits: 'Please enter a valid 6-digit code.',
+    toast_failed_2FA_setup: 'Failed to set up 2FA. Please try again.',
+    toast_chat_started: 'Chat started successfully!',
   },
   nl: {
     // Navbar items
@@ -120,6 +164,15 @@ export const translations: Record<string, LanguageMap> = {
     game_start: 'Start Spel',
     game_score: 'Score',
     game_lives: 'Levens',
+    opponent_found: 'Tegenstander Gevonden',
+    game_ready: 'Klaar',
+    game_set: 'Set',
+    game_go: 'Ga!',
+    game_waiting: 'Wachten op tegenstander...',
+    winner: 'winnaar',
+    losser: 'verliezer',
+    game_lobby_wait: 'Wachten tot je wedstrijd begint...',
+    game_scored: ' Gescoord!',
 
     // Leaderboard items
     leaderboard_level: 'Niveau',
@@ -131,6 +184,7 @@ export const translations: Record<string, LanguageMap> = {
     leaderboard_title: 'Leiderschapsbord',
     leaderboard_rank: 'Rang',
     leaderboard_player: 'Speler',
+    leaderboard_no_games_played: 'Geen Spellen Gespeeld',
 
     // Chat items
     chat_title: 'Spreek',
@@ -156,6 +210,8 @@ export const translations: Record<string, LanguageMap> = {
     profile_versus: 'Wedstrijd tegen',
     pending_btn: 'In afwachting',
     profile_streak_games: 'spellen',
+    profile_exeprience: 'Ervaring',
+    profile_level: 'Niveau',
 
     // Edit proifle
     change_avatar_btn: 'Verander Avatar',
@@ -172,6 +228,11 @@ export const translations: Record<string, LanguageMap> = {
     edit_2fa_desc: 'Voeg een extra beveiligingslaag toe aan je account.',
     edit_cancel_btn: 'Annuleer',
     edit_save_btn: 'Wijzigingen Opslaan',
+    display_name_placeholder: 'Voer je weergavenaam in',
+    confirm_pass_placeholder: 'Bevestig nieuw wachtwoord',
+    current_pass_placeholder: 'Voer huidig wachtwoord in',
+    new_password_placeholder: 'Voer nieuw wachtwoord in',
+
 
     // 2FA modal
     twoFA_title: 'Stel Twee-Factor Authenticatie In',
@@ -191,6 +252,12 @@ export const translations: Record<string, LanguageMap> = {
     tournament_players_joined: 'Spelers zijn toegetreden',
     tournament_join: 'Doe mee aan het toernooi',
     tournament_waiting: 'Wachten op spelers...',
+    tournament_waiting_for_player: 'Wachten op speler...',
+    tournament_subtitle_1: 'Doe mee aan ',
+    tournament_subtitle_3: '-speler toernooi',
+    tournament_modal_desc: 'Sluit je aan bij de huidige toernooireeks. Het toernooi begint automatisch zodra alle spelers zich hebben aangemeld.',
+    btn_join: 'Doe mee',
+    tournament_fetch: 'Haal Voltooide Toernooien Op',
 
     // Friendslist items
     friendslist_title: 'Vrienden',
@@ -223,6 +290,16 @@ export const translations: Record<string, LanguageMap> = {
     game_start: 'Začni igro',
     game_score: 'Rezultat',
     game_lives: 'Življenja',
+    opponent_found: 'Nasprotnik najden',
+    game_ready: 'Pripravljen',
+    game_set: 'Nastavi',
+    game_go: 'Pojdi!', 
+    game_waiting: 'Čakanje na nasprotnika...',
+    winner: 'zmagovalec',
+    losser: 'poraženec',
+    game_lobby_wait: 'Čakanje, da se začne vaša tekma...',
+    game_scored: ' Zadel!',
+
 
     // Leaderboard item
     leaderboard_level: 'Stopnja',
@@ -234,6 +311,7 @@ export const translations: Record<string, LanguageMap> = {
     leaderboard_title: 'Lestvica',
     leaderboard_rank: 'Uvrstitev',
     leaderboard_player: 'Igralec',
+    leaderboard_no_games_played: 'Nobena igra ni bila odigrana',
 
     // Chat items
     chat_title: 'Pogovor',
@@ -259,6 +337,8 @@ export const translations: Record<string, LanguageMap> = {
     profile_versus: 'Tekma proti',
     pending_btn: 'Čaka',
     profile_streak_games: 'iger',
+    profile_exeprience: 'Izkušnje',
+    profile_level: 'Stopnja',
 
     // Edit proifle
     change_avatar_btn: 'Spremeni avatar',
@@ -275,6 +355,10 @@ export const translations: Record<string, LanguageMap> = {
     edit_2fa_desc: 'Dodaj dodatno plast zaščite svojemu računu.',
     edit_cancel_btn: 'Prekliči',
     edit_save_btn: 'Shrani spremembe',
+    display_name_placeholder: 'Vnesi svoje ime za prikaz',
+    confirm_pass_placeholder: 'Potrdi novo geslo',
+    current_pass_placeholder: 'Vnesi trenutno geslo',
+    new_password_placeholder: 'Vnesi novo geslo',
 
     // 2FA modal
     twoFA_title: 'Nastavi dvofaktorsko avtentikacijo',
@@ -294,6 +378,12 @@ export const translations: Record<string, LanguageMap> = {
     tournament_players_joined: 'Igralci so se pridružili',
     tournament_join: 'Pridruži se turnirju',
     tournament_waiting: 'Čakanje na igralce...',
+    tournament_waiting_for_player: 'Čakanje na igralca...',
+    tournament_subtitle_1: 'Tekmujte v ',
+    tournament_subtitle_3: '-igralčevem turnirju',
+    tournament_modal_desc: 'Pridruži se trenutnemu turnirju. Turnir se bo samodejno začel, ko se vsi igralci pridružijo.',
+    btn_join: 'Pridruži se',
+    tournament_fetch: 'Pridobi končane turnirje',
 
     // Friendslist items
     friendslist_title: 'Prijatelji',
@@ -326,6 +416,15 @@ export const translations: Record<string, LanguageMap> = {
     game_start: 'Почати гру',
     game_score: 'Рахунок',
     game_lives: 'Життя',
+    opponent_found: 'Суперник знайдений',
+    game_ready: 'Готовий',
+    game_set: 'Встановити',
+    game_go: 'Почати!',
+    game_waiting: 'Очікування суперника...',
+    winner: 'переможець',
+    losser: 'програвший',
+    game_lobby_wait: 'Очікування початку вашої гри...',
+    game_scored: ' Забито!',
 
     // Leaderboard item
     leaderboard_level: 'Рівень',
@@ -336,6 +435,7 @@ export const translations: Record<string, LanguageMap> = {
     leaderboard_title: 'Таблиця лідерів',
     leaderboard_rank: 'Ранг',
     leaderboard_player: 'Гравець',
+    leaderboard_no_games_played: 'Жодна гра не була зіграна',
 
     // Chat items
     chat_title: 'Чат',
@@ -361,6 +461,8 @@ export const translations: Record<string, LanguageMap> = {
     profile_versus: 'Матч проти',
     pending_btn: 'В очікуванні',
     profile_streak_games: 'ігор',
+    profile_exeprience: 'Досвід',
+    profile_level: 'Рівень',
 
     // Edit proifle
     change_avatar_btn: 'Змінити аватар',
@@ -377,6 +479,10 @@ export const translations: Record<string, LanguageMap> = {
     edit_2fa_desc: 'Додайте додатковий рівень безпеки до свого облікового запису.',
     edit_cancel_btn: 'Скасувати',
     edit_save_btn: 'Зберегти зміни',
+    display_name_placeholder: 'Введіть своє ім\'я для відображення',
+    confirm_pass_placeholder: 'Підтвердьте новий пароль',
+    current_pass_placeholder: 'Введіть поточний пароль',
+    new_password_placeholder: 'Введіть новий пароль',
 
     // 2FA modal
     twoFA_title: 'Налаштуйте двофакторну аутентифікацію',
@@ -394,7 +500,25 @@ export const translations: Record<string, LanguageMap> = {
     tournament_title: 'Турнір',
     tournament_description: 'Змагайтеся у турнірах з 6 гравцями',
     tournament_players_joined: 'Гравці приєднано',
-    tournament_join: 'Приєднатися до турніру',
     tournament_waiting: 'Очікування гравців...',
+    tournament_waiting_for_player: 'Очікування гравця...',
+    tournament_subtitle_1: 'Змагайтеся у ',
+    tournament_subtitle_3: '-гравцевому турнірі',
+    tournament_join: 'Приєднатися до турніру',
+    tournament_modal_desc: 'Приєднайтеся до поточної черги турніру. Турнір почнеться автоматично, як тільки всі гравці приєднаються.',
+    btn_join: 'Приєднатися',
+    tournament_fetch: 'Отримати завершені турніри',
+
+    // Friendslist items
+    friendslist_title: 'Друзі',
+    friendslist_desc: 'Керування друзями та зв\'язками',
+    friendslist_all_friends: 'Всі друзі',
+    friendslist_online: 'В мережі',
+    friendslist_pending: 'В очікуванні',
+    friendslist_blocked: 'Заблоковані',
+    friendslist_search: 'Шукати друзів...',
+    friendslist_no_friends: 'Друзів не знайдено',
+    friendslist_no_users: 'Користувачів не знайдено',
+    friendslist_showing_users: 'Показати всіх користувачів'
   }
 };

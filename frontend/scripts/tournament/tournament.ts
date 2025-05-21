@@ -1,3 +1,4 @@
+import { languageService } from "../i18n";
 import { showToast } from "../utils";
 import { TournamentManager } from "./TournamentManager";
 
@@ -11,7 +12,7 @@ export function initTournament(): void {
     }
     ).catch(err => {
         console.error('Error fetching user data:', err);
-        showToast("Error", "Could not initialize tournament data.", "error");
+        showToast(languageService.retrieveValue('toast_error'), "Could not initialize tournament data.", "error");
     });
 }
 

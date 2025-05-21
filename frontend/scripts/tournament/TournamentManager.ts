@@ -1,8 +1,9 @@
 import { GameState } from "../game/GameTypes";
+import { languageService } from "../i18n";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { State } from "../state/State";
-import { showToast } from "../utils";
+import { getElement, showToast } from "../utils";
 import { networkConfig } from "../wsConfig";
 import { Bracket, RoundMatch, Tournament, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
@@ -102,7 +103,7 @@ export class TournamentManager {
 				})
 				.catch(error => {
 					console.error('There was a problem with the fetch operation:', error);
-					showToast('Error', 'Failed to fetch player data', 'error');
+					showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch player data', 'error');
 				});
 		}
 		else {
@@ -152,7 +153,7 @@ export class TournamentManager {
 				const state = State.getState("tournament");
 				if (!state) {
 					console.error('Tournament state not found');
-					showToast('Error', 'Tournament state not found', 'error');
+					showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 					return;
 				}
 				state.isPlaying = true;
@@ -165,7 +166,7 @@ export class TournamentManager {
 				const player1 = tournament.players.find(p => p.id === data.p1);
 				const player2 = tournament.players.find(p => p.id === data.p2);
 				if (player1 && player2) {
-					showToast('Match Setup', `Match setup between ${player1.username} and ${player2.username}`, 'info');
+					showToast(languageService.retrieveValue('toast_match_setup'), `Match setup between ${player1.username} and ${player2.username}`, 'info');
 				}
 				else {
 					console.error('Player not found:', data.p1, data.p2);
@@ -233,6 +234,7 @@ export class TournamentManager {
 		//const modalLevel = document.getElementById('modal-level');
 		const modalWins = document.getElementById('modal-wins');
 		const modalLosses = document.getElementById('modal-losses');
+		const modalLevel = document.getElementById('level-number');
 
 
 		if (modal) {
@@ -250,6 +252,9 @@ export class TournamentManager {
 		if (modalLosses) {
 			modalLosses.textContent = this.user.losses?.toString() || '0';
 		}
+		if (modalLevel) {
+			modalLevel.textContent = Math.floor(this.user.wins / 100).toString();
+		}
 	}
 
 	private closeJoinModal(): void {
@@ -263,12 +268,12 @@ export class TournamentManager {
 		const state = State.getState("tournament");
 		if (!state) {
 			console.error('Tournament state not found');
-			showToast('Error', 'Tournament state not found', 'error');
+			showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 			return;
 		}
 		else if (!state.targetId) {
 			console.error('Target ID not found');
-			showToast('Error', 'Target ID not found', 'error');
+			showToast(languageService.retrieveValue('toast_error'), 'Target ID not found', 'error');
 			return;
 		}
 		this.socket.send(JSON.stringify({
@@ -285,7 +290,7 @@ export class TournamentManager {
 		const state = State.getState("tournament");
 		if (!state) {
 			console.error('Tournament state not found');
-			showToast('Error', 'Tournament state not found', 'error');
+			showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 			return;
 		}
 		this.socket.send(JSON.stringify({
@@ -302,11 +307,20 @@ export class TournamentManager {
 		const headerEl = document.createElement('div');
 		headerEl.id = 'tournament-header';
 		const title = document.createElement('h1');
+		title.dataset.i18n = 'tournament_title';
 		title.className = 'text-2xl font-bold';
 		title.textContent = 'Tournament';
 		const subtitle = document.createElement('p');
 		subtitle.className = 'text-gray-500';
-		subtitle.textContent = `Compete in ${tournament.maxPlayers}-player tournament`;
+		const subtitle1 = document.createElement('span');
+		const subtitle2 = document.createElement('span');
+		const subtitle3 = document.createElement('span');
+		subtitle1.dataset.i18n = 'tournament_subtitle_1';
+		subtitle3.dataset.i18n = 'tournament_subtitle_3';
+		subtitle2.textContent = `${tournament.maxPlayers}`;
+		subtitle.appendChild(subtitle1);
+		subtitle.appendChild(subtitle2);
+		subtitle.appendChild(subtitle3);
 		const headerInfo = document.createElement('div');
 		headerInfo.appendChild(title);
 		headerInfo.appendChild(subtitle);
@@ -315,12 +329,12 @@ export class TournamentManager {
 			const joinButton = document.createElement('button');
 			joinButton.id = 'join-button';
 			joinButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mr-2';
-			joinButton.innerHTML = `Join Tournament`;
+			joinButton.dataset.i18n = 'tournament_join';
 			joinButton.addEventListener('click', () => {
 				const state = State.getState("tournament");
 				if (!state) {
 					console.error('Tournament state not found');
-					showToast('Error', 'Tournament state not found', 'error');
+					showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 					return;
 				}
 				state.targetId = tournament.id;
@@ -376,7 +390,7 @@ export class TournamentManager {
 		const state = State.getState("tournament");
 		if (!state) {
 			console.error('Tournament state not found');
-			showToast('Error', 'Tournament state not found', 'error');
+			showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 			return;
 		}
 		let watch = false;
@@ -542,8 +556,8 @@ export class TournamentManager {
 				`;
 			} else {
 				playerCard.innerHTML = `
-					<div class="flex items-center justify-center h-16 text-gray-500">
-						Waiting for player...
+					<div class="flex items-center justify-center h-16 text-gray-500" data-i18n="tournament_waiting_for_player">
+						
 					</div>
 				`;
 			}
@@ -584,7 +598,7 @@ export class TournamentManager {
 			.then(async data => {
 				const finishedTournaments = data.tournaments as TournamentView[];
 				if (finishedTournaments.length === 0) {
-					showToast('Info', 'No more tournaments available', 'info');
+					showToast(languageService.retrieveValue('toast_warning'), 'No more tournaments available', 'info');
 					return;
 				}
 				this.lastTournamentTime = finishedTournaments[finishedTournaments.length - 1].endedAt;
@@ -603,7 +617,7 @@ export class TournamentManager {
 							credentials: 'include',
 						});
 						if (!res.ok) {
-							showToast('Error', 'Failed to fetch player data', 'error');
+							showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch player data', 'error');
 							throw new Error('Network response was not ok');
 						}
 						const data = await res.json();
@@ -615,7 +629,7 @@ export class TournamentManager {
 			})
 			.catch(error => {
 				console.error('There was a problem with the fetch operation:', error);
-				showToast('Error', 'Failed to fetch finished tournaments', 'error');
+				showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch finished tournaments', 'error');
 			}
 			);
 	}
@@ -625,7 +639,7 @@ export class TournamentManager {
 		fetchFinishedEl.className = 'text-gray-500 text-center mt-4';
 		const fetchFinishedBtn = document.createElement('button');
 		fetchFinishedBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg';
-		fetchFinishedBtn.textContent = 'Fetch Finished Tournaments';
+		fetchFinishedBtn.dataset.i18n = 'tournament_fetch';
 		fetchFinishedBtn.addEventListener('click', this.addFinishedTournaments.bind(this));
 		fetchFinishedEl.appendChild(fetchFinishedBtn);
 		return fetchFinishedEl;
@@ -648,6 +662,7 @@ export class TournamentManager {
 			this.tournamentContainer.appendChild(tournamentEl);
 		}
 		this.tournamentContainer.appendChild(this.createFetchFinishedElement());
+		languageService.init();
 	}
 
 	private fetchTournamentList(): void {
@@ -682,7 +697,7 @@ export class TournamentManager {
 								credentials: 'include',
 							});
 							if (!res.ok) {
-								showToast('Error', 'Failed to fetch player data', 'error');
+								showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch player data', 'error');
 								throw new Error('Network response was not ok');
 							}
 							const data = await res.json();
@@ -694,7 +709,7 @@ export class TournamentManager {
 			})
 			.catch(error => {
 				console.error('There was a problem with the fetch operation:', error);
-				showToast('Error', 'Failed to fetch tournaments', 'error');
+				showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch tournaments', 'error');
 			});
 	}
 }

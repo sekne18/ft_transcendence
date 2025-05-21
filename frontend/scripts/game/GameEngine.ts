@@ -5,6 +5,7 @@ import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
 import { loadContent } from '../router/router';
 import { State } from '../state/State';
+import { languageService } from '../i18n';
 
 
 export class GameEngine {
@@ -71,20 +72,20 @@ export class GameEngine {
 		let startTime = time;
 		let interval = setInterval(() => {
 			if (time / startTime > 0.65) {
-				this.UIManager.setCountdownOverlay('Ready?');
+				this.UIManager.setCountdownOverlay(languageService.retrieveValue('game_ready'));
 			}
 			else if (time / startTime > 0.32) {
-				this.UIManager.setCountdownOverlay('Set...');
+				this.UIManager.setCountdownOverlay(languageService.retrieveValue('game_set'));
 			}
 			else {
-				this.UIManager.setCountdownOverlay('Go!');
+				this.UIManager.setCountdownOverlay(languageService.retrieveValue('game_go'));
 			}
-			time -= 0.5;
+			time -= 0.05;
 			if (time <= 0.2) { // to protect against floating point errors
 				clearInterval(interval);
 				this.changeState('playing');
 			}
-		}, 500); //refresh rate of 2 FPS
+		}, 50); //refresh rate of 2 FPS
 	}
 
 	public onClose(): void {
@@ -212,7 +213,7 @@ export class GameEngine {
 				this.UIManager.toggleOverlayVisibility('visible');
 				break;
 			case 'idle-tournament':
-				this.UIManager.setCountdownOverlay('Waiting for your match to begin...');
+				this.UIManager.setCountdownOverlay(languageService.retrieveValue('game_lobby_wait'));
 				this.UIManager.toggleOverlayVisibility('visible');
 				if (this.extraParams.type === 'tournament' && this.extraParams.data.isPlaying) {
 					this.game.connect();
@@ -222,7 +223,7 @@ export class GameEngine {
 				loadContent('/tournament');
 				break;
 			case 'idle-lobby':
-				this.UIManager.setCountdownOverlay('Waiting for your match to begin...');
+				this.UIManager.setCountdownOverlay(languageService.retrieveValue('game_lobby_wait'));
 				this.UIManager.toggleOverlayVisibility('visible');
 				this.game.connect();
 				break;

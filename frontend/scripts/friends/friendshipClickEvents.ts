@@ -1,3 +1,4 @@
+import { languageService } from "../i18n";
 import { loadContent } from "../router/router";
 import { showToast } from "../utils";
 
@@ -30,10 +31,10 @@ export function onRemoveFriendClick() {
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
                     if (res.status === 200) {
-                        showToast("Friend removed", '', 'success');
+                        showToast(languageService.retrieveValue('toast_friend_removed'), '', 'success');
                         loadContent('/friends');
                     } else {
-                        showToast("Failed to remove friend", '', 'error');
+                        showToast(languageService.retrieveValue('toast_failed_friend_rm'), '', 'error');
                     }
                 });
             }
@@ -57,10 +58,10 @@ export function onAddFriendClick() {
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
                     if (res.status === 200) {
-                        showToast("Friend request sent", '', 'success');
+                        showToast(languageService.retrieveValue('toast_req_sent'), '', 'success');
                         loadContent('/friends');
                     } else {
-                        showToast("Failed to add friend", '', 'error');
+                        showToast(languageService.retrieveValue('toast_req_failed_sent'), '', 'error');
                     }
                 });
             }
@@ -84,10 +85,10 @@ export function onAcceptFriendRequestClick() {
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
                     if (res.status === 200) {
-                        showToast("Friend request accepted", '', 'success');
+                        showToast(languageService.retrieveValue('toast_req_accepted'), '', 'success');
                         loadContent('/friends');
                     } else {
-                        showToast("Failed to accept friend request", '', 'error');
+                        showToast(languageService.retrieveValue('toast_req_failed_accepted'), '', 'error');
                     }
                 });
             }
@@ -111,10 +112,10 @@ export function onBlockFriendClick() {
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
                     if (res.status === 200) {
-                        showToast("Friend blocked", '', 'success');
+                        showToast(languageService.retrieveValue('toast_block_user'), '', 'success');
                         loadContent('/friends');
                     } else {
-                        showToast("Failed to block friend", '', 'error');
+                        showToast(languageService.retrieveValue('toast_failed_block_user'), '', 'error');
                     }
                 });
             }
@@ -138,10 +139,10 @@ export function onUnblockFriendClick() {
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
                     if (res.status === 200) {
-                        showToast("Friend unblocked", '', 'success');
+                        showToast(languageService.retrieveValue('toast_unblock_user'), '', 'success');
                         loadContent('/friends');
                     } else {
-                        showToast("Failed to block friend", '', 'error');
+                        showToast(languageService.retrieveValue('toast_failed_unblock_user'), '', 'error');
                     }
                 });
             }

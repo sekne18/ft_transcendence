@@ -255,11 +255,20 @@ function handleRegister(event: Event) {
     // Sanitize inputs
     registerData.username = sanitizeInput(registerData.username);
     registerData.email = sanitizeInput(registerData.email);
+    registerData.password = sanitizeInput(registerData.password);
+    registerData.repassword = sanitizeInput(registerData.repassword);
 
     if (registerData.username.length < 3 || registerData.username.length > 20) {
         const errMsg = document.getElementById("error-register-message");
         if (errMsg) {
             errMsg.innerText = 'Username must be between 3 and 20 characters.';
+            return;
+        }
+    }
+    if (registerData.password.length < 10) {
+        const errMsg = document.getElementById("error-register-message");
+        if (errMsg) {
+            errMsg.innerText = 'Password must be at least 10 characters.';
             return;
         }
     }

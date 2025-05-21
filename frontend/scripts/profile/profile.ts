@@ -120,13 +120,13 @@ function setClickEvents() {
       return res.json();
     }).then((res) => {
       if (res.success) {
-        showToast('Friend removed successfully!', '', 'success');
+        showToast(languageService.retrieveValue('toast_friend_removed'), '', 'success');
         fetchUserProfile(otherId).then((userProfile) => {
           renderUserProfile(userProfile);
           renderMatchHistory(otherId);
         });
       } else {
-        showToast('Failed to remove friend.', '', 'error');
+        showToast(languageService.retrieveValue('toast_failed_friend_rm'), '', 'error');
       }
     });
   });
@@ -149,13 +149,13 @@ function setClickEvents() {
       return res.json();
     }).then((res) => {
       if (res.success) {
-        showToast('User unblocked successfully!', '', 'success');
+        showToast(languageService.retrieveValue('toast_unblock_user'), '', 'success');
         fetchUserProfile(otherId).then((userProfile) => {
           renderUserProfile(userProfile);
           renderMatchHistory(otherId);
         });
       } else {
-        showToast('Failed to unblock user.', '', 'error');
+        showToast(languageService.retrieveValue('toast_failed_unblock_user'), '', 'error');
       }
     });
   });
@@ -178,13 +178,13 @@ function setClickEvents() {
       return res.json();
     }).then((res) => {
       if (res.success) {
-        showToast('Friend request sent successfully!', '', 'success');
+        showToast(languageService.retrieveValue('toast_req_sent'), '', 'success');
         fetchUserProfile(otherId).then((userProfile) => {
           renderUserProfile(userProfile);
           renderMatchHistory(otherId);
         });
       } else {
-        showToast('Failed to send friend request.', '', 'error');
+        showToast(languageService.retrieveValue('toast_req_failed_sent'), '', 'error');
       }
     });
   });
@@ -207,13 +207,13 @@ function setClickEvents() {
       return res.json();
     }).then((res) => {
       if (res.success) {
-        showToast('User blocked successfully!', '', 'success');
+        showToast(languageService.retrieveValue('toast_block_user'), '', 'success');
         fetchUserProfile(otherId).then((userProfile) => {
           renderUserProfile(userProfile);
           renderMatchHistory(otherId);
         });
       } else {
-        showToast('Failed to block user.', '', 'error');
+        showToast(languageService.retrieveValue('toast_failed_block_user'), '', 'error');
       }
     });
   });
@@ -248,10 +248,7 @@ function startChat() {
     })
     .then(data => {
       if (data.success) {
-        // const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
-        // chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
-        // chatWindow.classList.add("w-0", "h-0", "scale-0");
-        showToast('Chat started successfully!', '', 'success');
+        showToast(languageService.retrieveValue('toast_chat_started'), '', 'success');
       } else {
         console.error('Chat failed:', data.message);
       }
@@ -331,10 +328,15 @@ function fillProfileData(profile: Profile) {
   (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
   getElement('display_name').textContent = profile.display_name;
   getElement('username').textContent = profile.username;
-  getElement('rank').textContent = 'rookie'; // TODO: Add rank to user in database??
   const navAvatar = getElement('user-avatar') as HTMLImageElement;
   navAvatar.src = profile.avatar_url;
   navAvatar.alt = profile.display_name;
+  getElement('level').textContent = Math.floor(profile.games_played / 100).toString();
+
+  // Set user experience
+  const experience = (profile.games_played / 100 - Math.floor(profile.games_played / 100)) * 500;
+  getElement('experience').textContent = experience.toFixed(0).toString() + '/500 XP';
+  getElement('experience-bar').style.width = `${Math.round(experience)}%`;
 
   // Set user stats
   getElement('games-played').textContent = profile.games_played.toString();
@@ -343,7 +345,7 @@ function fillProfileData(profile: Profile) {
 
   // Calculate avg score
   const avg_score = profile.avg_score > 5 ? 5 : profile.avg_score;
-  getElement('avg-score').textContent = profile.avg_score.toString();
+  getElement('avg-score').textContent = profile.avg_score.toFixed(1).toString();
   getElement('avg-score-bar').style.width = `${Math.round(avg_score * 20)}%`;
 
   // // Calculate Longest streak

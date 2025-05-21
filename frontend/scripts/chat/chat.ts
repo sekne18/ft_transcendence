@@ -4,6 +4,7 @@ import { getStatusColor } from "../friends/friendsList";
 import { showToast } from "../utils";
 import { loadContent } from "../router/router";
 import { State } from "../state/State";
+import { languageService } from "../i18n";
 
 let chatManager: ChatManager | null = null;
 
@@ -509,7 +510,7 @@ class ChatManager {
     private sendMessage(chatSocket: WebSocket, message: string, chat_id: number): void {
         const isInvite = (message === "/invite");
         if (isInvite && this.inviteId) {
-            showToast("Whoah there", "You can only have one active invite at a time.", "warning");
+            showToast(languageService.retrieveValue("toast_limit_inv"), languageService.retrieveValue('toast_limit_inv_desc'), "warning");
             return;
         }
         const msgObj: ChatMessage = {

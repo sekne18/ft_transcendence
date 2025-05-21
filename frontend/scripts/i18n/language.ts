@@ -10,10 +10,7 @@ export const languageService = {
     const savedLang = localStorage.getItem('lang') || 'en';
     this.setLanguage(savedLang);
 
-    // Attach event listeners after DOM is ready
-    setTimeout(() => {
-      this.attachLanguageSwitchers();
-    }, 0);
+    this.attachLanguageSwitchers();
   },
 
   /**
@@ -55,5 +52,14 @@ export const languageService = {
         this.setLanguage(lang);
       });
     });
+  },
+
+  retrieveValue(key: string): string {
+    const lang = localStorage.getItem('lang') || 'en';
+    const texts = translations[lang];
+    if (texts && texts[key]) {
+      return texts[key];
+    }
+    return key;
   }
 };
