@@ -1,7 +1,7 @@
 import { updateTournament } from "../db/queries/tournament.js";
 import { GameStore } from "../game/GameStore.js";
 import { Bracket, RoundMatch, TournamentConnection, TournamentEvent } from "./Types.js";
-import { getMatchById } from "../db/queries/match.js";
+import { createMatch, getMatchById, updateMatch } from "../db/queries/match.js";
 import { PlayerConnection } from "../game/GameTypes.js";
 import { updateUser } from "../db/queries/user.js";
 
@@ -98,6 +98,14 @@ export class Tournament {
 		this.callbacks.forEach((callback) => callback(event));
 	}
 
+	private isReachable(playerId: number): boolean {
+		const player = this.players.find((p) => p.id === playerId);
+		if (!player) {
+			return false;
+		}
+		return player.socket !== null;
+	}
+
 	// requires this.winners to be set
 	private setupNextMatch(): void {
 		//if no match played yet: generate first round
@@ -155,6 +163,23 @@ export class Tournament {
 			if (!nextMatch) {
 				throw new Error("No match to start");
 			}
+		}
+		if (!this.isReachable(nextMatch.playerIds.p1) || !this.isReachable(nextMatch.playerIds.p2)) {
+			const matchId = createMatch(nextMatch.playerIds.p1, nextMatch.playerIds.p2, Date.now(), this.id, this.bracket.rounds.length - 1);
+			nextMatch.matchId = matchId;
+			if (!this.isReachable(nextMatch.playerIds.p1)) {
+				updateMatch(matchId, {
+					winnerId: nextMatch.playerIds.p2,
+					status: 'disconnected',
+				});
+			} else {
+				updateMatch(matchId, {
+					winnerId: nextMatch.playerIds.p1,
+					status: 'disconnected',
+				});
+			}
+			this.onMatchEnd(matchId);
+			return;
 		}
 		this.notify({
 			type: 'setup_match',
@@ -250,7 +275,7 @@ export class Tournament {
 		}
 		const player = this.players[playerIndex];
 		player.enteredTournament = null;
-		
+
 		this.players.splice(playerIndex, 1);
 		this.notify({
 			type: 'left',

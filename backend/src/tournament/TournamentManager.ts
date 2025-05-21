@@ -11,6 +11,7 @@ export class TournamentManager {
 	private spectators: { id: number, socket: ProxyPlayer }[] = [];
 	private tournaments: Map<number, Tournament> = new Map();
 	private tournamentUnsubscribers: Map<number, () => void> = new Map();
+	private activeMatches: number[] = [];
 	private gameStore: GameStore;
 	private readonly tournamentTabFilter: Map<string, boolean> = new Map([
 		['game_state', true],
@@ -45,10 +46,11 @@ export class TournamentManager {
 
 	public onMatchBegin(tournamentId: number, matchId: number): void {
 		this.gameStore.spectateGame(matchId, this.spectators);
+		this.activeMatches.push(matchId);
 	}
 
 	public onMatchEnd(tournamentId: number, matchId: number): void {
-		//...
+		this.activeMatches = this.activeMatches.filter((id) => id !== matchId);
 	}
 
 	public addTournament(tournament: TournamentParams): void {
@@ -120,7 +122,11 @@ export class TournamentManager {
 			socket: player.socket,
 		} as TournamentConnection;
 		this.connectedPlayers.set(player.id, tournamentConnection);
-		this.spectators.push({ id: player.id, socket: new ProxyPlayer(this.tournamentTabFilter, tournamentConnection) });
+		const spectator = { id: player.id, socket: new ProxyPlayer(this.tournamentTabFilter, tournamentConnection) };
+		this.spectators.push(spectator);
+		this.activeMatches.forEach((matchId) => {
+			this.gameStore.spectateGame(matchId, spectator);
+		});
 		player.socket.on("close", () => {
 			this.disconnectPlayer(player.id);
 		});

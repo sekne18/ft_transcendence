@@ -75,7 +75,8 @@ export class TournamentManager {
 			targetId: null,
 			id: null,
 			socket: this.socket,
-			watch: false
+			watch: false,
+			joined: false,
 		});
 		this.user = user; //TODO: if user is allowed to edit their profile during tournaments, this should be fetched every time
 		this.fetchTournamentList();
@@ -124,6 +125,19 @@ export class TournamentManager {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
 			tournament.bracket = data.bracket;
+			if (tournament.bracket.rounds[tournament.bracket.rounds.length - 1].length === 1 &&
+				tournament.bracket.rounds[tournament.bracket.rounds.length - 1][0].winnerId) {
+				tournament.status = 'finished';
+				const state = State.getState("tournament");
+				if (state) {
+					state.isPlaying = false;
+					state.joined = false;
+					state.targetId = null;
+					state.id = null;
+					state.watch = false;
+					State.setState("tournament", state);
+				}
+			}
 			this.renderTournaments();
 		}
 		else {
@@ -263,15 +277,25 @@ export class TournamentManager {
 				tournamentId: state.targetId
 			}
 		} as TournamentMsgOut));
+		state.joined = true;
+		State.setState("tournament", state);
 	}
 
 	private leaveTournament(tournament: Tournament): void {
+		const state = State.getState("tournament");
+		if (!state) {
+			console.error('Tournament state not found');
+			showToast('Error', 'Tournament state not found', 'error');
+			return;
+		}
 		this.socket.send(JSON.stringify({
 			type: 'leave',
 			data: {
 				tournamentId: tournament.id
 			}
 		} as TournamentMsgOut));
+		state.joined = false;
+		State.setState("tournament", state);
 	}
 
 	private createHeaderEl(tournament: Tournament): HTMLDivElement {
@@ -613,6 +637,7 @@ export class TournamentManager {
 		const currRenderId = ++this.currRenderId;
 		const tournamentEls = [];
 		for (const t of this.tournaments) {
+			console.log('Tournament:', t[1]);
 			tournamentEls.push(await this.createTournamentElement(t[1]));
 		}
 		if (currRenderId !== this.currRenderId) {
