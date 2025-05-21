@@ -139,7 +139,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 				code,
 				client_id: process.env.GOOGLE_CLIENT_ID!,
 				client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-				redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+				redirect_uri: `${process.env.FRONTEND_URL!}${process.env.GOOGLE_REDIRECT_URI!}`,
 				grant_type: 'authorization_code',
 			})
 		});
@@ -190,7 +190,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 				sameSite: cookieOptions.sameSite,
 				maxAge: refresh_exp
 			})
-			.redirect('/'); // After handling cookies, redirect the user to frontend
+			.redirect(`${process.env.FRONTEND_URL!}`); // After handling cookies, redirect the user to frontend
 	} catch (err) {
 		fastify.log.error('Google login error:', err);
 		return reply.status(500).send({ success: false, message: 'Google login failed' });
