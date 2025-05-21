@@ -144,6 +144,11 @@ export function initializeDatabase() {
 			VALUES (1, 0, 0, 0);
 		`).run();
 
+		db.prepare(`
+			INSERT INTO tournaments (max_players)
+			VALUES (4), (2), (4);
+			`).run();
+
 		console.log('Database tables created successfully');
 	});
 

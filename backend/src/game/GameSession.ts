@@ -98,15 +98,17 @@ export class GameSession {
 			});
 		}
 			, 1000 / this.params.FPS);
-		this.broadcastMsg({
-			type: "game_event",
-			data: { event: "start_countdown", time: this.params.countdown },
-			timestamp: Date.now()
-		});
 		setTimeout(() => {
-			this.startTime = Date.now();
-			this.game.startGame();
-		}, this.params.countdown * 1000);
+			this.broadcastMsg({
+				type: "game_event",
+				data: { event: "start_countdown", time: this.params.countdown },
+				timestamp: Date.now()
+			});
+			setTimeout(() => {
+				this.startTime = Date.now();
+				this.game.startGame();
+			}, this.params.countdown * 1000);
+		}, 500);
 	}
 
 	public stopGame(): void {
