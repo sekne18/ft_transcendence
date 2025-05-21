@@ -56,6 +56,13 @@ export class GameEngine {
 		this.UIManager.setMatchmakingOverlay('found');
 		this.UIManager.updateScore(0, 0);
 		this.player = side;
+		if (side === 'left') {
+			this.UIManager.setPlayerInfo('self', 'left');
+			this.UIManager.setPlayerInfo(enemy_id, 'right');
+		} else {
+			this.UIManager.setPlayerInfo('self', 'right');
+			this.UIManager.setPlayerInfo(enemy_id, 'left');
+		}
 		this.inputController.setSide(side);
 	}
 

@@ -163,7 +163,7 @@ class ChatManager {
     }
 
     private createInviteMessageElement(message: ChatMessage, other: boolean): HTMLDivElement {
-        const msgWrapper = document.createElement("div");   
+        const msgWrapper = document.createElement("div");
         msgWrapper.className = `flex items-center mb-2 justify-center`;
         const messageElement = document.createElement("div");
         messageElement.className = `flex flex-col max-w-[70%] text-center`;
@@ -184,7 +184,7 @@ class ChatManager {
         inviteBtn.className = "bg-blue-500 text-white rounded px-2 py-1";
         inviteBtn.textContent = "Join Lobby";
         inviteBtn.addEventListener("click", () => {
-            State.setState('lobby', { 
+            State.setState('lobby', {
                 id: message.chat_id,
                 expiresAt: message.expires_at! - Date.now()
             });
@@ -516,7 +516,7 @@ class ChatManager {
             content: message,
             sender_id: 0, // Replaced with actual sender ID on backend
             created_at: Date.now(),
-            expires_at: isInvite ? Date.now() + 15000 : null, // 1 minute expiration for invite links
+            expires_at: isInvite ? Date.now() + 10000 : null, // 1 minute expiration for invite links
             is_invite: isInvite,
         };
         const msg = {

@@ -1,3 +1,4 @@
+import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { getElement } from "../utils";
 
@@ -9,7 +10,6 @@ export class UIManager {
 	private scoreLeft: HTMLDivElement;
 	private scoreRight: HTMLDivElement;
 	private userInfo: HTMLDivElement;
-	private enemyInfo: HTMLDivElement;
 	private matchmakeTitle: HTMLDivElement;
 
 	constructor(MatchmakeHandler: () => void) {
@@ -17,7 +17,6 @@ export class UIManager {
 		this.scoreLeft = document.getElementById('score-left') as HTMLDivElement;
 		this.scoreRight = document.getElementById('score-right') as HTMLDivElement;
 		this.userInfo = document.getElementById('game-user-info') as HTMLDivElement;
-		this.enemyInfo = document.getElementById('game-enemy-info') as HTMLDivElement;
 		this.matchmakeTitle = getElement('game-result-text') as HTMLDivElement;
 		this.matchmakeButton = document.getElementById('game-matchmake-button') as HTMLButtonElement;
 		this.reloadButton = document.getElementById('game-reload-button') as HTMLButtonElement;
@@ -76,7 +75,7 @@ export class UIManager {
 			this.reloadButton.classList.remove('hidden');
 		}
 	}
-		
+
 
 	// when called with 'loading' must call 'found' when opponent is found to clear interval
 	public setMatchmakingOverlay(state: 'button' | 'loading' | 'found'): void {
@@ -96,7 +95,7 @@ export class UIManager {
 					this.matchmakeTitle.textContent = "Searching for opponent";
 				}
 			}
-			, 1000);
+				, 1000);
 		}
 		else if (state === 'found') {
 			this.matchmakeTitle.textContent = "Opponent Found!";
@@ -123,7 +122,55 @@ export class UIManager {
 		this.scoreRight.innerText = right.toString();
 	}
 
-	public updateEnemyInfo(): void {
-		this.enemyInfo.innerText = "Enemy Info";
+	private setLeftPlayerInfo(user: Profile) {
+		const avatarEl = this.userInfo.querySelector('#game-left-avatar') as HTMLImageElement;
+		console.log('el:', avatarEl);
+		const usernameEl = this.userInfo.querySelector('#game-left-username') as HTMLSpanElement;
+		const statsEl = this.userInfo.querySelector('#game-left-stats') as HTMLSpanElement;
+		avatarEl.src = user.avatar_url;
+		avatarEl.alt = user.username;
+		usernameEl.innerText = user.username;
+		statsEl.innerText = `Wins: ${user.wins} | Losses: ${user.losses}`;
+	}
+
+	private setRightPlayerInfo(user: Profile) {
+		const avatarEl = this.userInfo.querySelector('#game-right-avatar') as HTMLImageElement;
+		const usernameEl = this.userInfo.querySelector('#game-right-username') as HTMLSpanElement;
+		const statsEl = this.userInfo.querySelector('#game-right-stats') as HTMLSpanElement;
+		avatarEl.src = user.avatar_url;
+		avatarEl.alt = user.username;
+		usernameEl.innerText = user.username;
+		statsEl.innerText = `Wins: ${user.wins} | Losses: ${user.losses}`;
+	}
+
+	public async setPlayerInfo(id: number | 'self', side: 'left' | 'right') {
+		console.log('Fetching player info');
+		let retries = 0;
+		let uri = '/api/user/profile';
+		if (id !== 'self') {
+			uri = `/api/user/profile/${id}`;
+		}
+		while (retries < 3) {
+			const res = await fetch(uri, {
+				method: 'GET',
+				credentials: 'include',
+			});
+			if (res.status === 200) {
+				const data = await res.json();
+				console.log('Player info:', data);
+				if (!data.success) {
+					retries++;
+					continue;
+				}
+				if (side === 'left') {
+					this.setLeftPlayerInfo(data.user);
+				} else {
+					this.setRightPlayerInfo(data.user);
+				}
+				return;
+			} else {
+				retries++;
+			}
+		}
 	}
 };

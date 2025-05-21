@@ -1,34 +1,37 @@
-<div id="page-game"
-    class="h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#16161F]">
+<div id="page-game" class="h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#16161F]">
     <!-- Game Header with Player Info -->
-    <div
+    <div id="game-user-info"
         class="w-full max-w-4xl flex flex-row items-center justify-between mb-4 px-2 py-3 rounded-lg">
         <!-- Player Info -->
         <div class="flex items-center gap-3">
-            <div id="player-avatar"
-                class="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center text-xl font-bold">P
-            </div>
+            <img id="game-left-avatar" src="/uploads/avatars/default.png"
+                class="w-12 h-12 rounded-full flex items-center justify-center">
+            </img>
             <div class="hidden sm:block">
-                <p id="player-username" class="font-orbitron font-semibold text-white" data-i18n="game_player">Player</p>
-                <p id="player-stats" class="text-gray-300 text-sm">W: 0 / L: 0</p>
+                <p id="game-left-username" class="font-orbitron font-semibold text-white" data-i18n="game_player">Player
+                </p>
+                <p id="game-left-stats" class="text-gray-300 text-sm">W: 0 / L: 0</p>
             </div>
             <span id="score-left" class="text-2xl sm:text-3xl font-orbitron font-bold text-white ml-10">0</span>
         </div>
 
         <!-- Score Display -->
-            <span class="text-lg sm:text-xl text-[#7a7cb7] px-4 py-1 rounded-2xl font-orbitron bg-[#262649]">vs</span>
+        <span class="text-lg sm:text-xl text-[#7a7cb7] px-4 py-1 rounded-2xl font-orbitron bg-[#262649]">vs</span>
         <!-- Opponent Info -->
         <div class="flex items-center gap-3 flex-row-reverse">
-            <div class="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-xl font-bold">AI
-            </div>
-            <div class="text-right hidden sm:block" >
-                <p id="opponent-name" class="font-orbitron font-semibold text-white" data-i18n="game_opponent">Opponent</p>
-                <p class="text-gray-300 text-sm">Computer</p>
+            <img id="game-right-avatar" src="/uploads/avatars/default.png"
+                class="w-12 h-12 rounded-full flex items-center justify-center">
+            </img>
+            <div class="text-right hidden sm:block">
+                <p id="game-right-username" class="font-orbitron font-semibold text-white" data-i18n="game_opponent">
+                    Opponent
+                </p>
+                <p id="game-right-stats" class="text-gray-300 text-sm">W: 0 / L: 0</p>
             </div>
             <span id="score-right" class="text-2xl sm:text-3xl font-orbitron font-bold text-white mr-10">0</span>
         </div>
     </div>
-    
+
 
     <!-- Game Container -->
     <div class="grow flex flex-col items-center justify-center relative">
@@ -37,13 +40,16 @@
         <!-- Game Overlay -->
         <div id="game-overlay"
             class="invisible w-full text-yellow-500 absolute h-full z-20 flex flex-col items-center justify-center rounded-lg">
-            <h2 id="game-result-text" class="text-3xl hidden text-yellow-500 sm:text-4xl font-orbitron font-bold mb-3"></h2>
+            <h2 id="game-result-text" class="text-3xl hidden text-yellow-500 sm:text-4xl font-orbitron font-bold mb-3">
+            </h2>
             <button id="game-matchmake-button"
-                class="hidden px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-orbitron rounded-md transition-colors shadow-lg" data-i18n="game_play_again">
+                class="hidden px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-orbitron rounded-md transition-colors shadow-lg"
+                data-i18n="game_play_again">
                 Play Again
             </button>
             <button id="game-reload-button"
-                class="hidden px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-orbitron rounded-md transition-colors shadow-lg mt-2" data-i18n="game_reload">
+                class="hidden px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-orbitron rounded-md transition-colors shadow-lg mt-2"
+                data-i18n="game_reload">
                 Reload
             </button>
         </div>

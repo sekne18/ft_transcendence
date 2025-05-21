@@ -196,7 +196,6 @@ export class GameSession {
 		this.status = 'disconnected';
 		updateUserStats(player.id, 0, 1, 1);
 		updateUserStats(this.players[0].id === player.id ? this.players[1].id : this.players[0].id, 1, 0, 1);
-		this.players = this.players.filter((p) => p.id !== player.id);
 		const gameState = this.game.getState();
 		updateMatch(this.matchId, {
 			winnerId: this.players[0].id,
@@ -207,7 +206,8 @@ export class GameSession {
 			score2: gameState.right_score,
 			status: 'disconnected'
 		});
-		updateUser(player.id, { status: 'online' });
+		this.players = this.players.filter((p) => p.id !== player.id);
+		updateUser(this.players[0].id === player.id ? this.players[1].id : this.players[0].id, { status: 'online' });
 		this.broadcastMsg({
 			type: "error",
 			data: "disconnect",

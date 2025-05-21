@@ -83,3 +83,7 @@ html, body {
   .animate-grow-bounce {
     animation: grow-bounce 400ms ease-out forwards;
   }
+
+img {
+    object-fit: cover;
+}
