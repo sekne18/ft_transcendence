@@ -42,7 +42,6 @@ function createLeaderboardRow(player: LeaderboardPlayer): string {
           </div>
           <span class="text-sm font-semibold">${player.winRate.toFixed(1)}%</span>
           `;
-  console.log(Number.isNaN(player.winRate));
 
   return `
     <tr class="${highlightClass}">
