@@ -34,6 +34,16 @@ function createLeaderboardRow(player: LeaderboardPlayer): string {
       ? 'bg-[#6366F1]'
       : 'bg-[#F4407F]';
 
+  const winRateHtml = Number.isNaN(player.winRate) ? `
+          <span class="text-sm font-semibold">No Games Played</span>
+          ` : `
+  <div class="w-full max-w-[100px] h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div class="h-full ${progressBarColor}" style="width: ${player.winRate}%"></div>
+          </div>
+          <span class="text-sm font-semibold">${player.winRate.toFixed(1)}%</span>
+          `;
+  console.log(Number.isNaN(player.winRate));
+
   return `
     <tr class="${highlightClass}">
       <td class="text-center font-medium">
@@ -54,10 +64,7 @@ function createLeaderboardRow(player: LeaderboardPlayer): string {
       <td class="text-center text-[#F4407F] font-semibold">${player.losses}</td>
       <td>
         <div class="flex items-center gap-2">
-          <div class="w-full max-w-[100px] h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div class="h-full ${progressBarColor}" style="width: ${player.winRate}%"></div>
-          </div>
-          <span class="text-sm font-semibold">${player.winRate.toFixed(1)}%</span>
+          ${winRateHtml}
         </div>
       </td>
     </tr>
