@@ -32,14 +32,14 @@ export function initGame(): void {
             };
 
             const tournament = State.getState("tournament");
-            const isTournament = tournament ? true : false;
+            const isTournament = tournament ? tournament.joined : false;
             const lobby = State.getState("lobby");
             const isLobby = lobby ? true : false;
 
             const wsParams = {
-                url: `${networkConfig.wsScheme}://${networkConfig.host}/api/${isTournament ? 
-                `tournament/${tournament.id}` : (isLobby ?
-                    `lobby/${lobby.id}` : "game")}/ws`,
+                url: `${networkConfig.wsScheme}://${networkConfig.host}/api/${isTournament ?
+                    `tournament/${tournament.id}` : (isLobby ?
+                        `lobby/${lobby.id}` : "game")}/ws`,
             };
 
             const extraParams: ExtraParams = {

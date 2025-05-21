@@ -63,6 +63,8 @@ export class GameSession {
 		this.spectators.forEach((spectator) => {
 			const specMsg: any = { ...msg };
 			specMsg.matchId = this.matchId;
+			if (!spectator.socket)
+				return;
 			spectator.socket.send(JSON.stringify(specMsg));
 		});
 	}

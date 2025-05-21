@@ -120,6 +120,7 @@ class ChatManager {
         this.chatBadge = document.getElementById("chat-badge") as HTMLSpanElement;
         const response = await fetch("/api/chat");
         if (response.ok) {
+            this.chatList.innerHTML = "";
             const chats = (await response.json() as any).chats;
             if (chats.length === 0) {
                 return;
