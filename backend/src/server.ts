@@ -190,7 +190,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 				sameSite: cookieOptions.sameSite,
 				maxAge: refresh_exp
 			})
-			.redirect('http://localhost:5173'); // After handling cookies, redirect the user to frontend
+			.redirect('/'); // After handling cookies, redirect the user to frontend
 	} catch (err) {
 		fastify.log.error('Google login error:', err);
 		return reply.status(500).send({ success: false, message: 'Google login failed' });

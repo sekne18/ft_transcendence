@@ -1,5 +1,6 @@
 import { loadContent } from "../router/router";
 import { getDataFromForm, getElement } from "../utils";
+import { networkConfig } from "../wsConfig";
 
 /* 
     Run any logic from this function. 
@@ -21,7 +22,7 @@ function setEvents(): void {
 
 function setGoogleAuthEvents() {
     const clientId = "94330344622-l32lnl8uqlut2bko0ub5td9ddqamb8p8.apps.googleusercontent.com"; // Safe to expose
-    const redirectUri = "http://localhost:3000/api/login/google/callback"; // Backend route
+    const redirectUri = `${networkConfig.httpScheme}://${networkConfig.host}/api/login/google/callback`; // Backend route
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${clientId}&` +
         `redirect_uri=${redirectUri}&` +

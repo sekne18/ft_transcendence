@@ -47,4 +47,10 @@ export const wsConfig: {
 	host: window.location.host, // "localhost:3000" in dev, window.location.host in prod
 }
 ```
+in ./backend/.env file change the URI
+```
+GOOGLE_REDIRECT_URI=https://${ip of server host}:8443/api/login/google/callback
+```
+
+
 Now you are ready to go! browse to ``https://localhost:8443/``
