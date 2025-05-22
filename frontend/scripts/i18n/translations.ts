@@ -60,6 +60,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'games',
     profile_exeprience: 'Experience',
     profile_level: 'Level',
+    match_victory: 'Victory',
+    match_defeat: 'Defeat',
+    match_ongoing: 'Ongoing',
 
     // Edit proifle
     change_avatar_btn: 'Change Avatar',
@@ -212,6 +215,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'spellen',
     profile_exeprience: 'Ervaring',
     profile_level: 'Niveau',
+    match_victory: 'Overwinning',
+    match_defeat: 'Nederlaag',
+    match_ongoing: 'Bezig',
 
     // Edit proifle
     change_avatar_btn: 'Verander Avatar',
@@ -364,6 +370,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'iger',
     profile_exeprience: 'Izkušnje',
     profile_level: 'Stopnja',
+    match_victory: 'Zmaga',
+    match_defeat: 'Poraz',
+    match_ongoing: 'Poteka',
 
     // Edit proifle
     change_avatar_btn: 'Spremeni avatar',
@@ -513,6 +522,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'ігор',
     profile_exeprience: 'Досвід',
     profile_level: 'Рівень',
+    match_victory: 'Перемога',
+    match_defeat: 'Поразка',
+    match_ongoing: 'В процесі',
 
     // Edit proifle
     change_avatar_btn: 'Змінити аватар',

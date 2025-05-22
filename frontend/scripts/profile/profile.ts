@@ -421,8 +421,8 @@ function createMatchElement(match: Match, showDetailsButton = false) {
         </div>
       </div>
       <div class="text-right">
-        <p class="font-semibold ${resultColor}">
-          ${match.result === 'win' ? 'Victory' : match.result === 'ongoing' ? 'Ongoing' : 'Defeat'}
+        <p class="font-semibold ${resultColor}" ${match.result === 'win' ? "data-i18n='match_victory'" : match.result === 'ongoing' ? "data-i18n='match_ongoing'" : "data-i18n='match_defeat'"}>
+          
         </p>
         <p class="text-gray-500 text-sm">${match.score}</p>
       </div>
