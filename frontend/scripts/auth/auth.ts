@@ -20,9 +20,21 @@ function setEvents(): void {
 
 }
 
-function setGoogleAuthEvents() {
+async function setGoogleAuthEvents() {
+    const res = await fetch(`${networkConfig.httpScheme}://${networkConfig.host}/api/ngrok-url`,
+        {
+            method: 'GET',
+            credentials: 'include',
+        });
+    if (!res.ok) {
+        console.error('Failed to fetch ngrok URL');
+        document.getElementById("google-login")?.classList.add("hidden");
+        return;
+    }
+    const ngrokUrl = await res.json();
+    console.log(ngrokUrl);
     const clientId = "94330344622-l32lnl8uqlut2bko0ub5td9ddqamb8p8.apps.googleusercontent.com"; // Safe to expose
-    const redirectUri = `${networkConfig.httpScheme}://${networkConfig.host}/api/login/google/callback`; // Backend route
+    const redirectUri = `${ngrokUrl}/api/login/google/callback`; // Backend route
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${clientId}&` +
         `redirect_uri=${redirectUri}&` +

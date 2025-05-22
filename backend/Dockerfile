@@ -6,7 +6,8 @@ RUN apk update && apk add --no-cache \
   py3-pip \
   make \
   g++ \
-  bash
+  bash \
+  curl
 
 WORKDIR /app
 
@@ -17,6 +18,10 @@ COPY dist/ /app/
 
 COPY jwtRS256.key* .
 
+
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+#CMD ["node", "server.js"]
+COPY tools/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+CMD ["/app/start.sh"]

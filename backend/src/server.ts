@@ -36,7 +36,7 @@ import { match } from 'assert';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
-	secure: false, // Set to true in production (requires HTTPS)
+	secure: true, // Set to true in production (requires HTTPS)
 	sameSite: 'strict',
 };
 
@@ -124,6 +124,13 @@ fastify.decorate('authenticate', async function handler(request: any, reply: any
 	}
 });
 
+fastify.get('/api/ngrok-url', async (req, reply) => {
+	if (!process.env.NGROK_URL) {
+		return reply.code(500).send({ success: false, message: 'NGROK_URL not set' });
+	}
+	return reply.send({ success: true, ngrokUrl: process.env.NGROK_URL });
+});
+
 fastify.get('/api/login/google/callback', async (req, reply) => {
 	const code = (req.query as any).code;
 	if (!code) return reply.status(400).send({ success: false, message: 'Missing code' });
@@ -137,7 +144,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 				code,
 				client_id: process.env.GOOGLE_CLIENT_ID!,
 				client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-				redirect_uri: `${process.env.BACKEND_URL!}${process.env.GOOGLE_REDIRECT_URI!}`,
+				redirect_uri: `${process.env.NGROK_URL!}${process.env.GOOGLE_REDIRECT_URI!}`,
 				grant_type: 'authorization_code',
 			})
 		});

@@ -9,6 +9,8 @@ services:
       - "3000"
     networks:
       - app-network
+    env_file:
+      - .env
     restart: unless-stopped
 
   nginx:
@@ -26,6 +28,24 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    ports:
+    - "4040:4040"
+    command:
+      - "http"
+      - "--log=stdout"
+      - "nginx:80"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    networks:
+      - app-network
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
 
 volumes:
   backend_db:
