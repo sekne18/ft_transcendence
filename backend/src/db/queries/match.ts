@@ -7,7 +7,6 @@ export function createMatch(
 	tournamentId: number | null = null,
 	round: number | null = null,
 ): number {
-	console.log("Creating match");
 	const fields = [
 		"player1_id",
 		"player2_id",

@@ -1,4 +1,5 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
+import { chatManager } from "../chat/chat";
 import { languageService } from "../i18n";
 import { getDataFromForm, getElement, showToast } from "../utils";
 import { ModalManager } from "./modal";
@@ -148,6 +149,7 @@ function setClickEvents() {
       }
       return res.json();
     }).then((res) => {
+      chatManager?.handleChatToggle(false);
       if (res.success) {
         showToast(languageService.retrieveValue('toast_unblock_user'), '', 'success');
         fetchUserProfile(otherId).then((userProfile) => {
@@ -206,6 +208,7 @@ function setClickEvents() {
       }
       return res.json();
     }).then((res) => {
+      chatManager?.handleChatToggle(false);
       if (res.success) {
         showToast(languageService.retrieveValue('toast_block_user'), '', 'success');
         fetchUserProfile(otherId).then((userProfile) => {
@@ -247,6 +250,7 @@ function startChat() {
       return res.json();
     })
     .then(data => {
+      chatManager?.handleChatToggle(false);
       if (data.success) {
         showToast(languageService.retrieveValue('toast_chat_started'), '', 'success');
       } else {
@@ -323,7 +327,6 @@ function renderUserProfile(profile: Profile | undefined = undefined) {
 }
 
 function fillProfileData(profile: Profile) {
-  console.log(profile);
   // Set user details
   (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
   getElement('display_name').textContent = profile.display_name;

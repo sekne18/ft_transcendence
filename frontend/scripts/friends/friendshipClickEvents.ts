@@ -1,3 +1,4 @@
+import { chatManager } from "../chat/chat";
 import { languageService } from "../i18n";
 import { loadContent } from "../router/router";
 import { showToast } from "../utils";
@@ -111,6 +112,7 @@ export function onBlockFriendClick() {
                     },
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
+                    chatManager?.handleChatToggle(false);
                     if (res.status === 200) {
                         showToast(languageService.retrieveValue('toast_block_user'), '', 'success');
                         loadContent('/friends');
@@ -138,6 +140,7 @@ export function onUnblockFriendClick() {
                     },
                     body: JSON.stringify({ otherId: userId }),
                 }).then(res => {
+                    chatManager?.handleChatToggle(false);
                     if (res.status === 200) {
                         showToast(languageService.retrieveValue('toast_unblock_user'), '', 'success');
                         loadContent('/friends');

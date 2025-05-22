@@ -83,7 +83,6 @@ export class TournamentManager {
 	}
 
 	public removeTournament(tournamentId: number): void {
-		console.log("Removing tournament", tournamentId);
 		const tournament = this.tournaments.get(tournamentId);
 		if (!tournament) {
 			throw new Error("Tournament not found");
@@ -134,7 +133,6 @@ export class TournamentManager {
 			this.disconnectPlayer(player.id);
 		});
 		player.socket.on("message", (message) => {
-			console.log(`Received message from player ${player.id}: ${message}`);
 			const parsedMessage: TournamentMsgIn = JSON.parse(message.toString());
 			this.handleMsg(player.id, parsedMessage);
 		});
@@ -161,7 +159,6 @@ export class TournamentManager {
 	}
 
 	private forwardTournamentEvent(tId: number, event: TournamentEvent): void {
-		console.log("Forwarding tournament event", event);
 		let message: TournamentMsgOut;
 		switch (event.type) {
 			case "setup_match":
@@ -228,8 +225,6 @@ export class TournamentManager {
 			player.socket?.close();
 			player.socket = null;
 		}
-		console.log("Player disconnected", playerId);
-		console.log("Connected players", this.connectedPlayers);
 	}
 
 	private addPlayerToTournamentQueue(tournamentId: number, player: TournamentConnection): void {

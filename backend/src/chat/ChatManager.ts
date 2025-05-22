@@ -16,17 +16,15 @@ export class ChatManager {
 	public addConnection(ws: ChatConnection): void {
 		const existingConnection = this.connections.get(ws.id);
 		if (existingConnection) {
-			console.error(`Connection with id ${ws.id} already exists, closing old one.`);
+			//console.error(`Connection with id ${ws.id} already exists, closing old one.`);
 			this.leave(existingConnection);
 		}
 		this.connections.set(ws.id, ws);
 		ws.socket.on('close', () => {
-			console.log('Socket closed:', ws.id);
 			this.leave(ws);
 			updateUser(ws.id, { status: 'offline' });
 		});
 		ws.socket.on('error', (err) => {
-			console.error('Socket error:', err);
 			this.leave(ws);
 			updateUser(ws.id, { status: 'offline' });
 		});
@@ -47,7 +45,7 @@ export class ChatManager {
 					this.forwardMessage(chatId, ws.id, parsedMsg);
 					break;
 				default:
-					console.error(`Unknown message type: ${parsedMsg.type}`);
+					//console.error(`Unknown message type: ${parsedMsg.type}`);
 					break;
 			}
 		});
@@ -61,7 +59,7 @@ export class ChatManager {
 			this.chats.set(chatId, []);
 		}
 		if (this.chats.get(chatId)?.includes(ws.id)) {
-			console.error(`Connection with id ${ws.id} already in chat ${chatId}`);
+			//console.error(`Connection with id ${ws.id} already in chat ${chatId}`);
 			return;
 		}
 		this.chats.get(chatId)?.forEach(id => {

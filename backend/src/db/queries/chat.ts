@@ -4,17 +4,22 @@ export function getChatsByUserId(userId: number) {
 	return db.prepare(`
 		SELECT
 			chats.id AS chat_id,
-			users.id AS user_id,
-			users.display_name,
-			users.avatar_url
+			other_user.id AS user_id,
+			other_user.display_name,
+			other_user.avatar_url,
+			friends.status AS friend_status
 		FROM chats
-		JOIN users ON (users.id = CASE
-			WHEN user1_id = ?
-	  			THEN user2_id
-	  			ELSE user1_id
-			END)
-		WHERE chats.user1_id = ? OR chats.user2_id = ?
-	`).all(userId, userId, userId);
+		JOIN users AS other_user
+			ON other_user.id = CASE
+				WHEN chats.user1_id = ? THEN chats.user2_id
+				ELSE chats.user1_id
+			END
+		LEFT JOIN friends
+			ON friends.user1_id = MIN(?, other_user.id)
+			AND friends.user2_id = MAX(?, other_user.id)
+		WHERE (chats.user1_id = ? OR chats.user2_id = ?)
+			AND (friends.status IS NULL OR friends.status != 'blocked')
+	`).all(userId, userId, userId, userId, userId);
 }
 
 export function getChatMessages(chatId: number, limit = 10, before?: number) {
@@ -32,7 +37,6 @@ export function getChatMessages(chatId: number, limit = 10, before?: number) {
 			.toISOString()
 			.replace('T', ' ')
 			.replace(/\.\d{3}Z$/, '');
-		console.log('fetchhing messages before', now);
 		params.push(before);
 	}
 
@@ -72,7 +76,6 @@ export function createMessage(chatId: number, senderId: number, content: string,
 		.toISOString()
 		.replace('T', ' ')
 		.replace(/\.\d{3}Z$/, '');
-	console.log('creating message', now);
 	return db.prepare(`
 	  INSERT INTO messages (chat_id, sender_id, content, created_at, is_invite, expires_at)
 	  VALUES (?, ?, ?, ?, ?, ?)

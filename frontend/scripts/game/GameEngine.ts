@@ -107,7 +107,6 @@ export class GameEngine {
 			this.enemyDisconnected = true;
 			return;
 		}
-		console.error('Game error:', error);
 		this.changeState('idle');
 	}
 
@@ -133,7 +132,6 @@ export class GameEngine {
 	private changeState(newStatus: GameStatus): void {
 		this.exitState(this.status);
 		this.status = newStatus;
-		console.log('Game status changed to:', this.status);
 		this.enterState(newStatus);
 	}
 

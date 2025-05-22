@@ -53,7 +53,7 @@ export class GameConnection {
 		this.socket = new WebSocket(this.wsParams.url);
 
 		this.socket.addEventListener('open', () => {
-			console.log('Connected to server');
+			//console.log('Connected to server');
 		});
 
 		this.socket.addEventListener('message', event => {
@@ -62,7 +62,6 @@ export class GameConnection {
 		});
 
 		this.socket.addEventListener('close', event => {
-			console.log('Disconnected from server');
 			this.disconnect();
 			if (event.code !== 1000) {
 				this.onError(new Error(event.reason));
@@ -71,7 +70,6 @@ export class GameConnection {
 		});
 
 		this.socket.addEventListener('error', err => {
-			console.error('WebSocket error:', err);
 			this.disconnect();
 			this.onError(new Error('WebSocket error'));
 
@@ -124,7 +122,7 @@ export class GameConnection {
 						this.onSetCountdown(msg.data.time);
 						break;
 					default:
-						console.error(`Unknown game event: ${msg.data}`);
+						//console.error(`Unknown game event: ${msg.data}`);
 						break;
 				}
 				break;
@@ -135,7 +133,7 @@ export class GameConnection {
 				this.onError(new Error(msg.data));
 				break;
 			default:
-				console.error(`Unknown message type: ${msg.type}`);
+				//console.error(`Unknown message type: ${msg.type}`);
 				break;
 		}
 	}

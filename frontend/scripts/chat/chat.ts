@@ -6,7 +6,7 @@ import { loadContent } from "../router/router";
 import { State } from "../state/State";
 import { languageService } from "../i18n";
 
-let chatManager: ChatManager | null = null;
+export let chatManager: ChatManager | null = null;
 
 /* 
     Run any logic from this function. 
@@ -15,11 +15,9 @@ let chatManager: ChatManager | null = null;
 export function initChat(): void {
     // open a new websocket connection for chat
     if (chatManager) {
-        console.log("Chat already initialized");
         return;
     }
     chatManager = new ChatManager(`${networkConfig.wsScheme}://${networkConfig.host}/api/chat/ws`);
-    console.log("Chat initialized");
     const chatToggle = document.getElementById("chat-toggle") as HTMLButtonElement;
     const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
     chatToggle.classList.remove("invisible");
@@ -72,19 +70,14 @@ class ChatManager {
             this.handleIncomingMessage(event);
         });
         this.ChatSocket.addEventListener("error", (event: Event) => {
-            console.error("WebSocket error:", event);
+            //console.error("WebSocket error:", event);
         });
         this.ChatSocket.addEventListener("close", (event: CloseEvent) => {
-            console.log("WebSocket closed:", event);
+            //console.log("WebSocket closed:", event);
         });
         this.ChatSocket.addEventListener("open", () => {
-            console.log("Chat socket opened");
             this.fetchChatList();
         });
-        this.ChatSocket.addEventListener("close", () => {
-            console.log("Chat socket closed");
-        });
-
     }
 
     private createChatItem(chatId: number, displayName: string, avatarUrl: string, userId: number): HTMLLIElement {
@@ -264,6 +257,8 @@ class ChatManager {
         let loadingElement = this.messageContainer.querySelector("#loading-messages") as HTMLDivElement;
         if (loadingElement && hide) {
             loadingElement.classList.add("hidden");
+            loadingElement.textContent = "";
+            return loadingElement;
         }
         if (loadingElement && !hide) {
             loadingElement.classList.remove("hidden");
@@ -310,11 +305,19 @@ class ChatManager {
             }
             );
         } else {
+            let showLoading = false;
+            const firstMessage = this.messageContainer.querySelector("div");
+            if (firstMessage && firstMessage.id === "loading-messages" && firstMessage.textContent === "Beginning of this chat.") {
+                showLoading = true;
+            }
             this.messageContainer.innerHTML = "";
             chatMessages.forEach((message) => {
                 const messageElement = this.createMessageElement(message, message.sender_id === this.SelectedUserId);
                 this.messageContainer.insertAdjacentElement("afterbegin", messageElement);
             });
+            if (showLoading) {
+                this.setLoadingElement(false, "Beginning of this chat.");
+            }
             this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
         }
     }
@@ -375,6 +378,7 @@ class ChatManager {
     }
 
     private selectChat(chatId: number): void {
+        this.setLoadingElement(true, "Loading messages...");
         this.SelectedChatId = chatId;
         this.SelectedUserId = parseInt((this.chatList.querySelector(`#chat-${chatId}`) as HTMLElement)?.dataset.userId || "0");
         const chatItems = this.chatList.querySelectorAll("li");
@@ -396,13 +400,13 @@ class ChatManager {
         fetch(`/api/chat/${chatId}/mark-as-read`, {
             method: "POST"
         }).then((response) => {
-            if (response.ok) {
-                //console.log("Marked messages as read for chat ID:", chatId);
-            } else {
+            if (!response.ok) {
                 console.error("Failed to mark messages as read");
+                return;
             }
+            //console.log("Marked messages as read for chat ID:", chatId);
         }).catch((error) => {
-            console.error("Error marking messages as read:", error);
+            //console.error("Error marking messages as read:", error);
         });
     }
 
@@ -444,7 +448,10 @@ class ChatManager {
         });
     }
 
-    private handleChatToggle(): void {
+    public handleChatToggle(open: boolean | null = null): void {
+        if (open !== null) {
+            this.isOpen = !open;
+        }
         this.isOpen = !this.isOpen;
         if (this.isOpen) {
             this.updateOnlineStatus();
@@ -452,15 +459,20 @@ class ChatManager {
             this.chatWindow.classList.add("w-[480px]", "h-[300px]", "animate-grow-bounce");
             this.renderChatWindow();
         } else {
+            this.SelectedChatId = null;
+            this.SelectedUserId = null;
             this.chatWindow.classList.remove("w-[480px]", "h-[300px]", "animate-grow-bounce");
             this.chatWindow.classList.add("w-0", "h-0", "scale-0");
         }
     }
 
     private renderChatWindow(): void {
-        if (this.SelectedChatId !== null) {
-            this.selectChat(this.SelectedChatId);
-        }
+        this.messageContainer.innerHTML = "";
+        this.fetchChatList();
+        this.SelectedChatId === null
+        // if (this.SelectedChatId !== null) {
+        //     this.selectChat(this.SelectedChatId);
+        // }
     }
 
     private handleIncomingMessage(event: MessageEvent): void {

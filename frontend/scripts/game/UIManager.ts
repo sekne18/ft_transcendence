@@ -22,7 +22,6 @@ export class UIManager {
 		this.matchmakeButton = document.getElementById('game-matchmake-button') as HTMLButtonElement;
 		this.reloadButton = document.getElementById('game-reload-button') as HTMLButtonElement;
 		this.reloadButton.addEventListener('click', () => {
-			console.log('Reloading game');
 			this.toggleReloadButton('hidden');
 			loadContent('/game');
 		});
@@ -125,7 +124,6 @@ export class UIManager {
 
 	private setLeftPlayerInfo(user: Profile) {
 		const avatarEl = this.userInfo.querySelector('#game-left-avatar') as HTMLImageElement;
-		console.log('el:', avatarEl);
 		const usernameEl = this.userInfo.querySelector('#game-left-username') as HTMLSpanElement;
 		const statsEl = this.userInfo.querySelector('#game-left-stats') as HTMLSpanElement;
 		avatarEl.src = user.avatar_url;
@@ -145,7 +143,6 @@ export class UIManager {
 	}
 
 	public async setPlayerInfo(id: number | 'self', side: 'left' | 'right') {
-		console.log('Fetching player info');
 		let retries = 0;
 		let uri = '/api/user/profile';
 		if (id !== 'self') {
@@ -158,7 +155,6 @@ export class UIManager {
 			});
 			if (res.status === 200) {
 				const data = await res.json();
-				console.log('Player info:', data);
 				if (!data.success) {
 					retries++;
 					continue;

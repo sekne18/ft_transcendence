@@ -112,7 +112,6 @@ export class GameSession {
 	}
 
 	public stopGame(): void {
-		console.log("Stopping game");
 		this.players.forEach((player) => {
 			player.socket.close(1000, "Game Over");
 		});
@@ -132,7 +131,6 @@ export class GameSession {
 	}
 
 	private onGoal(paddle: 'left' | 'right'): void {
-		console.log("Goal scored by:", paddle);
 		const gameState = this.game.getState();
 		updateMatch(this.matchId, {
 			score1: gameState.left_score,
@@ -235,7 +233,8 @@ export class GameSession {
 				this.handleUserInput(msg.data);
 				break;
 			default:
-				console.error("Unknown message type:", msg.type);
+				//console.error("Unknown message type:", msg.type);
+				break;
 		}
 	}
 };

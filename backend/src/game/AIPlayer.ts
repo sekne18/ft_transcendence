@@ -89,7 +89,7 @@ export class AIPlayer implements PlayerSocket {
 						this.onSetCountdown(parsedMsg.data.time);
 						break;
 					default:
-						console.error(`Unknown game event: ${parsedMsg.data}`);
+						//console.error(`Unknown game event: ${parsedMsg.data}`);
 						break;
 				}
 				break;
@@ -97,7 +97,7 @@ export class AIPlayer implements PlayerSocket {
 				this.onError(new Error(parsedMsg.data));
 				break;
 			default:
-				console.error(`Unknown message type: ${parsedMsg.type}`);
+				//console.error(`Unknown message type: ${parsedMsg.type}`);
 				break;
 		}
 	}

@@ -111,7 +111,6 @@ function generateTokenPair(userId: number) {
 fastify.decorate('authenticate', async function handler(request: any, reply: any) {
 	const accessToken = request.cookies.access;
 	// First try to verify the access token
-	console.log('authenticating');
 	if (accessToken) {
 		try {
 			request.user = await fastify.jwt.verify(accessToken);
@@ -121,7 +120,6 @@ fastify.decorate('authenticate', async function handler(request: any, reply: any
 		}
 	}
 	else {
-		console.log('No access token found');
 		return reply.code(401).send({ error: 'Unauthorized' });
 	}
 });
@@ -554,8 +552,7 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 			if (await argon2.verify(user.password, currentPassword)) {
 				updateData.password = await argon2.hash(newPassword.trim());
 			} else {
-				// password did not match
-				fastify.log.info('Password did not match');
+				//fastify.log.info('Password did not match');
 				return reply.code(400).send({
 					success: false,
 					message: 'Invalid password'
@@ -576,7 +573,6 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 		});
 	}
 
-	console.log('Updating user with data:', updateData);
 	updateUser(id, { ...updateData });
 
 	return reply.send({ success: true });
@@ -663,32 +659,6 @@ fastify.get('/api/user/profile/:id',
 		return reply.send({ success: true, user });
 	});
 
-// fastify.get('/api/user/stats',
-// 	{ onRequest: [fastify.authenticate] },
-// 	async (req, reply) => {
-// 		const id = (req.user as { id: number }).id;
-
-// 		// Validate and convert to number
-// 		if (!id || isNaN(Number(id))) {
-// 			return reply.code(401).send({
-// 				success: false,
-// 				message: 'Invalid user ID'
-// 			});
-// 		}
-
-// 		const stats = await getStatsByUserId(Number(id));
-
-// 		// Handle case where user isn't found
-// 		if (!stats) {
-// 			return reply.code(404).send({
-// 				success: false,
-// 				message: 'Stats not found'
-// 			});
-// 		}
-
-// 		return reply.send({ success: true, stats });
-// 	});
-
 fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
 
@@ -699,7 +669,15 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 		});
 	}
 
-	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; ended_at: string; }[];
+	const matches = getMatchesByUserId(id) as {
+		id: number;
+		player1_id: number;
+		player2_id: number;
+		winner_id: number | null;
+		player1_score: number;
+		player2_score: number;
+		ended_at: string;
+	}[];
 
 	const matchHistory = matches.map(match => {
 		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
@@ -712,8 +690,6 @@ fastify.get('/api/user/recent-matches', { onRequest: [fastify.authenticate] }, a
 			date: match.ended_at
 		};
 	});
-
-
 	return reply.send({ success: true, matchHistory });
 });
 
@@ -725,14 +701,19 @@ fastify.get('/api/user/recent-matches/:id', { onRequest: [fastify.authenticate] 
 			message: 'Invalid match ID'
 		});
 	}
-	const matches = getMatchesByUserId(id) as { id: number; player1_id: number; player2_id: number; winner_id: number | null; player1_score: number; player2_score: number; played_at: string; }[];
+	const matches = getMatchesByUserId(id) as {
+		id: number;
+		player1_id: number;
+		player2_id: number;
+		winner_id: number | null;
+		player1_score: number;
+		player2_score: number;
+		played_at: string;
+	}[];
 
 	const matchHistory = matches.map(match => {
 		const opponentId = match.player1_id === Number(id) ? match.player2_id : match.player1_id;
-		console.log('opponentId', opponentId);
-		// get the oponnent display name
 		const opponent = getUserById(opponentId) as { id: number; display_name: string; }
-		console.log('match', match.winner_id, id, typeof match.winner_id, typeof id);
 		return {
 			id: match.id,
 			opponent: opponent ? opponent.display_name : 'Unknown',
@@ -773,7 +754,6 @@ fastify.get('/api/leaderboard', { onRequest: [fastify.authenticate] }, async (re
 			message: 'Failed to fetch leaderboard'
 		});
 	}
-	console.log('leaderboard', leaderboard);
 	return reply.send({ success: true, leaderboard });
 });
 
@@ -786,9 +766,8 @@ fastify.get('/api/game/params', { onRequest: [fastify.authenticate] }, async (re
 
 fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserProfileById((req.user as { id: number }).id) as { id: number, wins: number };
-	console.log('WebSocket connection established:', user.id);
 	if (!user) {
-		console.error('User not found');
+		//console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
@@ -802,27 +781,35 @@ fastify.get('/api/game/ws', { onRequest: [fastify.authenticate], websocket: true
 fastify.get('/api/tournament/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserProfileById((req.user as { id: number }).id) as { id: number; };
 	if (!user) {
-		console.error('User not found');
+		//console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
-	tournamentManager.connectPlayer({ id: user.id, socket: conn });
+	try {
+		tournamentManager.connectPlayer({ id: user.id, socket: conn });
+	} catch (err: any) {
+		conn.close(1008, err.message);
+	}
 });
 
 fastify.get('/api/tournament/:tId/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
 	const user = getUserById((req.user as { id: number }).id) as { id: number; };
 	if (!user) {
-		console.error('User not found');
+		//console.error('User not found');
 		conn.close(1008, 'User not found');
 		return;
 	}
 	const tournamentId = parseInt((req.params as any).tId);
 	if (!tournamentId) {
-		console.error('Tournament ID not found');
+		//console.error('Tournament ID not found');
 		conn.close(1008, 'Tournament ID not found');
 		return;
 	}
-	tournamentManager.setPlayerReady(tournamentId, { id: user.id, socket: conn });
+	try {
+		tournamentManager.setPlayerReady(tournamentId, { id: user.id, socket: conn });
+	} catch (err: any) {
+		conn.close(1008, err.message);
+	}
 });
 
 fastify.get('/api/chat/ws', { onRequest: [fastify.authenticate], websocket: true }, (conn, req) => {
@@ -863,7 +850,6 @@ fastify.get('/api/tournament', { onRequest: [fastify.authenticate] }, async (req
 			message: 'Invalid user ID'
 		});
 	}
-	console.log('Fetching tournaments for user:', id);
 	const tournaments = tournamentManager.getCurrentTournaments();
 	return reply.send({ success: true, tournaments: tournaments });
 });
@@ -872,8 +858,14 @@ fastify.get('/api/tournament/finished', { onRequest: [fastify.authenticate] }, a
 	const limit = parseInt((req.query as any).limit) || 10;
 	const before = parseInt((req.query as any).before) || Date.now();
 
-	const tournaments = await getCompletedTournaments(limit, before) as { id: number; status: 'pending' | 'ongoing' | 'finished'; max_players: number; created_at: number; ended_at: number | null; players: number[]; bracket: string | null }[];
-	console.log('Fetching finished tournaments:', tournaments);
+	const tournaments = await getCompletedTournaments(limit, before) as {
+		id: number; status: 'pending' | 'ongoing' | 'finished';
+		max_players: number;
+		created_at: number;
+		ended_at: number | null;
+		players: number[];
+		bracket: string | null
+	}[];
 	if (!tournaments) {
 		return reply.code(500).send({
 			success: false,
@@ -900,7 +892,6 @@ fastify.get('/api/tournament/finished', { onRequest: [fastify.authenticate] }, a
 		}
 		return t2;
 	});
-	console.log('tournamentsAltered', tournamentsAltered);
 	return reply.send({ success: true, tournaments: tournamentsAltered });
 });
 
@@ -913,7 +904,6 @@ fastify.get('/api/chat', { onRequest: [fastify.authenticate] }, async (req, repl
 		});
 	}
 	const chats = await getChatsByUserId(id) as { chat_id: number; user_id: number, display_name: string, avatar_url: string }[];
-	console.log('chats', chats);
 	if (!chats) {
 		return reply.code(500).send({
 			success: false,

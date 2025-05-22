@@ -124,7 +124,6 @@ export class MatchmakingManager {
 
 				if (ratingDiff <= maxAllowedDiff) {
 					// Found match
-					console.log(`Matched players ${p1.conn.id} and ${p2.conn.id} with rating difference ${ratingDiff}`);
 					updateUser(p1.conn.id, { status: 'in-game' });
 					this.gameStore.addGame(p1.conn, p2.conn, { tournamentId: null, round: null });
 					this.queue.splice(j, 1);

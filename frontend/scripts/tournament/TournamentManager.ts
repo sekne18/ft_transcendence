@@ -55,7 +55,7 @@ export class TournamentManager {
 		} else {
 			this.socket = new WebSocket(`${networkConfig.wsScheme}://${networkConfig.host}/api/tournament/ws`);
 			this.socket.addEventListener('open', () => {
-				console.log('Connected to tournament server');
+				//console.log('Connected to tournament server');
 			}
 			);
 			this.socket.addEventListener('message', event => {
@@ -64,11 +64,11 @@ export class TournamentManager {
 				this.processMsg(msg);
 			});
 			this.socket.addEventListener('close', () => {
-				console.log('Disconnected from tournament server');
+				//console.log('Disconnected from tournament server');
 
 			});
 			this.socket.addEventListener('error', err => {
-				console.error('WebSocket error:', err);
+				//console.error('WebSocket error:', err);
 			});
 		}
 		State.setState("tournament", {
@@ -651,7 +651,6 @@ export class TournamentManager {
 		const currRenderId = ++this.currRenderId;
 		const tournamentEls = [];
 		for (const t of this.tournaments) {
-			console.log('Tournament:', t[1]);
 			tournamentEls.push(await this.createTournamentElement(t[1]));
 		}
 		if (currRenderId !== this.currRenderId) {
