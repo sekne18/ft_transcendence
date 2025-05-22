@@ -337,7 +337,7 @@ function fillProfileData(profile: Profile) {
   // Set user experience
   const experience = (profile.games_played / 100 - Math.floor(profile.games_played / 100)) * 500;
   getElement('experience').textContent = experience.toFixed(0).toString() + '/500 XP';
-  getElement('experience-bar').style.width = `${Math.round(experience)}%`;
+  getElement('experience-bar').style.width = `${Math.round(experience / 10)}%`;
 
   // Set user stats
   getElement('games-played').textContent = profile.games_played.toString();
@@ -405,7 +405,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
   const matchElement = document.createElement('div');
   matchElement.className = 'rounded-lg p-2';
   const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
-  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
+  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d1166]' : 'bg-[#77202030]';
   const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
   const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDate();
 
