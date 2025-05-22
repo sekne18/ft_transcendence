@@ -126,10 +126,8 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_friend_removed'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
+        
       } else {
         showToast(languageService.retrieveValue('toast_failed_friend_rm'), '', 'error');
       }
@@ -155,10 +153,7 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_unblock_user'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
       } else {
         showToast(languageService.retrieveValue('toast_failed_unblock_user'), '', 'error');
       }
@@ -184,10 +179,7 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_req_sent'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
       } else {
         showToast(languageService.retrieveValue('toast_req_failed_sent'), '', 'error');
       }
@@ -213,10 +205,7 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_block_user'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
       } else {
         showToast(languageService.retrieveValue('toast_failed_block_user'), '', 'error');
       }
@@ -226,6 +215,14 @@ function setClickEvents() {
   chatBtn.addEventListener('click', () => {
     startChat();
   });
+}
+
+function updateProfile() {
+  fetchUserProfile(otherId).then((userProfile) => {
+    renderUserProfile(userProfile);
+    renderMatchHistory(otherId);
+  });
+  setProfileButtons(true);
 }
 
 function startChat() {
@@ -300,7 +297,6 @@ function onAvatarChange() {
 
 // Render user profile
 function renderUserProfile(profile: Profile | undefined = undefined) {
-  console.log(profile);
   if (profile)
     fillProfileData(profile);
   else {
