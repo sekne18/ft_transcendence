@@ -44,6 +44,7 @@ function setProfileButtons(isOther: boolean) {
   const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
   const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
   const pendingBtn = getElement('profile-pending-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
   if (isOther) {
     // fetch friend status to determine which buttons to show
@@ -68,24 +69,28 @@ function setProfileButtons(isOther: boolean) {
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
           pendingBtn.classList.add('hidden');
+          chatBtn.classList.remove('pointer-events-none', 'opacity-50');
         } else if (status === 'pending') {
           pendingBtn.classList.remove('hidden');
           addFriendBtn.classList.add('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
+          chatBtn.classList.remove('pointer-events-none', 'opacity-50');
         } else if (status === 'blocked') {
           addFriendBtn.classList.add('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.add('hidden');
           unblockBtn.classList.remove('hidden');
           pendingBtn.classList.add('hidden');
+          chatBtn.classList.add('pointer-events-none', 'opacity-50');
         } else {
           addFriendBtn.classList.remove('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
           pendingBtn.classList.add('hidden');
+          chatBtn.classList.remove('pointer-events-none', 'opacity-50');
         }
       }
     });
@@ -122,10 +127,8 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_friend_removed'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
+        
       } else {
         showToast(languageService.retrieveValue('toast_failed_friend_rm'), '', 'error');
       }
@@ -152,10 +155,7 @@ function setClickEvents() {
       chatManager?.handleChatToggle(false);
       if (res.success) {
         showToast(languageService.retrieveValue('toast_unblock_user'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
       } else {
         showToast(languageService.retrieveValue('toast_failed_unblock_user'), '', 'error');
       }
@@ -181,10 +181,7 @@ function setClickEvents() {
     }).then((res) => {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_req_sent'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
       } else {
         showToast(languageService.retrieveValue('toast_req_failed_sent'), '', 'error');
       }
@@ -211,10 +208,7 @@ function setClickEvents() {
       chatManager?.handleChatToggle(false);
       if (res.success) {
         showToast(languageService.retrieveValue('toast_block_user'), '', 'success');
-        fetchUserProfile(otherId).then((userProfile) => {
-          renderUserProfile(userProfile);
-          renderMatchHistory(otherId);
-        });
+        updateProfile();
       } else {
         showToast(languageService.retrieveValue('toast_failed_block_user'), '', 'error');
       }
@@ -224,6 +218,14 @@ function setClickEvents() {
   chatBtn.addEventListener('click', () => {
     startChat();
   });
+}
+
+function updateProfile() {
+  fetchUserProfile(otherId).then((userProfile) => {
+    renderUserProfile(userProfile);
+    renderMatchHistory(otherId);
+  });
+  setProfileButtons(true);
 }
 
 function startChat() {
@@ -299,7 +301,6 @@ function onAvatarChange() {
 
 // Render user profile
 function renderUserProfile(profile: Profile | undefined = undefined) {
-
   if (profile)
     fillProfileData(profile);
   else {
@@ -339,7 +340,7 @@ function fillProfileData(profile: Profile) {
   // Set user experience
   const experience = (profile.games_played / 100 - Math.floor(profile.games_played / 100)) * 500;
   getElement('experience').textContent = experience.toFixed(0).toString() + '/500 XP';
-  getElement('experience-bar').style.width = `${Math.round(experience)}%`;
+  getElement('experience-bar').style.width = `${Math.round(experience / 10)}%`;
 
   // Set user stats
   getElement('games-played').textContent = profile.games_played.toString();
@@ -407,7 +408,7 @@ function createMatchElement(match: Match, showDetailsButton = false) {
   const matchElement = document.createElement('div');
   matchElement.className = 'rounded-lg p-2';
   const resultColor = match.result === 'win' ? 'text-[#41C47B]' : match.result === 'ongoing' ? 'text-[#FF9F1C]' : 'text-[#FB2C34]';
-  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d11a3]' : 'bg-[#1C232A]';
+  const bgColor = match.result === 'win' ? 'bg-[#1C232A]' : match.result === 'ongoing' ? 'bg-[#432d1166]' : 'bg-[#77202030]';
   const icon = match.result === 'win' ? thumbsUpSvg : match.result === 'ongoing' ? hourGlassSvg : thumbsDownSvg;
   const date = new Date(match.date).getFullYear() + "-" + (new Date(match.date).getMonth() + 1) + "-" + new Date(match.date).getDate();
 
@@ -423,8 +424,8 @@ function createMatchElement(match: Match, showDetailsButton = false) {
         </div>
       </div>
       <div class="text-right">
-        <p class="font-semibold ${resultColor}">
-          ${match.result === 'win' ? 'Victory' : match.result === 'ongoing' ? 'Ongoing' : 'Defeat'}
+        <p class="font-semibold ${resultColor}" ${match.result === 'win' ? "data-i18n='match_victory'" : match.result === 'ongoing' ? "data-i18n='match_ongoing'" : "data-i18n='match_defeat'"}>
+          
         </p>
         <p class="text-gray-500 text-sm">${match.score}</p>
       </div>

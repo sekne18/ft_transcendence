@@ -60,6 +60,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'games',
     profile_exeprience: 'Experience',
     profile_level: 'Level',
+    match_victory: 'Victory',
+    match_defeat: 'Defeat',
+    match_ongoing: 'Ongoing',
 
     // Edit proifle
     change_avatar_btn: 'Change Avatar',
@@ -212,6 +215,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'spellen',
     profile_exeprience: 'Ervaring',
     profile_level: 'Niveau',
+    match_victory: 'Overwinning',
+    match_defeat: 'Nederlaag',
+    match_ongoing: 'Bezig',
 
     // Edit proifle
     change_avatar_btn: 'Verander Avatar',
@@ -269,7 +275,32 @@ export const translations: Record<string, LanguageMap> = {
     friendslist_search: 'Zoek vrienden...',
     friendslist_no_friends: 'Geen vrienden gevonden',
     friendslist_no_users: 'Geen gebruikers gevonden',
-    friendslist_showing_users: 'Toon alle gebruikers'
+    friendslist_showing_users: 'Toon alle gebruikers',
+
+    // Toast messages
+    toast_error: 'Fout',
+    toast_success: 'Succes',
+    toast_warning: 'Waarschuwing',
+    toast_limit_inv: 'Wieah daar',
+    toast_limit_inv_desc: 'Je kunt maar één actieve uitnodiging tegelijk hebben.',
+    toast_friend_removed: 'Vriend succesvol verwijderd!',
+    toast_failed_friend_rm: 'Vriend verwijderen mislukt',
+    toast_req_sent: 'Vriendschapsverzoek succesvol verzonden!',
+    toast_req_failed_sent: 'Vriend toevoegen mislukt',
+    toast_req_accepted: 'Vriendschapsverzoek geaccepteerd',
+    toast_req_failed_accepted: 'Vriendschapsverzoek accepteren mislukt',
+    toast_block_user: 'Gebruiker succesvol geblokkeerd!',
+    toast_failed_block_user: 'Vriend blokkeren mislukt',
+    toast_unblock_user: 'Gebruiker succesvol gedeblokkeerd!',
+    toast_failed_unblock_user: 'Vriend deblokkeren mislukt',
+    toast_match_setup: 'Wedstrijdinstellingen',
+    toast_2FA_disabled: '2FA succesvol uitgeschakeld!',
+    toast_failed_2FA_disabled: '2FA uitschakelen mislukt',
+    toast_2FA_enabled: '2FA succesvol ingeschakeld!',
+    toast_failed_2FA_enable: '2FA inschakelen mislukt. Probeer het opnieuw.',
+    toast_6_digits: 'Voer een geldige 6-cijferige code in.',
+    toast_failed_2FA_setup: '2FA instellen mislukt. Probeer het opnieuw.',
+    toast_chat_started: 'Chat succesvol gestart!',
   },
   sl: {
     // Navbar items
@@ -339,6 +370,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'iger',
     profile_exeprience: 'Izkušnje',
     profile_level: 'Stopnja',
+    match_victory: 'Zmaga',
+    match_defeat: 'Poraz',
+    match_ongoing: 'Poteka',
 
     // Edit proifle
     change_avatar_btn: 'Spremeni avatar',
@@ -395,7 +429,32 @@ export const translations: Record<string, LanguageMap> = {
     friendslist_search: 'Išči prijatelje...',
     friendslist_no_friends: 'Noben prijatelj ni najden',
     friendslist_no_users: 'Noben uporabnik ni najden',
-    friendslist_showing_users: 'Prikaži vse uporabnike'
+    friendslist_showing_users: 'Prikaži vse uporabnike',
+
+    // Toast messages
+    toast_error: 'Napaka',
+    toast_success: 'Uspeh',
+    toast_warning: 'Opozorilo',
+    toast_limit_inv: 'Previdno tam',
+    toast_limit_inv_desc: 'Lahko imate le eno aktivno povabilo naenkrat.',
+    toast_friend_removed: 'Prijatelj uspešno odstranjen!',
+    toast_failed_friend_rm: 'Odstranitev prijatelja ni uspela',
+    toast_req_sent: 'Vabilo prijatelju uspešno poslano!',
+    toast_req_failed_sent: 'Dodajanje prijatelja ni uspelo',
+    toast_req_accepted: 'Vabilo prijatelju sprejeto',
+    toast_req_failed_accepted: 'Sprejem vabila prijatelju ni uspel',
+    toast_block_user: 'Uporabnik uspešno blokiran!',
+    toast_failed_block_user: 'Blokiranje prijatelja ni uspelo',
+    toast_unblock_user: 'Uporabnik uspešno deblokiran!',
+    toast_failed_unblock_user: 'Deblokiranje prijatelja ni uspelo',
+    toast_match_setup: 'Nastavitve tekme',
+    toast_2FA_disabled: '2FA uspešno onemogočen!',
+    toast_failed_2FA_disabled: 'Onemogočanje 2FA ni uspelo', 
+    toast_2FA_enabled: '2FA uspešno omogočen!',
+    toast_failed_2FA_enable: 'Omogočanje 2FA ni uspelo. Prosim, poskusi ponovno.',
+    toast_6_digits: 'Vnesite veljavno 6-mestno kodo.',
+    toast_failed_2FA_setup: 'Nastavitev 2FA ni uspela. Prosim, poskusi ponovno.',
+    toast_chat_started: 'Pogovor uspešno začet!',
   },
   ua: {
     // Navbar items
@@ -463,6 +522,9 @@ export const translations: Record<string, LanguageMap> = {
     profile_streak_games: 'ігор',
     profile_exeprience: 'Досвід',
     profile_level: 'Рівень',
+    match_victory: 'Перемога',
+    match_defeat: 'Поразка',
+    match_ongoing: 'В процесі',
 
     // Edit proifle
     change_avatar_btn: 'Змінити аватар',
@@ -519,6 +581,31 @@ export const translations: Record<string, LanguageMap> = {
     friendslist_search: 'Шукати друзів...',
     friendslist_no_friends: 'Друзів не знайдено',
     friendslist_no_users: 'Користувачів не знайдено',
-    friendslist_showing_users: 'Показати всіх користувачів'
+    friendslist_showing_users: 'Показати всіх користувачів',
+
+    // Toast messages
+    toast_error: 'Помилка',
+    toast_success: 'Успіх',
+    toast_warning: 'Попередження',
+    toast_limit_inv: 'Обережно',
+    toast_limit_inv_desc: 'Ви можете мати лише одне активне запрошення одночасно.',
+    toast_friend_removed: 'Друг успішно видалений!',
+    toast_failed_friend_rm: 'Не вдалося видалити друга',
+    toast_req_sent: 'Запрошення другу успішно надіслано!',
+    toast_req_failed_sent: 'Не вдалося додати друга',
+    toast_req_accepted: 'Запрошення другу прийнято',
+    toast_req_failed_accepted: 'Не вдалося прийняти запрошення другу',
+    toast_block_user: 'Користувача успішно заблоковано!',
+    toast_failed_block_user: 'Не вдалося заблокувати друга',
+    toast_unblock_user: 'Користувача успішно розблоковано!',
+    toast_failed_unblock_user: 'Не вдалося розблокувати друга',
+    toast_match_setup: 'Налаштування матчу',
+    toast_2FA_disabled: '2FA успішно вимкнено!',
+    toast_failed_2FA_disabled: 'Не вдалося вимкнути 2FA',
+    toast_2FA_enabled: '2FA успішно ввімкнено!', 
+    toast_failed_2FA_enable: 'Не вдалося ввімкнути 2FA. Спробуйте ще раз.',
+    toast_6_digits: 'Введіть дійсний 6-значний код.',
+    toast_failed_2FA_setup: 'Не вдалося налаштувати 2FA. Спробуйте ще раз.',
+    toast_chat_started: 'Чат успішно розпочато!',
   }
 };
