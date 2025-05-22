@@ -7,6 +7,8 @@ services:
       - backend_db:/app/db_data
     expose:
       - "3000"
+    env_file:
+      - .env
     networks:
       - app-network
     restart: unless-stopped

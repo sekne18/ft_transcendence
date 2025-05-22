@@ -36,7 +36,7 @@ import { match } from 'assert';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
-	secure: false, // Set to true in production (requires HTTPS)
+	secure: true, // Set to true in production (requires HTTPS)
 	sameSite: 'strict',
 };
 
@@ -130,6 +130,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 
 	try {
 		// Step 1: Exchange code for access token
+		console.log(`${process.env.BACKEND_URL!}${process.env.GOOGLE_REDIRECT_URI!}`);
 		const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -143,7 +144,8 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 		});
 
 		const tokenData = await tokenRes.json() as { access_token?: string };
-
+		console.log('Token response:', tokenData);
+		
 		if (!tokenData.access_token) {
 			return reply.code(401).send({ success: false, message: 'Failed to get access token' });
 		}
