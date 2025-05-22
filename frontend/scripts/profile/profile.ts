@@ -43,6 +43,7 @@ function setProfileButtons(isOther: boolean) {
   const blockBtn = getElement('profile-block-btn') as HTMLButtonElement;
   const unblockBtn = getElement('profile-unblock-btn') as HTMLButtonElement;
   const pendingBtn = getElement('profile-pending-btn') as HTMLButtonElement;
+  const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
   if (isOther) {
     // fetch friend status to determine which buttons to show
@@ -67,24 +68,28 @@ function setProfileButtons(isOther: boolean) {
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
           pendingBtn.classList.add('hidden');
+          chatBtn.classList.remove('pointer-events-none', 'opacity-50');
         } else if (status === 'pending') {
           pendingBtn.classList.remove('hidden');
           addFriendBtn.classList.add('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
+          chatBtn.classList.remove('pointer-events-none', 'opacity-50');
         } else if (status === 'blocked') {
           addFriendBtn.classList.add('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.add('hidden');
           unblockBtn.classList.remove('hidden');
           pendingBtn.classList.add('hidden');
+          chatBtn.classList.add('pointer-events-none', 'opacity-50');
         } else {
           addFriendBtn.classList.remove('hidden');
           removeFriendBtn.classList.add('hidden');
           blockBtn.classList.remove('hidden');
           unblockBtn.classList.add('hidden');
           pendingBtn.classList.add('hidden');
+          chatBtn.classList.remove('pointer-events-none', 'opacity-50');
         }
       }
     });
@@ -295,7 +300,7 @@ function onAvatarChange() {
 
 // Render user profile
 function renderUserProfile(profile: Profile | undefined = undefined) {
-
+  console.log(profile);
   if (profile)
     fillProfileData(profile);
   else {
