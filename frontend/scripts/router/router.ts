@@ -20,8 +20,8 @@ const routes: Record<string, { file: string; init?: () => void }> = {
 export async function initRouter() {
     let path = window.location.pathname;
 
-    const protectedRoutes = ['/', '/game', '/leaderboard', '/tournament', '/friends', '/profile'];
-    const isProtected = protectedRoutes.includes(path);
+    const protectedRoutes = ['/game', '/leaderboard', '/tournament', '/friends', '/profile'];
+    const isProtected = protectedRoutes.some((route) => path.includes(route)) || path === '/';
 
     if (isProtected) {
         const isAuthed = await checkAuth();
@@ -34,6 +34,8 @@ export async function initRouter() {
     }
 
     loadContent(path);
+
+    console.log('Router initialized', window.location.pathname);
 
     document.addEventListener('click', async (e: MouseEvent) => {
         const target = e.target as HTMLElement;
@@ -108,7 +110,7 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
             .then(html => {
                 if (appElement) {
                     appElement.innerHTML = html;
-                    const userId : number = Number(url.split('/')[2]);
+                    const userId: number = Number(url.split('/')[2]);
                     (routes['/profile'].init as (userId?: number) => void)?.(userId);
                     languageService.init();
                 }
