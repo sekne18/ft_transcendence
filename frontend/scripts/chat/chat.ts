@@ -127,6 +127,7 @@ class ChatManager {
                     console.error(`Error updating unread count for chat ${chat.chat_id}:`, error);
                 });
             });
+            this.updateOnlineStatus();
         } else {
             console.error("Failed to fetch chat list");
         }
@@ -305,18 +306,20 @@ class ChatManager {
             }
             );
         } else {
-            let showLoading = false;
-            const firstMessage = this.messageContainer.querySelector("div");
-            if (firstMessage && firstMessage.id === "loading-messages" && firstMessage.textContent === "Beginning of this chat.") {
-                showLoading = true;
-            }
             this.messageContainer.innerHTML = "";
             chatMessages.forEach((message) => {
                 const messageElement = this.createMessageElement(message, message.sender_id === this.SelectedUserId);
                 this.messageContainer.insertAdjacentElement("afterbegin", messageElement);
             });
-            if (showLoading) {
-                this.setLoadingElement(false, "Beginning of this chat.");
+            if (this.messageContainer.scrollHeight <= this.messageContainer.clientHeight && this.SelectedChatId !== null) {
+                const firstMessage = this.messageContainer.querySelector("div");
+                if (firstMessage) {
+                    if (firstMessage.id === "loading-messages") {
+                        return;
+                    }
+                    const firstMessageDate = parseInt((firstMessage.querySelector("span") as HTMLSpanElement).dataset.timestamp || "0");
+                    this.renderOlderMessages(this.SelectedChatId, firstMessageDate);
+                }
             }
             this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
         }
@@ -378,6 +381,7 @@ class ChatManager {
     }
 
     private selectChat(chatId: number): void {
+        this.messageContainer.innerHTML = "";
         this.setLoadingElement(true, "Loading messages...");
         this.SelectedChatId = chatId;
         this.SelectedUserId = parseInt((this.chatList.querySelector(`#chat-${chatId}`) as HTMLElement)?.dataset.userId || "0");
@@ -454,7 +458,6 @@ class ChatManager {
         }
         this.isOpen = !this.isOpen;
         if (this.isOpen) {
-            this.updateOnlineStatus();
             this.chatWindow.classList.remove("w-0", "h-0", "scale-0");
             this.chatWindow.classList.add("w-[480px]", "h-[300px]", "animate-grow-bounce");
             this.renderChatWindow();

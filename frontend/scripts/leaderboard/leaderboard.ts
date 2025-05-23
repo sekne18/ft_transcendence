@@ -1,5 +1,6 @@
 import { LeaderboardPlayer, renderLeaderboard } from "./userList";
 import { leaderboardEntry } from "./types";
+import { languageService } from "../i18n";
 
 /* 
     Run any logic from this function. 
@@ -31,6 +32,7 @@ function getData(offset = 0): void {
                 level: Math.floor(entry.games_played / 100) // Example calculation for level
             }));
             renderLeaderboard(leaderboardData);
+            languageService.init();
         });
     }).catch((error) => {
         console.error('Error fetching leaderboard data:', error);

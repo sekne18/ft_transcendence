@@ -6,6 +6,7 @@ export interface FriendListPlayer {
   state: string; // friend relationship status
   status: string; // online status
   avatarUrl: string;
+  request: string;
 }
 
 export function getAllUsers(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
@@ -22,7 +23,9 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     WHERE u.id != ?
       AND f.status IS NULL
       AND u.username LIKE ?
+      AND u.username LIKE ?
       AND u.username != 'ai_bot'
+    ORDER BY u.username ASC
     ORDER BY u.username ASC
     LIMIT ?
   `).all(userId, userId, userId, name + '%', limit) as {
@@ -40,6 +43,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     state: 'Not Friends Yet',
     status: row.status,
     avatarUrl: row.avatarUrl,
+    request: 'null'
   }));
 }
 
@@ -60,6 +64,8 @@ export function getAllFriends(userId: number, name: string, limit: number = 10):
       AND f.status = 'accepted'
       AND u.username LIKE ?
     ORDER BY u.username ASC
+      AND u.username LIKE ?
+    ORDER BY u.username ASC
     LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -74,6 +80,7 @@ export function getAllFriends(userId: number, name: string, limit: number = 10):
     state: row.state,
     status: row.status,
     avatarUrl: row.avatarUrl,
+    request: 'null'
   }));
 }
 
@@ -94,6 +101,8 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
         AND f.status = 'blocked'
         AND u.username LIKE ?
       ORDER BY u.username ASC
+        AND u.username LIKE ?
+      ORDER BY u.username ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -109,6 +118,7 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
     state: row.state,
     status: row.status,
     avatarUrl: row.avatarUrl,
+    request: 'null'
   }));
 }
 
@@ -117,7 +127,8 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
       SELECT 
         u.id, 
         u.username, 
-        f.status AS state, 
+        f.status AS state,
+        f.sender_id,
         u.status, 
         u.avatar_url AS avatarUrl
       FROM friends f
@@ -131,21 +142,30 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
         AND f.sender_id != ?
       ORDER BY u.username ASC
       LIMIT ?
-  `).all(userId, userId, userId, userId, name + '%', userId, limit) as {
+  `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
     username: string;
     state: string;
     status: string;
     avatarUrl: string;
+    sender_id: number
   }[];
 
-  return rows.map(row => ({
-    id: row.id,
-    username: row.username,
-    state: row.state,
-    status: row.status,
-    avatarUrl: row.avatarUrl,
-  }));
+  return rows.map(row => {
+    const res: any = {
+      id: row.id,
+      username: row.username,
+      state: row.state,
+      status: row.status,
+      avatarUrl: row.avatarUrl,
+    };
+    if (row.sender_id === userId)
+      res.request = 'out';
+    else {
+      res.request = 'in';
+    }
+    return res;
+  });
 }
 
 export function getOnlineFriends(userId: number, name: string, limit: number = 10): FriendListPlayer[] {
@@ -166,6 +186,8 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
         AND (u.status = 'online' OR u.status = 'in-game' OR u.status = 'in-tournament')
         AND u.username LIKE ?
       ORDER BY u.username ASC
+        AND u.username LIKE ?
+      ORDER BY u.username ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -181,6 +203,7 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
     state: row.state,
     status: row.status,
     avatarUrl: row.avatarUrl,
+    request: 'null'
   }));
 }
 
