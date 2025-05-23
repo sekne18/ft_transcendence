@@ -3,7 +3,7 @@ import { languageService } from "../i18n";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { State } from "../state/State";
-import { getElement, showToast } from "../utils";
+import { showToast } from "../utils";
 import { networkConfig } from "../wsConfig";
 import { Bracket, RoundMatch, Tournament, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
@@ -166,7 +166,7 @@ export class TournamentManager {
 				const player1 = tournament.players.find(p => p.id === data.p1);
 				const player2 = tournament.players.find(p => p.id === data.p2);
 				if (player1 && player2) {
-					showToast(languageService.retrieveValue('toast_match_setup'), `Match setup between ${player1.username} and ${player2.username}`, 'info');
+					showToast(languageService.retrieveValue('toast_match_setup'), `Match setup between ${player1.display_name} and ${player2.display_name}`, 'info');
 				}
 				else {
 					console.error('Player not found:', data.p1, data.p2);
@@ -244,7 +244,7 @@ export class TournamentManager {
 			modalAvatar.src = this.user.avatar_url;
 		}
 		if (modalUsername) {
-			modalUsername.textContent = this.user.username;
+			modalUsername.textContent = this.user.display_name;
 		}
 		if (modalWins) {
 			modalWins.textContent = this.user.wins?.toString() || '0';
@@ -380,8 +380,8 @@ export class TournamentManager {
 		}
 		return `
 			<div class="flex items-center gap-2">
-				<img src="${player.avatar_url}" alt="${player.username}" class="w-6 h-6 rounded-full">
-				<span class="text-sm font-semibold">${player.username}</span>
+				<img src="${player.avatar_url}" alt="${player.display_name}" class="w-6 h-6 rounded-full">
+				<span class="text-sm font-semibold">${player.display_name}</span>
 			</div>
 		`;
 	}
@@ -547,9 +547,9 @@ export class TournamentManager {
 				const player = tournament.players[i];
 				playerCard.innerHTML = `
 					<div class="flex items-center gap-3">
-						<img src="${player.avatar_url}" alt="${player.username}" class="w-10 h-10 rounded-full">
+						<img src="${player.avatar_url}" alt="${player.display_name}" class="w-10 h-10 rounded-full">
 						<div>
-							<p class="font-semibold text-white">${player.username}</p>
+							<p class="font-semibold text-white">${player.display_name}</p>
 							<!-- <p class="text-gray-400 text-sm">Level ${player.wins}</p> -->
 						</div>
 					</div>
