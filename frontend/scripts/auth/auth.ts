@@ -118,10 +118,6 @@ function handleLogin(event: Event) {
         body: JSON.stringify(loginData),
     })
         .then(res => {
-            if (res.status === 401) {
-                window.location.href = '/auth';
-                return null;
-            }
             return res.json();
         })
         .then(data => {
