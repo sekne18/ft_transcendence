@@ -5,10 +5,9 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
 import { readFile } from 'fs/promises';
 import { getChatsByUserId, getChatMessages, markMessagesAsRead, getUnreadCount, createChat } from './db/queries/chat.js';
-import { createUser, getUserByEmail, getUserById, getUserProfileById, updateUser } from './db/queries/user.js';
+import { createUser, getUserByEmail, getUserById, getUserProfileById, getUserUnsafeById, updateUser } from './db/queries/user.js';
 import { getTokenByjti, pushTokenToDB, setUsedToken } from './db/queries/tokens.js';
 import { getMatchById, getMatchesByUserId } from './db/queries/match.js';
-import { getStatsByUserId } from './db/queries/stats.js';
 import { initializeDatabase } from './db/schema.js';
 import * as argon2 from "argon2";
 import speakeasy from 'speakeasy';
@@ -25,14 +24,11 @@ import { TournamentManager } from './tournament/TournamentManager.js';
 import { User } from './types.js';
 import { ChatManager } from './chat/ChatManager.js';
 import { getAllFriends, getOnlineFriends, getBlockedFriends, getPendingFriends, FriendListPlayer, getAllUsers, blockFriend, sendFriendRequest, acceptFriendRequest, declineFriendRequest, unblockFriend, getFriendshipStatus } from './db/queries/friends.js';
-import { parseArgs } from 'util';
 import { getLeaderboard } from './db/queries/leaderboard.js';
 import { defaultAvatarPath } from './Config.js';
 import { GameStore } from './game/GameStore.js';
 import { getCompletedTournaments } from './db/queries/tournament.js';
 import { Bracket } from './tournament/Types.js';
-import { match } from 'assert';
-
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -293,7 +289,7 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 			return reply.code(400).send({ success: false, message: 'Invalid token context' });
 		}
 
-		const user = await getUserById(payload.id) as { id: number; totp_secret: string; };
+		const user = await getUserUnsafeById(payload.id) as { id: number; totp_secret: string; };
 		if (!user || !user.totp_secret) {
 			return reply.code(400).send({ success: false, message: '2FA not configured' });
 		}
@@ -335,7 +331,7 @@ fastify.post('/api/2fa/verify', async (req, reply) => {
 
 fastify.get('/api/2fa/setup', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
-	const user = await getUserById(id) as { id: number; has2fa: boolean; };
+	const user = await getUserUnsafeById(id) as { id: number; has2fa: boolean; };
 	if (!user) return reply.code(404).send({ success: false, message: 'User not found' });
 
 	if (user.has2fa) {
@@ -365,7 +361,7 @@ fastify.post('/api/2fa/confirm', { onRequest: [fastify.authenticate] }, async (r
 	const id = (req.user as { id: number }).id;
 	const { code } = req.body as { code: string };
 
-	const user = await getUserById(id) as { id: number; totp_secret: string; };
+	const user = await getUserUnsafeById(id) as { id: number; totp_secret: string; };
 	if (!user || !user.totp_secret) {
 		return reply.code(400).send({ success: false, message: 'TOTP secret not found' });
 	}
@@ -548,7 +544,7 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 			});
 		}
 		else if (newPassword.trim() !== '') {
-			const user = await getUserById(id) as { id: number; password: string; };
+			const user = await getUserUnsafeById(id) as { id: number; password: string; };
 			if (await argon2.verify(user.password, currentPassword)) {
 				updateData.password = await argon2.hash(newPassword.trim());
 			} else {

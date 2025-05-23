@@ -55,7 +55,7 @@ export const wsConfig: {
 	host: window.location.host, // "localhost:3000" in dev, window.location.host in prod
 }
 ```
-set up ./backend/.env:
+set up .env:
 ```
 GOOGLE_CLIENT_ID=${your client id}
 GOOGLE_CLIENT_SECRET=${your client secret}
@@ -63,6 +63,9 @@ GOOGLE_REDIRECT_URI=/api/login/google/callback
 FRONTEND_URL=https://${server ip}
 BACKEND_URL=https://${server ip}
 ```
+
+note that google oauth might not work depending on whether you're using a domain name or not
+(you also have to add the BACKEND_URL / domain + GOOGLE_REDIRECT_URI to the valid redirects in google console)
 
 
 Now you are ready to go! browse to ``https://localhost:8443/``

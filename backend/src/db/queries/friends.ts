@@ -21,9 +21,9 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     LEFT JOIN friends f ON (f.user1_id = ? AND f.user2_id = u.id) OR (f.user2_id = ? AND f.user1_id = u.id)
     WHERE u.id != ?
       AND f.status IS NULL
-      AND u.display_name LIKE ?
+      AND u.username LIKE ?
       AND u.username != 'ai_bot'
-    ORDER BY u.display_name ASC
+    ORDER BY u.username ASC
     LIMIT ?
   `).all(userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -58,8 +58,8 @@ export function getAllFriends(userId: number, name: string, limit: number = 10):
     END
     WHERE (f.user1_id = ? OR f.user2_id = ?)
       AND f.status = 'accepted'
-      AND u.display_name LIKE ?
-    ORDER BY u.display_name ASC
+      AND u.username LIKE ?
+    ORDER BY u.username ASC
     LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -92,8 +92,8 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'blocked'
-        AND u.display_name LIKE ?
-      ORDER BY u.display_name ASC
+        AND u.username LIKE ?
+      ORDER BY u.username ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -127,9 +127,9 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'pending'
-        AND u.display_name LIKE ?
+        AND u.username LIKE ?
         AND f.sender_id != ?
-      ORDER BY u.display_name ASC
+      ORDER BY u.username ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', userId, limit) as {
     id: number;
@@ -164,8 +164,8 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'accepted'
         AND (u.status = 'online' OR u.status = 'in-game' OR u.status = 'in-tournament')
-        AND u.display_name LIKE ?
-      ORDER BY u.display_name ASC
+        AND u.username LIKE ?
+      ORDER BY u.username ASC
       LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;

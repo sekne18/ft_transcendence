@@ -127,8 +127,8 @@ export class UIManager {
 		const usernameEl = this.userInfo.querySelector('#game-left-username') as HTMLSpanElement;
 		const statsEl = this.userInfo.querySelector('#game-left-stats') as HTMLSpanElement;
 		avatarEl.src = user.avatar_url;
-		avatarEl.alt = user.username;
-		usernameEl.innerText = user.username;
+		avatarEl.alt = user.display_name;
+		usernameEl.innerText = user.display_name;
 		statsEl.innerText = `W: ${user.wins} | L: ${user.losses}`;
 	}
 
@@ -137,8 +137,8 @@ export class UIManager {
 		const usernameEl = this.userInfo.querySelector('#game-right-username') as HTMLSpanElement;
 		const statsEl = this.userInfo.querySelector('#game-right-stats') as HTMLSpanElement;
 		avatarEl.src = user.avatar_url;
-		avatarEl.alt = user.username;
-		usernameEl.innerText = user.username;
+		avatarEl.alt = user.display_name;
+		usernameEl.innerText = user.display_name;
 		statsEl.innerText = `W: ${user.wins} | L: ${user.losses}`;
 	}
 
