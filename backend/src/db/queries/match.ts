@@ -87,16 +87,16 @@ export function updateMatch(matchId: number, data: Partial<{
 	}
 
 	// If game is finished, update average_score and longest_streak for both users.
-	// Longest stream works by checking if the user has a streak of wins and adding 1 to it if he won. Otherwise it resets to 1.
+	// Longest stream works by checking if the user has a streak of wins and adding 1 to it if he won. Otherwise it resets to 0.
 	if (data.winnerId !== undefined) {
 		const updateStats = db.prepare(`
 			UPDATE stats
 			SET 
 				avg_score = (avg_score * games_played + ?) / (games_played + 1),
 				longest_streak = CASE
-					WHEN longest_streak IS NULL THEN 1
+					WHEN longest_streak IS NULL THEN 0
 					WHEN ? = ? THEN longest_streak + 1
-					ELSE 1
+					ELSE 0
 				END
 			WHERE user_id = ?
 		`);
