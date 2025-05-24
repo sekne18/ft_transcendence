@@ -1,7 +1,7 @@
 import { hourGlassSvg, thumbsDownSvg, thumbsUpSvg } from "../../images";
 import { chatManager } from "../chat/chat";
 import { languageService } from "../i18n";
-import { getDataFromForm, getElement, showToast } from "../utils";
+import { getDataFromForm, getElement, showToast, protectedFetch } from "../utils";
 import { ModalManager } from "./modal";
 import { Match, Profile } from "./Types";
 
@@ -51,7 +51,7 @@ function setProfileButtons(isOther: boolean) {
     editProfileBtn.classList.add('hidden');
     friendDiv.classList.remove('hidden');
 
-    fetch(`/api/friends/status/${otherId}`, {
+    protectedFetch(`/api/friends/status/${otherId}`, {
       method: 'GET',
       credentials: 'include'
     }).then(res => {
@@ -109,7 +109,7 @@ function setClickEvents() {
   const chatBtn = getElement('chat-btn') as HTMLButtonElement;
 
   removeFriendBtn.addEventListener('click', () => {
-    fetch('/api/friends/decline-friend-request', {
+    protectedFetch('/api/friends/decline-friend-request', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -128,7 +128,7 @@ function setClickEvents() {
       if (res.success) {
         showToast(languageService.retrieveValue('toast_friend_removed'), '', 'success');
         updateProfile();
-        
+
       } else {
         showToast(languageService.retrieveValue('toast_failed_friend_rm'), '', 'error');
       }
@@ -136,7 +136,7 @@ function setClickEvents() {
   });
 
   unblockBtn.addEventListener('click', () => {
-    fetch('/api/friends/unblock', {
+    protectedFetch('/api/friends/unblock', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -163,7 +163,7 @@ function setClickEvents() {
   });
 
   addFriendBtn.addEventListener('click', () => {
-    fetch('/api/friends/send-friend-request', {
+    protectedFetch('/api/friends/send-friend-request', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -189,7 +189,7 @@ function setClickEvents() {
   });
 
   blockBtn.addEventListener('click', () => {
-    fetch('/api/friends/block', {
+    protectedFetch('/api/friends/block', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -234,7 +234,7 @@ function startChat() {
     return;
   }
 
-  fetch('/api/chat/register', {
+  protectedFetch('/api/chat/register', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -266,7 +266,7 @@ function startChat() {
 
 async function fetchUserProfile(userId: number): Promise<Profile | undefined> {
   try {
-    const response = await fetch(`/api/user/profile/${userId}`, {
+    const response = await protectedFetch(`/api/user/profile/${userId}`, {
       method: 'GET',
       credentials: 'include',
     });
@@ -304,7 +304,7 @@ function renderUserProfile(profile: Profile | undefined = undefined) {
   if (profile)
     fillProfileData(profile);
   else {
-    fetch('/api/user/profile', {
+    protectedFetch('/api/user/profile', {
       method: 'GET',
       credentials: 'include',
     }).then(res => {
@@ -379,7 +379,7 @@ function renderMatchHistory(userId?: number) {
 
   const apiUrl = userId !== undefined ? `/api/user/recent-matches/${userId}` : '/api/user/recent-matches';
 
-  fetch(apiUrl, {
+  protectedFetch(apiUrl, {
     method: 'GET',
     credentials: 'include',
   }).then(res => {
@@ -446,14 +446,14 @@ function onEditProfileSubmit(e: Event) {
   const avatarUrl = (getElement('avatar-input') as HTMLImageElement).src;
   const twoFA = (getElement('toggle-2fa') as HTMLInputElement).checked;
 
-  fetch(avatarUrl)
+  protectedFetch(avatarUrl)
     .then(res => res.blob())
     .then(blob => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64data = reader.result as string;
         // Send update to backend
-        fetch('/api/user/update', {
+        protectedFetch('/api/user/update', {
           method: 'POST',
           credentials: 'include',
           headers: {

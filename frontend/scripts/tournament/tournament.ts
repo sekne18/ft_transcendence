@@ -1,5 +1,5 @@
 import { languageService } from "../i18n";
-import { showToast } from "../utils";
+import { showToast, protectedFetch } from "../utils";
 import { TournamentManager } from "./TournamentManager";
 
 // --- Initialization ---
@@ -7,7 +7,7 @@ export function initTournament(): void {
     // Establish WebSocket connection
     document.body.classList.remove('disable-scroll');
 
-    fetch('/api/user/profile').then(res => res.json()).then(data => {
+    protectedFetch('/api/user/profile').then(res => res.json()).then(data => {
         const tournamentConnection = new TournamentManager(data.user);
     }
     ).catch(err => {

@@ -1,4 +1,5 @@
 import { renderFriendslist } from "./friendsList";
+import { protectedFetch } from '../utils';
 
 export function initFriends() {
     getData('/api/friends/all');
@@ -61,7 +62,7 @@ function setupTabs(): void {
 }
 
 async function getData(where: string): Promise<void> {
-    fetch(where, {
+    protectedFetch(where, {
         method: 'GET',
         credentials: 'include',
     }).then(res => {

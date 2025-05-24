@@ -113,6 +113,7 @@ fastify.decorate('authenticate', async function handler(request: any, reply: any
 			return;
 		} catch (err) {
 			fastify.log.warn('Access token invalid or expired');
+			return reply.code(401).send({ success: false, message: 'Invalid access token' });
 		}
 	}
 	else {

@@ -1,34 +1,36 @@
+import { State } from "./state/State";
+
 export function getElement(id: string) {
-  const element = document.getElementById(id);
-  if (!element)
-    throw new Error(`Element with id "${id}" not found`);
-  return element;
+	const element = document.getElementById(id);
+	if (!element)
+		throw new Error(`Element with id "${id}" not found`);
+	return element;
 }
 
 // This function gets the data from the form and returns it as an object
 export function getDataFromForm(formId: string): Record<string, string> {
-  const form = document.getElementById(formId) as HTMLFormElement;
-  const formData = new FormData(form);
-  const data: Record<string, string> = {};
+	const form = document.getElementById(formId) as HTMLFormElement;
+	const formData = new FormData(form);
+	const data: Record<string, string> = {};
 
-  formData.forEach((value, key) => {
-    data[key] = value.toString();
-  });
-  return data;
+	formData.forEach((value, key) => {
+		data[key] = value.toString();
+	});
+	return data;
 }
 
 export function showToast(title: string, description: string, type: 'success' | 'error' | 'warning' | 'info'): void {
-  const toastContainer = document.getElementById('toast-container');
-  if (!toastContainer) return;
+	const toastContainer = document.getElementById('toast-container');
+	if (!toastContainer) return;
 
-  const toast = document.createElement('div');
-  toast.className = `flex items-center p-4 mb-4 rounded-lg shadow ${type === 'success' ? 'bg-green-100 text-green-800' :
-    type === 'error' ? 'bg-red-100 text-red-800' :
-      type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-blue-100 text-blue-800'
-    }`;
+	const toast = document.createElement('div');
+	toast.className = `flex items-center p-4 mb-4 rounded-lg shadow ${type === 'success' ? 'bg-green-100 text-green-800' :
+		type === 'error' ? 'bg-red-100 text-red-800' :
+			type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+				'bg-blue-100 text-blue-800'
+		}`;
 
-  toast.innerHTML = `
+	toast.innerHTML = `
       <div class="ml-3 text-sm font-medium">
           <div class="font-bold">${title}</div>
           <div>${description}</div>
@@ -39,18 +41,53 @@ export function showToast(title: string, description: string, type: 'success' | 
       </button>
   `;
 
-  toastContainer.appendChild(toast);
+	toastContainer.appendChild(toast);
 
-  // Auto remove after 5 seconds
-  setTimeout(() => {
-    toast.remove();
-  }, 5000);
+	// Auto remove after 5 seconds
+	setTimeout(() => {
+		toast.remove();
+	}, 5000);
 
-  // Remove on click
-  const closeButton = toast.querySelector('button');
-  if (closeButton) {
-    closeButton.addEventListener('click', () => {
-      toast.remove();
-    });
-  }
+	// Remove on click
+	const closeButton = toast.querySelector('button');
+	if (closeButton) {
+		closeButton.addEventListener('click', () => {
+			toast.remove();
+		});
+	}
+}
+
+export async function protectedFetch(
+	input: RequestInfo | URL, init?: RequestInit
+): Promise<Response> {
+	try {
+		const res = await fetch(input, init);
+		return res;
+	} catch (error) {
+		const state = State.getState('router');
+		if (state) {
+			document.removeEventListener('click', state.click);
+		}
+		const messageContainer = document.getElementById('message-container');
+		if (messageContainer) {
+			messageContainer.classList.add('hidden');
+		}
+		showToast('Error', 'Failed to fetch data. Please try again later.', 'error');
+		const errorCode = document.getElementById('error-code');
+		const errorMessage = document.getElementById('error-message');
+		if (error instanceof TypeError && error.message === 'Failed to fetch') {
+			if (errorCode) errorCode.textContent = 'Network Error';
+			if (errorMessage) errorMessage.textContent = 'Please check your internet connection.';
+		}
+		else {
+			if (errorCode) errorCode.textContent = 'Unknown Error';
+			if (errorMessage) errorMessage.textContent = 'An unexpected error occurred.';
+		}
+		const errorPage = document.getElementById('error-page');
+		if (errorPage) {
+			errorPage.classList.remove('hidden');
+			errorPage.classList.add('flex');
+		}
+		return Promise.reject(error);
+	}
 }

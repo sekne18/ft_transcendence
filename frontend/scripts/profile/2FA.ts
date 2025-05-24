@@ -1,5 +1,5 @@
 import { languageService } from "../i18n";
-import { getElement, showToast } from "../utils";
+import { getElement, showToast, protectedFetch } from "../utils";
 
 export function init2FA() {
     const toggle2FA = document.getElementById('toggle-2fa') as HTMLInputElement;
@@ -18,7 +18,7 @@ export function init2FA() {
 
         if (toggle2FA.checked) {
             modal2FA.classList.remove('hidden');
-            fetch('/api/2fa/setup', {
+            protectedFetch('/api/2fa/setup', {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -41,7 +41,7 @@ export function init2FA() {
                 }
             });
         } else {
-            fetch('/api/user/update', {
+            protectedFetch('/api/user/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export function init2FA() {
         const code = codeInput.value.trim();
         if (code.length === 6 && /^[0-9]+$/.test(code)) {
             // Call api to verify the 2FA code
-            fetch('/api/2fa/confirm', {
+            protectedFetch('/api/2fa/confirm', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

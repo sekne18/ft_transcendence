@@ -9,6 +9,16 @@
 </head>
 
 <body class="dark text-foreground bg-background min-h-screen h-screen flex flex-col">
+  <div id="error-page" class="w-screen h-screen z-[100] hidden fixed top-0 left-0">
+    <!-- contains error page that has a fillable status code and message-->
+    <div class="h-full w-full">
+      <div
+        class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg text-center w-full h-full flex flex-col items-center justify-center">
+        <h1 id="error-code" class="text-4xl font-bold mb-4">404</h1>
+        <p id="error-message" class="text-gray-600 dark:text-gray-300">Page not found</p>
+      </div>
+    </div>
+  </div>
   <!-- 786px and up navbar -->
   <nav class="md:flex hidden items-center justify-between bg-[var(--navbar)] px-4 py-4 shadow-sm">
     <div class="flex items-center">
@@ -102,7 +112,7 @@
     <a href="#" id="logout-btn-mobile" class="block py-2 px-3 rounded text-red-400 hover:text-red-600"
       data-i18n="nav_logout"></a>
   </div>
-  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col items-end space-y-2">
+  <div id="toast-container" class="fixed top-4 right-4 z-[110] flex flex-col items-end space-y-2">
   </div>
   <main id="app" class="flex-grow flex p-4">
 
@@ -128,33 +138,6 @@
       <div id="chat-list" class="w-32 h-full overflow-y-auto border-r border-gray-600 p-2 bg-[#1E1E2A]">
         <div class="font-bold mb-2" data-i18n="chat_title">Chats</div>
         <ul id="chat-items" class="space-y-2">
-          <!-- 
-          <li class="flex items-center justify-between">
-            <div class="flex items-center space-x-1">
-              <a href="https://example.com/profile/alice" target="_blank" class="text-blue-600 hover:underline">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4.418 0-8 1.79-8 4v1h16v-1c0-2.21-3.582-4-8-4z" />
-                </svg>
-              </a>
-              <span class="text-sm">Alice</span>
-            </div>
-
-            <span id="badge-alice"
-              class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">2</span>
-          </li>
-
-          <li class="flex items-center justify-between">
-            <div class="flex items-center space-x-1">
-              <a href="https://example.com/profile/bob" target="_blank" class="text-blue-600 hover:underline">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4.418 0-8 1.79-8 4v1h16v-1c0-2.21-3.582-4-8-4z" />
-                </svg>
-              </a>
-              <span class="text-sm">Bob</span>
-            </div>
-            <span id="badge-bob" class="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">1</span>
-          </li>
-        -->
         </ul>
       </div>
 
@@ -163,21 +146,6 @@
 
         <!-- Message View -->
         <div id="message-container" class="flex-1 flex-col p-4 overflow-y-auto space-y-2">
-          <!--
-          <div class="flex flex-col max-w-[70%] justify-self-start text-left">
-            <span class="text-[10px] text-gray-400 mb-1">12 May 2025, 14:32</span>
-            <div class="text-sm bg-blue-100 rounded p-2">You: Hello!</div>
-          </div>
-
-          <div class="flex flex-col max-w-[70%] justify-self-end text-right self-end">
-            <span class="text-[10px] text-gray-400 mb-1">12 May 2025, 14:33</span>
-            <div class="text-sm bg-green-100 rounded p-2">Alice: Hi!</div>
-          </div>
-
-          <div class="text-sm bg-blue-100 rounded p-2 max-w-[70%] justify-self-start text-left">You: How are you?</div>
-
-          <div class="text-sm bg-green-100 rounded p-2 max-w-[70%] justify-self-end text-right">Alice: I'm great!</div>
-        -->
         </div>
 
         <!-- Input Bar (attached) -->
