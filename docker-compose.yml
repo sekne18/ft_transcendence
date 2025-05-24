@@ -8,6 +8,8 @@ services:
       - uploads:/app/public/uploads
     expose:
       - "3000"
+    env_file:
+      - .env
     networks:
       - app-network
     restart: unless-stopped
