@@ -18,7 +18,7 @@ export function createUser({ username, display_name, email, hash, avatarUrl, rol
 	}
 	const insertUser = db.prepare(`
     INSERT INTO users (username, display_name, email, password, avatar_url, role)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
 	if (!avatarUrl) {
 		avatarUrl = defaultAvatarPath;
