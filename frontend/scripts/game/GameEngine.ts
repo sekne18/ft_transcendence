@@ -47,6 +47,12 @@ export class GameEngine {
 		this.changeState(this.isTournament ? 'idle-tournament' : (this.isLobby ? 'idle-lobby' : 'idle'));
 	}
 
+	public stop(): void {
+		this.game.disconnect();
+		this.inputController.stop();
+		this.changeState('idle');
+	}
+
 	public matchmake(): void {
 		this.enemyDisconnected = false;
 		this.changeState('matchmaking');
