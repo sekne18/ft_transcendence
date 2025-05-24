@@ -68,8 +68,14 @@ export function init2FA() {
     });
 
     const closeModal = () => {
+        const codeInput = document.getElementById('2fa-code') as HTMLInputElement;
+        codeInput.value = '';
+        const errMsg = document.getElementById("error-modal-2fa-message");
+        if (errMsg) {
+            errMsg.innerText = '';
+        }
         modal2FA.classList.add('hidden');
-        ignoreToggleEvent = true;
+        // ignoreToggleEvent = true;
         toggle2FA.checked = false;
     };
 
@@ -89,10 +95,6 @@ export function init2FA() {
                 credentials: 'include',
                 body: JSON.stringify({ code }),
             }).then((res) => {
-                if (res.status === 401) {
-                    window.location.href = '/auth';
-                    return null;
-                }
                 return res.json();
             }).then((res) => {
                 if (res.success) {
@@ -101,8 +103,10 @@ export function init2FA() {
                     toggle2FA.checked = true;
                     modal2FA.classList.add('hidden');
                 } else {
-                    showToast(languageService.retrieveValue('toast_failed_2FA_enable'), '', 'error');
-                    closeModal();
+                    const errMsg = document.getElementById("error-modal-2fa-message");
+                    if (errMsg) {
+                        errMsg.innerText = res.message;
+                    }
                 }
             });
         } else {

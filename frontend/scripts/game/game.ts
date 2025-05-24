@@ -2,6 +2,8 @@ import { State } from "../state/State";
 import { networkConfig } from "../wsConfig";
 import { GameEngine } from "./GameEngine";
 import { ExtraParams, GameParams } from "./GameTypes";
+
+let gameEngine: GameEngine | null = null;
 /* 
     Run any logic from this function. 
     This function is called when a tab is pressed.
@@ -47,7 +49,12 @@ export function initGame(): void {
                 data: isTournament ? tournament : (isLobby ? lobby : null),
             }
 
-            const gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, extraParams);
+            if (gameEngine) {
+                gameEngine.stop();
+                gameEngine = null;
+            }
+
+            gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, extraParams);
             gameEngine.start();
         })
         .catch(error => {
@@ -56,3 +63,11 @@ export function initGame(): void {
         });
 }
 
+
+export function exitGame(): void {
+    if (gameEngine) {
+        gameEngine.stop();
+        gameEngine = null;
+    }
+    document.body.classList.remove('disable-scroll');
+}

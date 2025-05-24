@@ -123,7 +123,7 @@ function handleLogin(event: Event) {
         .then(data => {
             if (data.success) {
                 if (!data.twoFA) {
-                    const newPath = '/';
+                    const newPath = '/game';
                     history.pushState(null, '', newPath);
                     document.dispatchEvent(new Event('auth-ready'));
                     loadContent(newPath);
@@ -173,12 +173,19 @@ function set2FaValidationEvents() {
 
     if (backBtn && vertifyBtn) {
         backBtn.addEventListener("click", () => {
+            const twoFAData = getElement('twoFactorInput') as HTMLInputElement;
+            const errMsg = document.getElementById("error-2fa-message");
+            if (twoFAData && errMsg) {
+                twoFAData.value = '';
+                errMsg.innerText = '';
+            }
             // Clear the token when going back to the login form
             authState.clearTempToken();
 
             loginForm.classList.remove('hidden');
             tabsAuth.classList.remove('hidden');
             twoFAForm.classList.add('hidden');
+
         });
         vertifyBtn.addEventListener("click", () => {
             const twoFAData = getElement('twoFactorInput') as HTMLInputElement;
@@ -199,10 +206,6 @@ function set2FaValidationEvents() {
                 body: JSON.stringify({ code: twoFAData.value }),
             })
                 .then(res => {
-                    // if (res.status === 401) {
-                    //     window.location.href = '/auth';
-                    //     return null;
-                    // }
                     return res.json();
                 })
                 .then(data => {
@@ -215,7 +218,7 @@ function set2FaValidationEvents() {
                         document.dispatchEvent(new Event('auth-ready'));
                         loadContent(newPath);
                     } else {
-                        const errMsg = document.getElementById("error-login-message");
+                        const errMsg = document.getElementById("error-2fa-message");
                         if (errMsg) {
                             errMsg.innerText = data.message;
                         }

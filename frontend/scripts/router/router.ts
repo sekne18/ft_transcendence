@@ -1,21 +1,23 @@
 import { initAuth } from "../auth/auth";
 import { initFriends } from "../friends/friends";
-import { initGame } from "../game/game";
+import { initGame, exitGame } from "../game/game";
 import { languageService } from "../i18n";
 import { initLeaderboard } from "../leaderboard/leaderboard";
 import { initProfile } from "../profile/profile";
 import { initTournament } from "../tournament/tournament";
 
 // router.ts
-const routes: Record<string, { file: string; init?: () => void }> = {
-    '/': { file: 'pages/game.html', init: initGame },
-    '/game': { file: 'pages/game.html', init: initGame },
+const routes: Record<string, { file: string; init?: () => void, exit?: () => void }> = {
+    '/': { file: 'pages/game.html', init: initGame, exit: exitGame },
+    '/game': { file: 'pages/game.html', init: initGame, exit: exitGame },
     '/leaderboard': { file: 'pages/leaderboard.html', init: initLeaderboard },
     '/tournament': { file: 'pages/tournament.html', init: initTournament },
     '/auth': { file: 'pages/auth.html', init: initAuth },
     '/friends': { file: 'pages/friends.html', init: initFriends },
     '/profile': { file: 'pages/profile.html', init: initProfile }
 };
+
+let currRoute = '/';
 
 export async function initRouter() {
     let path = window.location.pathname;
@@ -64,6 +66,9 @@ export async function initRouter() {
 
 
 export async function loadContent(url: string, ignoreScripts: boolean = false) {
+    if (currRoute && routes[currRoute]?.exit) {
+        routes[currRoute].exit();
+    }
     const appElement = document.getElementById('app');
     if (appElement) {
         appElement.innerHTML = '<div class="loading">Loading...</div>';
@@ -72,6 +77,8 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
     if (url.startsWith('/uploads') || url.startsWith('/api')) {
         return;
     }
+
+    updateActiveLink(url);
 
     const staticRoute = routes[url];
     if (staticRoute) {

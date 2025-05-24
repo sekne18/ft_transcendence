@@ -46,7 +46,9 @@ export class GameInstance {
 	// }
 
 	private launchBall(): void {
-		this.state.ball_v.x = Math.random() * 2 - 1;
+		const isNegative = Math.random() < 0.5;
+		const magnitude = 0.5 + Math.random() * 0.5;
+		this.state.ball_v.x = isNegative ? -magnitude : magnitude;
 		this.state.ball_v.y = (Math.random() * 2 - 1) * 0.1;
 		let { x, y } = normalize(this.state.ball_v.x, this.state.ball_v.y);
 		this.state.ball_v.x = x * this.params.ball_minv;
@@ -192,7 +194,7 @@ export class GameInstance {
 		this.state.ball.x = hit.x + nx * separation;
 		this.state.ball.y = hit.y + ny * separation;
 
-
+		this.state.ball_v.x *= 1.02;
 		// Clamp velocity
 		let speed = Math.sqrt(this.state.ball_v.x ** 2 + this.state.ball_v.y ** 2);
 		if (speed < this.params.ball_minv) {
