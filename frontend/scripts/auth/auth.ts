@@ -123,7 +123,7 @@ function handleLogin(event: Event) {
         .then(data => {
             if (data.success) {
                 if (!data.twoFA) {
-                    const newPath = '/';
+                    const newPath = '/game';
                     history.pushState(null, '', newPath);
                     document.dispatchEvent(new Event('auth-ready'));
                     loadContent(newPath);

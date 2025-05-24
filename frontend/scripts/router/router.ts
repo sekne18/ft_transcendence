@@ -37,8 +37,6 @@ export async function initRouter() {
 
     loadContent(path);
 
-    console.log('Router initialized', window.location.pathname);
-
     document.addEventListener('click', async (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (target.classList.contains('nav-link')) {
@@ -79,6 +77,8 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
     if (url.startsWith('/uploads') || url.startsWith('/api')) {
         return;
     }
+
+    updateActiveLink(url);
 
     const staticRoute = routes[url];
     if (staticRoute) {
