@@ -25,7 +25,7 @@ export function initializeDatabase() {
 				last_login DATETIME DEFAULT CURRENT_TIMESTAMP,
 				totp_secret TEXT,
 				avatar_url TEXT DEFAULT '',
-				role TEXT DEFAULT 'user', -- 'user', 'admin', 'bot'
+				role TEXT DEFAULT 'user', -- 'user', 'admin', 'bot', 'google-user'
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 			);
 		`).run();
