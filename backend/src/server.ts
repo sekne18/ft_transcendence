@@ -45,7 +45,7 @@ const tournamentManager = new TournamentManager(gameStore);
 const chatManager = new ChatManager(matchmaker);
 
 const fastify: FastifyInstance = Fastify({
-	logger: false
+	logger: true
 });
 
 dotenv.config();

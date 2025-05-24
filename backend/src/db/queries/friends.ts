@@ -23,9 +23,7 @@ export function getAllUsers(userId: number, name: string, limit: number = 10): F
     WHERE u.id != ?
       AND f.status IS NULL
       AND u.username LIKE ?
-      AND u.username LIKE ?
       AND u.username != 'ai_bot'
-    ORDER BY u.username ASC
     ORDER BY u.username ASC
     LIMIT ?
   `).all(userId, userId, userId, name + '%', limit) as {
@@ -64,8 +62,6 @@ export function getAllFriends(userId: number, name: string, limit: number = 10):
       AND f.status = 'accepted'
       AND u.username LIKE ?
     ORDER BY u.username ASC
-      AND u.username LIKE ?
-    ORDER BY u.username ASC
     LIMIT ?
   `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
@@ -99,8 +95,6 @@ export function getBlockedFriends(userId: number, name: string, limit: number = 
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'blocked'
-        AND u.username LIKE ?
-      ORDER BY u.username ASC
         AND u.username LIKE ?
       ORDER BY u.username ASC
       LIMIT ?
@@ -184,8 +178,6 @@ export function getOnlineFriends(userId: number, name: string, limit: number = 1
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'accepted'
         AND (u.status = 'online' OR u.status = 'in-game' OR u.status = 'in-tournament')
-        AND u.username LIKE ?
-      ORDER BY u.username ASC
         AND u.username LIKE ?
       ORDER BY u.username ASC
       LIMIT ?
