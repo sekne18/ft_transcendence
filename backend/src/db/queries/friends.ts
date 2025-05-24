@@ -132,7 +132,7 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
       FROM friends f
       JOIN users u ON u.id = CASE
         WHEN f.user1_id = ? THEN f.user2_id
-        WHEN f.user2_id = ? THEN f.user1_id
+        ELSE f.user1_id
       END
       WHERE (f.user1_id = ? OR f.user2_id = ?)
         AND f.status = 'pending'
