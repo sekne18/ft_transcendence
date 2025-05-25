@@ -1,6 +1,7 @@
 import { LeaderboardPlayer, renderLeaderboard } from "./userList";
 import { leaderboardEntry } from "./types";
 import { languageService } from "../i18n";
+import { protectedFetch } from "../utils";
 
 /* 
     Run any logic from this function. 
@@ -11,7 +12,7 @@ export function initLeaderboard(): void {
 }
 
 function getData(offset = 0): void {
-    fetch(`/api/leaderboard?limit=10&offset=${offset}`, {
+    protectedFetch(`/api/leaderboard?limit=10&offset=${offset}`, {
         method: 'GET',
         credentials: 'include',
     }).then((response) => {

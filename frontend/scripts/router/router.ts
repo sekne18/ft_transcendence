@@ -4,7 +4,9 @@ import { initGame, exitGame } from "../game/game";
 import { languageService } from "../i18n";
 import { initLeaderboard } from "../leaderboard/leaderboard";
 import { initProfile } from "../profile/profile";
+import { State } from "../state/State";
 import { initTournament } from "../tournament/tournament";
+import { protectedFetch } from "../utils";
 
 // router.ts
 const routes: Record<string, { file: string; init?: () => void, exit?: () => void }> = {
@@ -37,26 +39,41 @@ export async function initRouter() {
 
     loadContent(path);
 
-    document.addEventListener('click', async (e: MouseEvent) => {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains('nav-link')) {
-            e.preventDefault();
-            const url = target.getAttribute('href');
-            if (!url) return;
+    const state = {
+        click: async (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('nav-link')) {
+                e.preventDefault();
+                const url = target.getAttribute('href');
+                if (!url) return;
 
-            const isProtected = protectedRoutes.includes(url);
-            if (isProtected && !(await checkAuth())) {
-                history.pushState(null, '', '/auth');
-                loadContent('/auth');
-                updateActiveLink('/auth');
-                return;
+                const isProtected = protectedRoutes.some((route) => url.includes(route)) || url === '/';
+                if (isProtected && !(await checkAuth())) {
+                    history.pushState(null, '', '/auth');
+                    loadContent('/auth');
+                    updateActiveLink('/auth');
+                    return;
+                }
+                history.pushState(null, '', url);
+                document.dispatchEvent(new Event('auth-ready'));
+                loadContent(url);
+                updateActiveLink(url);
+            } else {
+                let path = window.location.pathname;
+                const isProtected = protectedRoutes.some((route) => path.includes(route)) || path === '/';
+                if (isProtected && !(await checkAuth())) {
+                    e.preventDefault();
+                    history.pushState(null, '', '/auth');
+                    loadContent('/auth');
+                    updateActiveLink('/auth');
+                    return;
+                }
             }
-            history.pushState(null, '', url);
-            document.dispatchEvent(new Event('auth-ready'));
-            loadContent(url);
-            updateActiveLink(url);
         }
-    });
+    }
+    State.setState('router', state);
+
+    document.addEventListener('click', state.click);
 
     window.addEventListener('popstate', () => {
         loadContent(window.location.pathname);
@@ -82,7 +99,7 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
 
     const staticRoute = routes[url];
     if (staticRoute) {
-        fetch(routes[url].file)
+        protectedFetch(routes[url].file)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 return response.text();
@@ -107,7 +124,7 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
             });
     } else if (url.startsWith('/profile/')) {
         history.pushState(null, '', '/profile');
-        fetch(routes['/profile'].file)
+        protectedFetch(routes['/profile'].file)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 return response.text();
@@ -129,7 +146,7 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
 
 export async function checkAuth(): Promise<boolean> {
     try {
-        const res = await fetch('/api/auth/status',
+        const res = await protectedFetch('/api/auth/status',
             {
                 method: 'GET',
                 credentials: 'include'
@@ -139,7 +156,7 @@ export async function checkAuth(): Promise<boolean> {
         const data = await res.json();
         return data.success;
     } catch (err) {
-        const refreshRes = await fetch('/api/token/refresh', {
+        const refreshRes = await protectedFetch('/api/token/refresh', {
             method: 'POST',
             credentials: 'include'
         });
@@ -149,7 +166,7 @@ export async function checkAuth(): Promise<boolean> {
             return false;
         }
 
-        const res = await fetch('/api/auth/status', { credentials: 'include' });
+        const res = await protectedFetch('/api/auth/status', { credentials: 'include' });
         return res.ok;
     }
 }

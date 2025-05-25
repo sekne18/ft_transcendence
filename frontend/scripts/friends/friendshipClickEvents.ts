@@ -1,7 +1,7 @@
 import { chatManager } from "../chat/chat";
 import { languageService } from "../i18n";
 import { loadContent } from "../router/router";
-import { showToast } from "../utils";
+import { showToast, protectedFetch } from "../utils";
 
 export function onProfileClick() {
     const buttons = document.querySelectorAll<HTMLButtonElement>('.user-profile-btn');
@@ -23,7 +23,7 @@ export function onRemoveFriendClick() {
         button.addEventListener('click', () => {
             const userId = button.dataset.userId;
             if (userId) {
-                fetch(`/api/friends/decline-request`, { // API name might confuse you, but behaves the same as remove friend
+                protectedFetch(`/api/friends/decline-request`, { // API name might confuse you, but behaves the same as remove friend
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -50,7 +50,7 @@ export function onAddFriendClick() {
         button.addEventListener('click', () => {
             const userId = button.dataset.userId;
             if (userId) {
-                fetch(`/api/friends/send-friend-request`, {
+                protectedFetch(`/api/friends/send-friend-request`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -77,7 +77,7 @@ export function onAcceptFriendRequestClick() {
         button.addEventListener('click', () => {
             const userId = button.dataset.userId;
             if (userId) {
-                fetch(`/api/friends/accept-request`, {
+                protectedFetch(`/api/friends/accept-request`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -104,7 +104,7 @@ export function onBlockFriendClick() {
         button.addEventListener('click', () => {
             const userId = button.dataset.userId;
             if (userId) {
-                fetch(`/api/friends/block`, {
+                protectedFetch(`/api/friends/block`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -132,7 +132,7 @@ export function onUnblockFriendClick() {
         button.addEventListener('click', () => {
             const userId = button.dataset.userId;
             if (userId) {
-                fetch(`/api/friends/unblock`, {
+                protectedFetch(`/api/friends/unblock`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {

@@ -60,8 +60,8 @@ set up .env:
 GOOGLE_CLIENT_ID=${your client id}
 GOOGLE_CLIENT_SECRET=${your client secret}
 GOOGLE_REDIRECT_URI=/api/login/google/callback
-FRONTEND_URL=https://${server ip}
-BACKEND_URL=https://${server ip}
+FRONTEND_URL=https://${server ip (host)}:8443
+BACKEND_URL=https://${server ip (host)}:8443
 ```
 
 note that google oauth might not work depending on whether you're using a domain name or not

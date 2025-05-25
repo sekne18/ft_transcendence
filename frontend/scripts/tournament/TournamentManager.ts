@@ -3,7 +3,7 @@ import { languageService } from "../i18n";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
 import { State } from "../state/State";
-import { showToast } from "../utils";
+import { showToast, protectedFetch } from "../utils";
 import { networkConfig } from "../wsConfig";
 import { Bracket, RoundMatch, Tournament, TournamentMsgIn, TournamentMsgOut, TournamentView } from "./types";
 
@@ -86,7 +86,7 @@ export class TournamentManager {
 	private handleJoined(data: { tournamentId: number, playerId: number }): void {
 		const tournament = this.tournaments.get(data.tournamentId);
 		if (tournament) {
-			fetch(`/api/user/profile/${data.playerId}`, {
+			protectedFetch(`/api/user/profile/${data.playerId}`, {
 				method: 'GET',
 				credentials: 'include',
 			})
@@ -419,7 +419,7 @@ export class TournamentManager {
 		const player2: Profile = tournament.players.find(p => p.id === match.playerIds.p2)!;
 		let matchDetails = null;
 		if (match.matchId) {
-			const res = await fetch(`/api/match/${match.matchId}`, {
+			const res = await protectedFetch(`/api/match/${match.matchId}`, {
 				method: 'GET',
 				credentials: 'include'
 
@@ -585,7 +585,7 @@ export class TournamentManager {
 
 	private addFinishedTournaments(): void {
 		const before = this.lastTournamentTime ? this.lastTournamentTime : Date.now();
-		fetch(`/api/tournament/finished?limit=5&before=${before}`, {
+		protectedFetch(`/api/tournament/finished?limit=5&before=${before}`, {
 			method: 'GET',
 			credentials: 'include',
 		})
@@ -612,7 +612,7 @@ export class TournamentManager {
 						players: []
 					};
 					for (const playerId of tournamentView.players) {
-						const res = await fetch(`/api/user/profile/${playerId}`, {
+						const res = await protectedFetch(`/api/user/profile/${playerId}`, {
 							method: 'GET',
 							credentials: 'include',
 						});
@@ -665,7 +665,7 @@ export class TournamentManager {
 	}
 
 	private fetchTournamentList(): void {
-		fetch('/api/tournament', {
+		protectedFetch('/api/tournament', {
 			method: 'GET',
 			credentials: 'include',
 		})
@@ -691,7 +691,7 @@ export class TournamentManager {
 					const tournament = this.tournaments.get(tournamentView.id);
 					if (tournament) {
 						for (const playerId of tournamentView.players) {
-							const res = await fetch(`/api/user/profile/${playerId}`, {
+							const res = await protectedFetch(`/api/user/profile/${playerId}`, {
 								method: 'GET',
 								credentials: 'include',
 							});

@@ -1,7 +1,7 @@
 import { networkConfig } from "../wsConfig";
 import { ChatMessage } from "./ChatTypes";
 import { getStatusColor } from "../friends/friendsList";
-import { showToast } from "../utils";
+import { showToast, protectedFetch } from "../utils";
 import { loadContent } from "../router/router";
 import { State } from "../state/State";
 import { languageService } from "../i18n";
@@ -112,7 +112,7 @@ class ChatManager {
         this.chatInput = document.getElementById("chat-input") as HTMLInputElement;
         this.chatToggle = document.getElementById("chat-toggle") as HTMLButtonElement;
         this.chatBadge = document.getElementById("chat-badge") as HTMLSpanElement;
-        const response = await fetch("/api/chat");
+        const response = await protectedFetch("/api/chat");
         if (response.ok) {
             this.chatList.innerHTML = "";
             const chats = (await response.json() as any).chats;
@@ -237,7 +237,7 @@ class ChatManager {
 
     private async fetchMessages(chatId: number, before?: number): Promise<ChatMessage[] | null> {
         const date = before ? before : Date.now();
-        const response = await fetch(`/api/chat/${chatId}/messages?limit=10&before=${date}`);
+        const response = await protectedFetch(`/api/chat/${chatId}/messages?limit=10&before=${date}`);
         if (response.ok) {
             const data = await response.json();
             return data.messages.map((message: any) => ({
@@ -357,7 +357,7 @@ class ChatManager {
 
 
     private async fetchUnreadCount(chatId: number): Promise<number> {
-        const response = await fetch(`/api/chat/${chatId}/unread-count`);
+        const response = await protectedFetch(`/api/chat/${chatId}/unread-count`);
         if (response.ok) {
             const data = await response.json();
             return data.count;
@@ -401,7 +401,7 @@ class ChatManager {
     }
 
     private markMessagesAsRead(chatId: number): void {
-        fetch(`/api/chat/${chatId}/mark-as-read`, {
+        protectedFetch(`/api/chat/${chatId}/mark-as-read`, {
             method: "POST"
         }).then((response) => {
             if (!response.ok) {
@@ -428,13 +428,11 @@ class ChatManager {
         const chatItems = this.chatList.querySelectorAll("li");
         chatItems.forEach((item) => {
             const userId = parseInt(item.dataset.userId || "0");
-            fetch(`/api/user/${userId}/status`).then((response) => {
+            protectedFetch(`/api/user/${userId}/status`).then((response) => {
                 if (response.ok) {
                     response.json().then((data) => {
                         const status = data.status;
-                        console.log("Status:", status, "for user ID:", userId);
                         const chatAvatar = item.querySelector("img");
-                        console.log("Chat Avatar:", chatAvatar);
                         if (chatAvatar) {
                             const [statusColor, statusText] = getStatusColor(status);
                             chatAvatar.classList.remove(

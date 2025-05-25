@@ -1,7 +1,7 @@
 import { languageService } from "../i18n";
 import { Profile } from "../profile/Types";
 import { loadContent } from "../router/router";
-import { getElement } from "../utils";
+import { getElement, protectedFetch } from "../utils";
 
 export class UIManager {
 	private overlay: HTMLDivElement;
@@ -149,7 +149,7 @@ export class UIManager {
 			uri = `/api/user/profile/${id}`;
 		}
 		while (retries < 3) {
-			const res = await fetch(uri, {
+			const res = await protectedFetch(uri, {
 				method: 'GET',
 				credentials: 'include',
 			});

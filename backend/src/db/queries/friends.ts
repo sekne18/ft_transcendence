@@ -156,7 +156,7 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
       status: row.status,
       avatarUrl: row.avatarUrl,
     };
-    if(row.sender_id === userId)
+    if (row.sender_id === userId)
       res.request = 'out';
     else {
       res.request = 'in';

@@ -2,6 +2,7 @@ import { State } from "../state/State";
 import { networkConfig } from "../wsConfig";
 import { GameEngine } from "./GameEngine";
 import { ExtraParams, GameParams } from "./GameTypes";
+import { protectedFetch } from '../utils';
 
 let gameEngine: GameEngine | null = null;
 /* 
@@ -12,7 +13,7 @@ export function initGame(): void {
     const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
     document.body.classList.add('disable-scroll');
 
-    fetch('/api/game/params', {
+    protectedFetch('/api/game/params', {
         method: 'GET',
         credentials: 'include',
     })

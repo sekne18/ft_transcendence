@@ -1,4 +1,4 @@
-import { getElement } from "../utils";
+import { getElement, protectedFetch } from "../utils";
 
 export function setEventHandlers() {
     setupLangDropdown();
@@ -32,7 +32,7 @@ function setProfileEvents() {
 
     logoutBtn?.addEventListener("click", () => {
         // Your logout logic here
-        fetch("/api/logout", {
+        protectedFetch("/api/logout", {
             method: "POST",
             credentials: "include"
         }).then(() => {

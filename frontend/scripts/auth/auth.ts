@@ -1,5 +1,5 @@
 import { loadContent } from "../router/router";
-import { getDataFromForm, getElement } from "../utils";
+import { getDataFromForm, getElement, protectedFetch } from "../utils";
 import { networkConfig } from "../wsConfig";
 
 /* 
@@ -109,7 +109,7 @@ function handleLogin(event: Event) {
     if (!loginData.email || !loginData.password)
         return;
     // For example, using fetch:
-    fetch('/api/login', {
+    protectedFetch('/api/login', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -196,7 +196,7 @@ function set2FaValidationEvents() {
             const tempToken = authState.getTempToken();
 
             // Call to the backend to verify the 2FA code
-            fetch('/api/2fa/verify', {
+            protectedFetch('/api/2fa/verify', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -273,7 +273,7 @@ function handleRegister(event: Event) {
     }
 
     // Call to the backend to register the user 
-    fetch('/api/register', {
+    protectedFetch('/api/register', {
         method: 'POST',
         credentials: 'include',
         headers: {
