@@ -163,6 +163,7 @@ fastify.get('/api/login/google/callback', async (req, reply) => {
 				username: googleUser.name,
 				display_name: googleUser.name,
 				avatarUrl: googleUser.picture,
+				role: 'google-user' // Mark as Google user
 			});
 		}
 

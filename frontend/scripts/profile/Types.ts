@@ -25,6 +25,7 @@ export interface Profile {
     has2fa: boolean;
     longest_streak: number;
     avg_score: number;
+    role: 'user' | 'google-user';
 }
 
 export interface EditForm {

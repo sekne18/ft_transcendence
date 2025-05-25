@@ -3,12 +3,13 @@ import { defaultAvatarPath } from "../../Config.js";
 import db from "../connection.js";
 
 
-export function createUser({ username, display_name, email, hash, avatarUrl }: {
+export function createUser({ username, display_name, email, hash, avatarUrl, role }: {
 	username: string;
 	display_name: string;
 	email: string;
 	hash: string;
 	avatarUrl?: string;
+	role?: 'user' | 'google-user';
 }): number {
 	// Check if the username or email already exists and return null if it does
 	const existingUser = getUserByEmail(email) || getUserByUsername(username) as User;
@@ -16,13 +17,16 @@ export function createUser({ username, display_name, email, hash, avatarUrl }: {
 		return existingUser.id;
 	}
 	const insertUser = db.prepare(`
-    INSERT INTO users (username, display_name, email, password, avatar_url)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO users (username, display_name, email, password, avatar_url, role)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
 	if (!avatarUrl) {
 		avatarUrl = defaultAvatarPath;
 	}
-	const result = insertUser.run(username, display_name, email, hash, avatarUrl);
+	if (!role) {
+		role = 'user';
+	}
+	const result = insertUser.run(username, display_name, email, hash, avatarUrl, role);
 	const userId = result.lastInsertRowid as number;
 
 	const insertStats = db.prepare(`
@@ -43,6 +47,7 @@ export function getUserProfileById(id: number) {
       users.email,
       users.has2fa,
       users.avatar_url,
+	  users.role,
       stats.games_played,
       stats.wins,
       stats.losses,

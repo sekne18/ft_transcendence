@@ -328,6 +328,14 @@ function renderUserProfile(profile: Profile | undefined = undefined) {
 }
 
 function fillProfileData(profile: Profile) {
+  // set 2fa
+  const twoFaContainer = getElement('two-fa-container') as HTMLDivElement;
+  if (profile.role !== 'google-user') {
+    twoFaContainer.classList.remove('opacity-50', 'pointer-events-none');
+  } else {
+    twoFaContainer.classList.add('opacity-50', 'pointer-events-none');
+  }
+
   // Set user details
   (getElement('user-profile-avatar') as HTMLImageElement).src = profile.avatar_url;
   getElement('display_name').textContent = profile.display_name;

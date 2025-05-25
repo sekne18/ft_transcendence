@@ -124,7 +124,11 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
         f.status AS state,
         f.sender_id,
         u.status, 
-        u.avatar_url AS avatarUrl
+        u.avatar_url AS avatarUrl,
+        CASE
+          WHEN f.sender_id = ? THEN 'out'
+          ELSE 'in'
+        END AS request
       FROM friends f
       JOIN users u ON u.id = CASE
         WHEN f.user1_id = ? THEN f.user2_id
