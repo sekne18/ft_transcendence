@@ -162,7 +162,7 @@ export async function checkAuth(): Promise<boolean> {
         });
 
         if (!refreshRes.ok) {
-            console.error('Failed to refresh token:', refreshRes.statusText);
+            //console.error('Failed to refresh token:', refreshRes.statusText);
             return false;
         }
 
@@ -172,6 +172,9 @@ export async function checkAuth(): Promise<boolean> {
 }
 
 function updateActiveLink(url: string) {
+    if (url === '/') {
+        url = '/game'; // Default to game page for root URL
+    }
     const mobileMenu = document.getElementById('mobile-menu') as HTMLDivElement;
 
     mobileMenu?.classList.toggle("hidden");

@@ -27,7 +27,7 @@ export class GameSession {
 				this.onDisconnect(player);
 			});
 			player.socket.on("error", (err) => {
-				console.error("Socket error:", err);
+				//console.error("Socket error:", err);
 				this.onDisconnect(player);
 			});
 			player.socket.on("message", (msg: string) => {
@@ -75,7 +75,7 @@ export class GameSession {
 			this.spectators = this.spectators.filter((s) => s.id !== spectre.id);
 		});
 		spectre.socket.on("error", (err) => {
-			console.error("Socket error:", err);
+			//console.error("Socket error:", err);
 			this.spectators = this.spectators.filter((s) => s.id !== spectre.id);
 		});
 		spectre.socket.send(JSON.stringify({ type: "game_state", data: this.game.getState(), timestamp: Date.now() }));

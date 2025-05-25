@@ -54,12 +54,11 @@ export function initGame(): void {
                 gameEngine.stop();
                 gameEngine = null;
             }
-
             gameEngine = new GameEngine(canvas, gameParams, renderDetails, wsParams, extraParams);
             gameEngine.start();
         })
         .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
+            //console.error('There was a problem with the fetch operation:', error);
             // Handle error (e.g., show an error message to the user)
         });
 }

@@ -83,6 +83,7 @@ export const translations: Record<string, LanguageMap> = {
     confirm_pass_placeholder: 'Confirm new password',
     current_pass_placeholder: 'Enter current password',
     new_password_placeholder: 'Enter new password',
+    toast_profile_update_failed: 'Failed to update profile.',
 
     // 2FA modal
     twoFA_title: 'Set Up Two-Factor Authentication',
@@ -90,6 +91,7 @@ export const translations: Record<string, LanguageMap> = {
     twoFA_verif_code: 'Enter the verification code from your authenticator app:',
     twoFA_enter_code: 'Enter this code manually in your authenticator app:',
     twoFA_enable_btn: 'Verify & Enable',
+    password_too_short: 'Password must be at least 10 characters long.',
 
     // Chat items
     chat_title: 'Chat',
@@ -238,6 +240,7 @@ export const translations: Record<string, LanguageMap> = {
     confirm_pass_placeholder: 'Bevestig nieuw wachtwoord',
     current_pass_placeholder: 'Voer huidig wachtwoord in',
     new_password_placeholder: 'Voer nieuw wachtwoord in',
+    toast_profile_update_failed: 'Profiel bijwerken mislukt.',
 
 
     // 2FA modal
@@ -246,6 +249,7 @@ export const translations: Record<string, LanguageMap> = {
     twoFA_verif_code: 'Voer de verificatiecode in van je authenticator-app:',
     twoFA_enter_code: 'Voer deze code handmatig in je authenticator-app in:',
     twoFA_enable_btn: 'Verifiëren & Inschakelen',
+    password_too_short: 'Wachtwoord moet minimaal 10 tekens lang zijn.',
 
     // Tab items
     tab_global: 'Wereldwijd',
@@ -393,6 +397,7 @@ export const translations: Record<string, LanguageMap> = {
     confirm_pass_placeholder: 'Potrdi novo geslo',
     current_pass_placeholder: 'Vnesi trenutno geslo',
     new_password_placeholder: 'Vnesi novo geslo',
+    toast_profile_update_failed: 'Posodobitev profila ni uspela.',
 
     // 2FA modal
     twoFA_title: 'Nastavi dvofaktorsko avtentikacijo',
@@ -400,6 +405,7 @@ export const translations: Record<string, LanguageMap> = {
     twoFA_verif_code: 'Vnesi kodo za preverjanje iz svoje aplikacije za avtentikacijo:',
     twoFA_enter_code: 'Vnesi to kodo ročno v svojo aplikacijo za avtentikacijo:',
     twoFA_enable_btn: 'Preveri in omogoči',
+    password_too_short: 'Geslo mora biti dolgo vsaj 10 znakov.',
 
     // Tab items
     tab_global: 'Globalno',
@@ -545,6 +551,7 @@ export const translations: Record<string, LanguageMap> = {
     confirm_pass_placeholder: 'Підтвердьте новий пароль',
     current_pass_placeholder: 'Введіть поточний пароль',
     new_password_placeholder: 'Введіть новий пароль',
+    toast_profile_update_failed: 'Не вдалося оновити профіль.',
 
     // 2FA modal
     twoFA_title: 'Налаштуйте двофакторну аутентифікацію',
@@ -552,6 +559,7 @@ export const translations: Record<string, LanguageMap> = {
     twoFA_verif_code: 'Введіть код підтвердження з програми аутентифікації:',
     twoFA_enter_code: 'Введіть цей код вручну у своїй програмі аутентифікації:',
     twoFA_enable_btn: 'Перевірити та активувати',
+    password_too_short: 'Пароль має бути не менше 10 символів.',
 
     // Tab items
     tab_global: 'Глобальний',

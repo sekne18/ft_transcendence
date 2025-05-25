@@ -1,5 +1,5 @@
 import { GameConnection } from './GameConnection';
-import { GameParams, RenderDetails, GameStatus, WsParams, TournamentParams, ExtraParams } from './GameTypes';
+import { GameParams, RenderDetails, GameStatus, WsParams, ExtraParams } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';

@@ -41,13 +41,12 @@ export function init2FA() {
                 }
             });
         } else {
+            const formData = new FormData();
+            formData.append('twoFA', 'false');
             protectedFetch('/api/user/update', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ twoFA: false }),
                 credentials: 'include',
+                body: formData,
             }).then((res) => {
                 if (res.status === 401) {
                     window.location.href = '/auth';

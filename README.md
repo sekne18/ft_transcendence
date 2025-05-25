@@ -68,4 +68,4 @@ note that google oauth might not work depending on whether you're using a domain
 (you also have to add the BACKEND_URL / domain + GOOGLE_REDIRECT_URI to the valid redirects in google console)
 
 
-Now you are ready to go! browse to ``https://localhost:8443/``
+Now you are ready to go! browse to ``https://${server ip (host)}:8443/``
