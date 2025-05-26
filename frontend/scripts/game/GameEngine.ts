@@ -209,6 +209,7 @@ export class GameEngine {
 						gameState.left_score > gameState.right_score :
 						gameState.right_score > gameState.left_score
 					));
+				this.UIManager.toggleOverlayVisibility('visible');
 				setTimeout(() => {
 					this.changeState('idle');
 				}, 2000);

@@ -25,8 +25,8 @@ export const translations: Record<string, LanguageMap> = {
     game_go: 'Go!',
     game_waiting: 'Waiting for opponent...',
     opponent_found: 'Opponent Found',
-    winner: 'winner',
-    losser: 'loser',
+    winner: 'You won!',
+    loser: 'You lost!',
     game_lobby_wait: 'Waiting for your match to begin...',
     game_scored: ' Scored!',
 
@@ -174,8 +174,8 @@ export const translations: Record<string, LanguageMap> = {
     game_set: 'Set',
     game_go: 'Ga!',
     game_waiting: 'Wachten op tegenstander...',
-    winner: 'winnaar',
-    losser: 'verliezer',
+    winner: 'Je hebt gewonnen!',
+    loser: 'Je hebt verloren!',
     game_lobby_wait: 'Wachten tot je wedstrijd begint...',
     game_scored: ' Gescoord!',
 
@@ -330,8 +330,8 @@ export const translations: Record<string, LanguageMap> = {
     game_set: 'Nastavi',
     game_go: 'Pojdi!', 
     game_waiting: 'Čakanje na nasprotnika...',
-    winner: 'zmagovalec',
-    losser: 'poraženec',
+    winner: 'Zmagal si!',
+    loser: 'Izgubil si!',
     game_lobby_wait: 'Čakanje, da se začne vaša tekma...',
     game_scored: ' Zadel!',
 
@@ -486,8 +486,8 @@ export const translations: Record<string, LanguageMap> = {
     game_set: 'Встановити',
     game_go: 'Почати!',
     game_waiting: 'Очікування суперника...',
-    winner: 'переможець',
-    losser: 'програвший',
+    winner: 'Ви виграли!',
+    loser: 'Ви програли!',
     game_lobby_wait: 'Очікування початку вашої гри...',
     game_scored: ' Забито!',
 

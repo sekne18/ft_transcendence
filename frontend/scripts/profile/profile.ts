@@ -331,10 +331,13 @@ function renderUserProfile(profile: Profile | undefined = undefined) {
 function fillProfileData(profile: Profile) {
 	// set 2fa
 	const twoFaContainer = getElement('two-fa-container') as HTMLDivElement;
+	const passwordContainer = getElement('password-container') as HTMLDivElement;
 	if (profile.role !== 'google-user') {
 		twoFaContainer.classList.remove('opacity-50', 'pointer-events-none');
+		passwordContainer.classList.remove('opacity-50', 'pointer-events-none');
 	} else {
 		twoFaContainer.classList.add('opacity-50', 'pointer-events-none');
+		passwordContainer.classList.add('opacity-50', 'pointer-events-none');
 	}
 
 	// Set user details
@@ -500,6 +503,7 @@ function onEditProfileSubmit(e: Event) {
 				}
 			}
 			document.getElementById("edit-profile-modal")?.classList.add('hidden');
+			resetEditProfileForm();
 		}).catch((error) => {
 			//revert to old avatar if the update fails
 			const avatarImg = getElement('avatar-input') as HTMLImageElement;
@@ -509,6 +513,7 @@ function onEditProfileSubmit(e: Event) {
 			}
 			showToast(languageService.retrieveValue('toast_profile_update_failed'), '', 'error');
 			document.getElementById("edit-profile-modal")?.classList.add('hidden');
+			resetEditProfileForm();
 		});
 
 	// protectedFetch(avatarUrl)
