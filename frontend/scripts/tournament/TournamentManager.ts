@@ -35,7 +35,7 @@ export class TournamentManager {
 			closeBtn.addEventListener('click', () => {
 				const tournamentId = State.getState("tournament")?.targetId;
 				if (!tournamentId) {
-					console.error('Tournament ID not found');
+					//console.error('Tournament ID not found');
 					return;
 				}
 				this.toggleSpectate(tournamentId);
@@ -77,7 +77,7 @@ export class TournamentManager {
 			id: null,
 			socket: this.socket,
 			watch: false,
-			joined: false,
+			joined: state ? state.joined : false,
 		});
 		this.user = user; //TODO: if user is allowed to edit their profile during tournaments, this should be fetched every time
 		this.fetchTournamentList();
@@ -102,12 +102,12 @@ export class TournamentManager {
 					this.renderTournaments();
 				})
 				.catch(error => {
-					console.error('There was a problem with the fetch operation:', error);
+					//console.error('There was a problem with the fetch operation:', error);
 					showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch player data', 'error');
 				});
 		}
 		else {
-			console.error('Tournament not found:', data.tournamentId);
+			//console.error('Tournament not found:', data.tournamentId);
 		}
 	}
 
@@ -118,7 +118,7 @@ export class TournamentManager {
 			this.renderTournaments();
 		}
 		else {
-			console.error('Tournament not found:', data.tournamentId);
+			//console.error('Tournament not found:', data.tournamentId);
 		}
 	}
 
@@ -142,7 +142,7 @@ export class TournamentManager {
 			this.renderTournaments();
 		}
 		else {
-			console.error('Tournament not found:', data.tournamentId);
+			//console.error('Tournament not found:', data.tournamentId);
 		}
 	}
 
@@ -152,7 +152,7 @@ export class TournamentManager {
 			if (data.p1 === this.user.id || data.p2 === this.user.id) {
 				const state = State.getState("tournament");
 				if (!state) {
-					console.error('Tournament state not found');
+					//console.error('Tournament state not found');
 					showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 					return;
 				}
@@ -169,7 +169,7 @@ export class TournamentManager {
 					showToast(languageService.retrieveValue('toast_match_setup'), `Match setup between ${player1.display_name} and ${player2.display_name}`, 'info');
 				}
 				else {
-					console.error('Player not found:', data.p1, data.p2);
+					//console.error('Player not found:', data.p1, data.p2);
 				}
 				this.renderTournaments();
 			}
@@ -267,12 +267,12 @@ export class TournamentManager {
 	private joinTournament(): void {
 		const state = State.getState("tournament");
 		if (!state) {
-			console.error('Tournament state not found');
+			//console.error('Tournament state not found');
 			showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 			return;
 		}
 		else if (!state.targetId) {
-			console.error('Target ID not found');
+			//console.error('Target ID not found');
 			showToast(languageService.retrieveValue('toast_error'), 'Target ID not found', 'error');
 			return;
 		}
@@ -289,7 +289,7 @@ export class TournamentManager {
 	private leaveTournament(tournament: Tournament): void {
 		const state = State.getState("tournament");
 		if (!state) {
-			console.error('Tournament state not found');
+			//console.error('Tournament state not found');
 			showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 			return;
 		}
@@ -333,7 +333,7 @@ export class TournamentManager {
 			joinButton.addEventListener('click', () => {
 				const state = State.getState("tournament");
 				if (!state) {
-					console.error('Tournament state not found');
+					//console.error('Tournament state not found');
 					showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 					return;
 				}
@@ -389,7 +389,7 @@ export class TournamentManager {
 	private toggleSpectate(tournamentId: number): void {
 		const state = State.getState("tournament");
 		if (!state) {
-			console.error('Tournament state not found');
+			//console.error('Tournament state not found');
 			showToast(languageService.retrieveValue('toast_error'), 'Tournament state not found', 'error');
 			return;
 		}
@@ -425,7 +425,7 @@ export class TournamentManager {
 
 			});
 			if (!res.ok) {
-				console.error('Failed to fetch match details:', res.statusText);
+				//console.error('Failed to fetch match details:', res.statusText);
 				const errorDiv = document.createElement('div');
 				errorDiv.className = 'text-gray-500';
 				errorDiv.textContent = 'Match details not available';
@@ -433,7 +433,7 @@ export class TournamentManager {
 			}
 			const data = await res.json();
 			if (!data) {
-				console.error('Match details not found');
+				//console.error('Match details not found');
 				const errorDiv = document.createElement('div');
 				errorDiv.className = 'text-gray-500';
 				errorDiv.textContent = 'Match details not found';
@@ -508,7 +508,7 @@ export class TournamentManager {
 					const roundHtml = await this.renderRoundTree(tournament, matchesInRound, roundNumber);
 					bracketDiv.appendChild(roundHtml);
 				} catch (error) {
-					console.error('Error rendering round:', error);
+					//console.error('Error rendering round:', error);
 				}
 			}
 		}
@@ -628,7 +628,7 @@ export class TournamentManager {
 				this.renderTournaments();
 			})
 			.catch(error => {
-				console.error('There was a problem with the fetch operation:', error);
+				//console.error('There was a problem with the fetch operation:', error);
 				showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch finished tournaments', 'error');
 			}
 			);
@@ -647,6 +647,7 @@ export class TournamentManager {
 
 	private async renderTournaments(): Promise<void> {
 		this.tournamentContainer = document.getElementById("tournament-container") as HTMLDivElement;
+		if (!this.tournamentContainer) return;
 		this.tournamentContainer.innerHTML = "";
 		const currRenderId = ++this.currRenderId;
 		const tournamentEls = [];
@@ -707,7 +708,7 @@ export class TournamentManager {
 				this.renderTournaments();
 			})
 			.catch(error => {
-				console.error('There was a problem with the fetch operation:', error);
+				//console.error('There was a problem with the fetch operation:', error);
 				showToast(languageService.retrieveValue('toast_error'), 'Failed to fetch tournaments', 'error');
 			});
 	}

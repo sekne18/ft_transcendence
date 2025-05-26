@@ -124,12 +124,12 @@ class ChatManager {
                 this.fetchUnreadCount(chat.chat_id).then((count: number) => {
                     this.updateChatBadges(chat.chat_id, count);
                 }).catch((error) => {
-                    console.error(`Error updating unread count for chat ${chat.chat_id}:`, error);
+                    //console.error(`Error updating unread count for chat ${chat.chat_id}:`, error);
                 });
             });
             this.updateOnlineStatus();
         } else {
-            console.error("Failed to fetch chat list");
+            //console.error("Failed to fetch chat list");
         }
     }
 
@@ -144,7 +144,7 @@ class ChatManager {
                 badge.textContent = "";
             }
         } else {
-            console.error("Badge not found for chat ID:", chatId);
+            //console.error("Badge not found for chat ID:", chatId);
             return;
         }
         this.newMessages[chatId] = count;
@@ -249,7 +249,7 @@ class ChatManager {
                 expires_at: message.expires_at || null,
             })) as ChatMessage[];
         } else {
-            console.error("Failed to fetch chat messages");
+            //console.error("Failed to fetch chat messages");
             return null;
         }
     }
@@ -301,7 +301,7 @@ class ChatManager {
                 }
             }
             ).catch((error) => {
-                console.error("Error fetching messages:", error);
+                //console.error("Error fetching messages:", error);
                 this.setLoadingElement(false, "Error loading messages");
             }
             );
@@ -349,7 +349,7 @@ class ChatManager {
                 loadingElement.textContent = "Error fetching older messages";
             }
         }).catch((error) => {
-            console.error("Error fetching older messages:", error);
+            //console.error("Error fetching older messages:", error);
             loadingElement.textContent = "Error loading older messages";
         }
         );
@@ -362,7 +362,7 @@ class ChatManager {
             const data = await response.json();
             return data.count;
         } else {
-            console.error("Failed to fetch unread count");
+            //console.error("Failed to fetch unread count");
             return 0;
         }
     }
@@ -405,7 +405,7 @@ class ChatManager {
             method: "POST"
         }).then((response) => {
             if (!response.ok) {
-                console.error("Failed to mark messages as read");
+                //console.error("Failed to mark messages as read");
                 return;
             }
             //console.log("Marked messages as read for chat ID:", chatId);
@@ -446,7 +446,7 @@ class ChatManager {
 
                     });
                 } else {
-                    console.error("Failed to fetch user status");
+                    //console.error("Failed to fetch user status");
                 }
             });
         });
@@ -494,7 +494,7 @@ class ChatManager {
             case "accepted_game":
                 break;
             default:
-                console.error("Unknown message type:", message.type);
+                //console.error("Unknown message type:", message.type);
                 break;
         }
     }

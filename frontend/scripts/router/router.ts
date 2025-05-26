@@ -41,40 +41,33 @@ export async function initRouter() {
 
     const state = {
         click: async (e: MouseEvent) => {
-            console.log('click', e);
             const target = e.target as HTMLElement;
             if (target.classList.contains('nav-link')) {
-                console.log('nav-link clicked', target);
                 e.preventDefault();
                 const url = target.getAttribute('href');
                 if (!url) return;
 
                 const isProtected = protectedRoutes.some((route) => url.includes(route)) || url === '/';
                 if (isProtected && !(await checkAuth())) {
-                    console.log('not authenticated, redirecting to /auth');
                     history.pushState(null, '', '/auth');
                     loadContent('/auth');
                     updateActiveLink('/auth');
                     return;
                 }
-                console.log('authenticated, loading content for', url);
                 history.pushState(null, '', url);
                 document.dispatchEvent(new Event('auth-ready'));
                 loadContent(url);
                 updateActiveLink(url);
             } else {
-                console.log('click on non-nav-link', target);
                 let path = window.location.pathname;
                 const isProtected = protectedRoutes.some((route) => path.includes(route)) || path === '/';
                 if (isProtected && !(await checkAuth())) {
-                    console.log('not authenticated, redirecting to /auth');
                     e.preventDefault();
                     history.pushState(null, '', '/auth');
                     loadContent('/auth');
                     updateActiveLink('/auth');
                     return;
                 }
-                console.log('authenticated, loading content for', path);
             }
         }
     }
@@ -152,7 +145,6 @@ export async function loadContent(url: string, ignoreScripts: boolean = false) {
 }
 
 export async function checkAuth(): Promise<boolean> {
-    console.log('Checking authentication status...');
     try {
         const res = await protectedFetch('/api/auth/status',
             {
@@ -170,7 +162,7 @@ export async function checkAuth(): Promise<boolean> {
         });
 
         if (!refreshRes.ok) {
-            console.error('Failed to refresh token:', refreshRes.statusText);
+            //console.error('Failed to refresh token:', refreshRes.statusText);
             return false;
         }
 
@@ -180,6 +172,9 @@ export async function checkAuth(): Promise<boolean> {
 }
 
 function updateActiveLink(url: string) {
+    if (url === '/') {
+        url = '/game'; // Default to game page for root URL
+    }
     const mobileMenu = document.getElementById('mobile-menu') as HTMLDivElement;
 
     mobileMenu?.classList.toggle("hidden");

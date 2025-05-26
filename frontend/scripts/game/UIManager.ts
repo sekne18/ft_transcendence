@@ -54,7 +54,7 @@ export class UIManager {
 	}
 
 	public setGameOverOverlay(winner: true | false): void {
-		this.matchmakeTitle.textContent = winner ? languageService.retrieveValue('winner') : languageService.retrieveValue('looser');
+		this.matchmakeTitle.textContent = winner ? languageService.retrieveValue('winner') : languageService.retrieveValue('loser');
 		this.matchmakeTitle.classList.remove('hidden');
 		this.matchmakeButton.classList.add('hidden');
 		this.reloadButton.classList.add('hidden');

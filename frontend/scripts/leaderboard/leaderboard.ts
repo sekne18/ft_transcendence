@@ -17,7 +17,7 @@ function getData(offset = 0): void {
         credentials: 'include',
     }).then((response) => {
         if (!response.ok) {
-            console.error('Failed to fetch leaderboard data');
+            //console.error('Failed to fetch leaderboard data');
             return;
         }
         response.json().then((data: any) => {
@@ -36,6 +36,6 @@ function getData(offset = 0): void {
             languageService.init();
         });
     }).catch((error) => {
-        console.error('Error fetching leaderboard data:', error);
+        //('Error fetching leaderboard data:', error);
     });
 }

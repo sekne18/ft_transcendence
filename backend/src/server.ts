@@ -3,6 +3,8 @@ import { FastifyInstance } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import fastifyWebsocket from '@fastify/websocket';
+import fastifyMultipart from '@fastify/multipart';
+import fs from 'node:fs';
 import { readFile } from 'fs/promises';
 import { getChatsByUserId, getChatMessages, markMessagesAsRead, getUnreadCount, createChat } from './db/queries/chat.js';
 import { createUser, getUserByEmail, getUserById, getUserProfileById, getUserUnsafeById, updateUser } from './db/queries/user.js';
@@ -29,6 +31,7 @@ import { defaultAvatarPath } from './Config.js';
 import { GameStore } from './game/GameStore.js';
 import { getCompletedTournaments } from './db/queries/tournament.js';
 import { Bracket } from './tournament/Types.js';
+import { pipeline } from 'node:stream/promises';
 
 const cookieOptions: { httpOnly: boolean, secure: boolean, sameSite: "strict" | "lax" | "none" } = {
 	httpOnly: true,
@@ -67,6 +70,12 @@ if (!existsSync(UPLOAD_DIR)) {
 
 await fastify.register(fastifyCookie);
 await fastify.register(fastifyWebsocket);
+await fastify.register(fastifyMultipart, {
+	limits: {
+		fileSize: 10 * 1024 * 1024, // 10 MB
+		files: 1 // Limit to 1 file per request
+	}
+});
 
 {
 
@@ -491,51 +500,54 @@ fastify.post('/api/register', async (req, reply) => {
 
 fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 	const id = (req.user as { id: number }).id;
-	const { display_name, currentPassword, newPassword, confirmPassword, twoFA, avatarUrl } = req.body as {
-		display_name?: string;
-		currentPassword?: string;
-		newPassword?: string;
-		confirmPassword?: string;
-		twoFA?: boolean;
-		avatarUrl?: string;
-	};
+	const parts = req.parts();
 
-	if (!id) {
-		return reply.code(401).send({
-			success: false,
-			message: 'Missing user ID'
-		});
-	}
+	const updateData: Record<string, string | boolean> = {};
+	let newAvatarUrl: string | undefined;
+	let currentPassword = '';
+	let newPassword = '';
+	let confirmPassword = '';
 
-	let newAvatarUrl;
+	for await (const part of parts) {
+		if (part.type === 'file' && part.fieldname === 'avatar') {
+			const allowedTypes = {
+				'image/png': '.png',
+				'image/jpeg': '.jpg',
+				'image/webp': '.webp',
+				'image/gif': '.gif'
+			} as Record<string, string>;
 
-	if (avatarUrl) {
-		const match = avatarUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-		if (!match) {
-			return reply.code(400).send({ success: false, message: 'Invalid base64 format' });
+			if (!(part.mimetype in allowedTypes)) {
+				return reply.code(400).send({ success: false, message: 'Unsupported image type' });
+			}
+
+			const ext = allowedTypes[part.mimetype];
+			const fileName = `${id}${ext}`;
+			const filePath = path.join(UPLOAD_DIR, fileName);
+			await pipeline(part.file, fs.createWriteStream(filePath));
+			newAvatarUrl = `/uploads/avatars/${fileName}?t=${Date.now()}`;
+			updateData.avatarUrl = newAvatarUrl;
+		} else if (part.type === 'field') {
+			const { fieldname, value } = part as { fieldname: string, value: string };
+			switch (fieldname) {
+				case 'display_name':
+					if (value.trim()) updateData.display_name = value.trim();
+					break;
+				case 'twoFA':
+					updateData.has2fa = value === 'true';
+					break;
+				case 'currentPassword':
+					currentPassword = value;
+					break;
+				case 'newPassword':
+					newPassword = value;
+					break;
+				case 'confirmPassword':
+					confirmPassword = value;
+					break;
+			}
 		}
-
-		const mimeType: string = match[1];
-		const base64Data = match[2];
-		const buffer = Buffer.from(base64Data, 'base64');
-
-		const allowedTypes: Record<string, string> = {
-			'image/png': '.png',
-			'image/jpeg': '.jpg',
-			'image/webp': '.webp',
-			'image/gif': '.gif',
-		};
-
-		const ext: string = allowedTypes[mimeType];
-
-		const fileName = `${id}${ext}`;
-		const filePath = path.join(UPLOAD_DIR, fileName);
-
-		writeFileSync(filePath, buffer);
-		newAvatarUrl = `/uploads/avatars/${fileName}?t=${Date.now()}`;
 	}
-
-	const updateData: Record<string, string | boolean | number> = {};
 
 	// Validate the password if provided
 	if (currentPassword && newPassword && confirmPassword) {
@@ -544,11 +556,16 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 				success: false,
 				message: 'New passwords do not match'
 			});
+		} else if (currentPassword === newPassword) {
+			return reply.code(400).send({
+				success: false,
+				message: 'New password cannot be the same as current password'
+			});
 		}
-		else if (newPassword.trim() !== '') {
-			const user = await getUserUnsafeById(id) as { id: number; password: string; };
+		const user = await getUserUnsafeById(id) as { id: number; password: string; };
+		try {
 			if (await argon2.verify(user.password, currentPassword)) {
-				updateData.password = await argon2.hash(newPassword.trim());
+				updateData.password = await argon2.hash(newPassword);
 			} else {
 				//fastify.log.info('Password did not match');
 				return reply.code(400).send({
@@ -556,13 +573,19 @@ fastify.post('/api/user/update', { onRequest: [fastify.authenticate] }, async (r
 					message: 'Invalid password'
 				});
 			}
+		} catch (err) {
+			fastify.log.error('Error verifying password:', err);
+			return reply.code(500).send({
+				success: false,
+				message: 'Internal server error'
+			});
 		}
+	} else if (newPassword && confirmPassword) {
+		return reply.code(400).send({
+			success: false,
+			message: 'Current password is required to change password'
+		});
 	}
-
-	// Build the update object dynamically since we don't know which fields will be updated
-	if (display_name && display_name.trim() !== '') updateData.display_name = display_name.trim();
-	if (newAvatarUrl && newAvatarUrl.trim() !== '') updateData.avatarUrl = newAvatarUrl.trim();
-	if (twoFA === true || twoFA === false) updateData.has2fa = twoFA;
 
 	if (Object.keys(updateData).length === 0) {
 		return reply.code(400).send({

@@ -73,7 +73,7 @@ async function getData(where: string): Promise<void> {
         return res.json();
     }).then((response) => {
         if (!response || !response.success) {
-            console.error("response failed");
+            //("response failed");
         }
         else {
             renderFriendslist(response.friendsList, response.isFriends, response.type);

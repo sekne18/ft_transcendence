@@ -1,3 +1,4 @@
+import { languageService } from "../i18n";
 import { loadContent } from "../router/router";
 import { getDataFromForm, getElement, protectedFetch } from "../utils";
 import { networkConfig } from "../wsConfig";
@@ -159,7 +160,7 @@ function handleLogin(event: Event) {
             }
         })
         .catch(error => {
-            console.error('Error during login:', error);
+            //console.error('Error during login:', error);
         });
 }
 
@@ -225,7 +226,7 @@ function set2FaValidationEvents() {
                     }
                 })
                 .catch(error => {
-                    console.error('Error during 2FA verification:', error);
+                    //console.error('Error during 2FA verification:', error);
                     // Clear the token in case of errors
                     authState.clearTempToken();
                 });
@@ -267,7 +268,7 @@ function handleRegister(event: Event) {
     if (registerData.password.length < 10) {
         const errMsg = document.getElementById("error-register-message");
         if (errMsg) {
-            errMsg.innerText = 'Password must be at least 10 characters.';
+            errMsg.innerText = languageService.retrieveValue('password_too_short');
             return;
         }
     }
@@ -311,7 +312,7 @@ function handleRegister(event: Event) {
             }
         }
     }).catch(error => {
-        console.error('Error during registration:', error);
+        //console.error('Error during registration:', error);
     });
 }
 

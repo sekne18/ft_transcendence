@@ -139,7 +139,7 @@ export function getPendingFriends(userId: number, name: string, limit: number = 
         AND u.username LIKE ?
       ORDER BY u.username ASC
       LIMIT ?
-  `).all(userId, userId, userId, name + '%', limit) as {
+  `).all(userId, userId, userId, userId, name + '%', limit) as {
     id: number;
     username: string;
     state: string;

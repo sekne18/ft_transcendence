@@ -1,5 +1,5 @@
 import { GameConnection } from './GameConnection';
-import { GameParams, RenderDetails, GameStatus, WsParams, TournamentParams, ExtraParams } from './GameTypes';
+import { GameParams, RenderDetails, GameStatus, WsParams, ExtraParams } from './GameTypes';
 import { PointerInputController } from './PointerInputController';
 import { GameRenderer } from './GameRenderer';
 import { UIManager } from './UIManager';
@@ -209,6 +209,7 @@ export class GameEngine {
 						gameState.left_score > gameState.right_score :
 						gameState.right_score > gameState.left_score
 					));
+				this.UIManager.toggleOverlayVisibility('visible');
 				setTimeout(() => {
 					this.changeState('idle');
 				}, 2000);
